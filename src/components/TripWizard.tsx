@@ -51,6 +51,11 @@ interface UniversityModalProps {
   preselectedCountry?: string;
 }
 
+interface DocumentLegalizationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
 interface University {
   id: number;
   name: string;
@@ -59,14 +64,110 @@ interface University {
   website?: string;
   applicationUrl?: string;
   specialty?: string;
-  programs: UniversityProgram[];
+  createdAt?: string;
+  programs?: UniversityProgram[];
 }
 
 interface UniversityProgram {
   id: number;
   name: string;
   level: string;
+  universityId?: number;
+  createdAt?: string;
 }
+
+// Composant DocumentLegalizationModal
+const DocumentLegalizationModal: React.FC<DocumentLegalizationModalProps> = ({ 
+  isOpen, 
+  onClose 
+}) => {
+  const handleWhatsAppContact = () => {
+    const phoneNumber = "+22899230353";
+    const message = "Bonjour, j'ai besoin d'aide avec la légalisation de documents.";
+    const whatsappUrl = `https://wa.me/${phoneNumber.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Légalisation de Documents</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Process Overview */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">Processus de Légalisation</h3>
+            <ol className="list-decimal list-inside space-y-2 text-blue-800">
+              <li>Authentification par l'institution émettrice</li>
+              <li>Légalisation par notaire certifié</li>
+              <li>Authentification par le Ministère des Affaires Étrangères</li>
+              <li>Légalisation par l'ambassade/consulat du pays de destination</li>
+              <li>Traduction par traducteur certifié (si nécessaire)</li>
+            </ol>
+          </div>
+
+          {/* Required Documents */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-green-900 mb-3">Documents Requis</h3>
+            <ul className="list-disc list-inside space-y-2 text-green-800">
+              <li>Documents originaux</li>
+              <li>Copies certifiées conformes</li>
+              <li>Pièce d'identité valide</li>
+              <li>Formulaires de demande remplis</li>
+              <li>Justificatifs du motif de la légalisation</li>
+            </ul>
+          </div>
+
+          {/* Processing Times */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-yellow-900 mb-3">Délais de Traitement</h3>
+            <div className="space-y-2 text-yellow-800">
+              <p>• <strong>Standard :</strong> 15-20 jours ouvrables</p>
+              <p>• <strong>Express :</strong> 5-7 jours ouvrables (frais supplémentaires)</p>
+              <p>• <strong>Urgence :</strong> 2-3 jours ouvrables (frais premium)</p>
+            </div>
+          </div>
+
+          {/* Important Notice */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-orange-900 mb-2">⚠️ Important</h3>
+            <p className="text-orange-800">
+              Les procédures de légalisation varient selon le pays de destination. 
+              Il est recommandé de vérifier les exigences spécifiques auprès de 
+              l'ambassade ou du consulat concerné.
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-8">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-green-600 text-white py-3 px-6 rounded-md hover:bg-green-700 transition-colors font-medium"
+          >
+            J'ai compris et déjà fait
+          </button>
+          <button
+            onClick={handleWhatsAppContact}
+            className="flex-1 bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors font-medium"
+          >
+            Nous contacter
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Composant AccommodationModal
 const AccommodationModal: React.FC<AccommodationModalProps> = ({ 
@@ -271,7 +372,7 @@ const UniversityModal: React.FC<UniversityModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
-  const levels = ["Bachelor", "Master", "PhD", "Certificate"];
+  const levels = ["Bachelor", "Master"]; // Based on the API documentation
 
   useEffect(() => {
     if (isOpen) {
@@ -293,23 +394,24 @@ const UniversityModal: React.FC<UniversityModalProps> = ({
       setLoading(true);
       setError("");
       
-      const filters = {
+      const filters: any = {
+        region: 'europe', // Always filter for European universities
         ...(selectedCountry && { country: selectedCountry }),
         ...(selectedProgram && { program: selectedProgram }),
         ...(selectedLevel && { level: selectedLevel }),
         ...(searchQuery && { search: searchQuery })
       };
 
-      const response = await apiService.getUniversities(filters);
+      const response = await apiService.searchUniversities(filters);
       
       if (response.success) {
         setUniversities(response.data || []);
       } else {
-        setError("Failed to load universities");
+        setError(response.error || "Failed to load universities");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error loading universities:", err);
-      setError("Error loading universities. Please try again.");
+      setError(err.message || "Error loading universities. Please try again.");
       setUniversities([]);
     } finally {
       setLoading(false);
@@ -319,26 +421,39 @@ const UniversityModal: React.FC<UniversityModalProps> = ({
   const loadCountries = async () => {
     try {
       const response = await apiService.getUniversityCountries();
-      if (response.success) {
-        setAvailableCountries(response.data || []);
+      if (response.success && response.data) {
+        setAvailableCountries(response.data);
+      } else {
+        // Fallback to European countries only for study trips
+        setAvailableCountries(['France', 'Germany', 'Italy', 'Belgium', 'Netherlands', 'Luxembourg', 'Estonia']);
       }
     } catch (err) {
       console.error("Error loading countries:", err);
-      setAvailableCountries(regions.flatMap(region => region.countries).sort());
+      // Fallback to European countries only for study trips
+      setAvailableCountries(['France', 'Germany', 'Italy', 'Belgium', 'Netherlands', 'Luxembourg', 'Estonia']);
     }
   };
 
   const loadPrograms = async () => {
     try {
       const response = await apiService.getUniversityPrograms();
-      if (response.success && response.data) {
-        setAvailablePrograms(response.data.programNames || []);
+      if (response.success && response.data && response.data.programNames) {
+        setAvailablePrograms(response.data.programNames.sort());
+      } else {
+        // Fallback to common programs
+        setAvailablePrograms([
+          "Informatique", "Médecine", "Mathématiques", "Physics", "Engineering", 
+          "Business", "Law", "Literature", "History", "Philosophy", "Economics", 
+          "Political Science", "Psychology", "Biology", "Chemistry"
+        ].sort());
       }
     } catch (err) {
       console.error("Error loading programs:", err);
+      // Fallback to common programs
       setAvailablePrograms([
-        "Computer Science", "Engineering", "Business", "Medicine", "Law",
-        "Literature", "History", "Philosophy", "Economics", "Political Science"
+        "Informatique", "Médecine", "Mathématiques", "Physics", "Engineering", 
+        "Business", "Law", "Literature", "History", "Philosophy", "Economics", 
+        "Political Science", "Psychology", "Biology", "Chemistry"
       ].sort());
     }
   };
@@ -468,14 +583,14 @@ const UniversityModal: React.FC<UniversityModalProps> = ({
                   <p className="text-gray-600 mb-2">{university.city}, {university.country}</p>
                   
                   {university.specialty && (
-                    <p className="text-gray-600 mb-4 text-sm">{university.specialty}</p>
+                    <p className="text-gray-600 mb-3 text-sm italic">{university.specialty}</p>
                   )}
                   
-                  {university.programs.length > 0 && (
+                  {university.programs && university.programs.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-1">Available Programs:</p>
+                      <p className="text-sm font-medium text-gray-700 mb-1">Programmes disponibles:</p>
                       <div className="flex flex-wrap gap-1">
-                        {university.programs.slice(0, 3).map((program) => (
+                        {university.programs.slice(0, 3).map((program: any) => (
                           <span
                             key={`${program.id}`}
                             className="inline-block bg-primary/10 text-primary px-2 py-1 rounded-full text-xs"
@@ -485,28 +600,61 @@ const UniversityModal: React.FC<UniversityModalProps> = ({
                         ))}
                         {university.programs.length > 3 && (
                           <span className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-                            +{university.programs.length - 3} more
+                            +{university.programs.length - 3} programmes
                           </span>
                         )}
                       </div>
                     </div>
                   )}
                   
-                  <button
-                    onClick={() => handleSelect(university)}
-                    className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
-                  >
-                    Select This University
-                  </button>
+                  {university.website && (
+                    <div className="mb-3">
+                      <a 
+                        href={university.website.startsWith('http') ? university.website : `https://${university.website}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Site officiel ↗
+                      </a>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSelect(university)}
+                      className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+                    >
+                      Sélectionner
+                    </button>
+                    {university.applicationUrl && (
+                      <a
+                        href={university.applicationUrl.startsWith('http') ? university.applicationUrl : `https://${university.applicationUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        Candidater ↗
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))
             ) : (
               <div className="col-span-full text-center py-8">
                 <p className="text-gray-500">
                   {searchQuery || selectedCountry || selectedProgram || selectedLevel
-                    ? "No universities found matching your criteria. Please adjust your filters."
-                    : "No universities available. Please check back later."}
+                    ? "Aucune université trouvée correspondant à vos critères. Veuillez ajuster vos filtres."
+                    : "Aucune université disponible. Veuillez réessayer plus tard."}
                 </p>
+                {!loading && !error && (
+                  <button
+                    onClick={loadUniversities}
+                    className="mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    Actualiser
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -526,6 +674,7 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
   const [selectedAccommodation, setSelectedAccommodation] = useState<any>(null);
   const [showUniversityModal, setShowUniversityModal] = useState(false);
   const [selectedUniversity, setSelectedUniversity] = useState<any>(null);
+  const [showDocumentLegalizationModal, setShowDocumentLegalizationModal] = useState(false);
   const [tripData, setTripData] = useState<TripData>({
     category: '',
     title: '',
@@ -544,6 +693,7 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
       setCloseAfterSave(false);
       setSelectedAccommodation(null);
       setSelectedUniversity(null);
+      setShowDocumentLegalizationModal(false);
       setTripData({
         category: '',
         title: '',
@@ -587,6 +737,12 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
     }
 
     if (currentStep === 1) {
+      // Validate that either region or destination country is selected
+      if (!selectedRegion && !tripData.destination) {
+        alert('Please select either a region or a destination country to continue.');
+        return;
+      }
+      
       if (tripData.startDate && tripData.endDate) {
         const dateError = validateDates(tripData.startDate, tripData.endDate);
         if (dateError) {
@@ -660,9 +816,20 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
   );
 
   const renderBasicInfo = () => {
-    const availableCountries = selectedRegion
-      ? regions.find(r => r.name === selectedRegion)?.countries || []
-      : regions.flatMap(r => r.countries);
+    // For study trips, only show Europe region and specific countries
+    const isStudyTrip = selectedCategory === 'study';
+    
+    const studyCountries = ['France', 'Germany', 'Italy', 'Belgium', 'Netherlands', 'Luxembourg', 'Estonia'];
+    
+    const availableRegions = isStudyTrip 
+      ? regions.filter(r => r.name === 'Europe')
+      : regions;
+    
+    const availableCountries = isStudyTrip 
+      ? studyCountries
+      : selectedRegion
+        ? regions.find(r => r.name === selectedRegion)?.countries || []
+        : regions.flatMap(r => r.countries);
 
     return (
       <div className="space-y-6">
@@ -690,7 +857,7 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
               className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
             >
               <option value="">Select Region</option>
-              {regions.map(region => (
+              {availableRegions.map(region => (
                 <option key={region.name} value={region.name}>{region.name}</option>
               ))}
             </select>
@@ -774,6 +941,13 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
               >
                 Browse {serviceDetail.name}
               </button>
+            ) : currentService === 'Document Legalization & Recognition' ? (
+              <button
+                onClick={() => setShowDocumentLegalizationModal(true)}
+                className="inline-block bg-primary text-white px-6 py-3 rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Browse {serviceDetail.name}
+              </button>
             ) : (
               <Link
                 to={serviceDetail.learnMoreLink}
@@ -853,9 +1027,14 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
       });
     };
 
-    const availableCountries = selectedRegion
-      ? regions.find(r => r.name === selectedRegion)?.countries || []
-      : regions.flatMap(r => r.countries);
+    const isStudyTrip = selectedCategory === 'study';
+    const studyCountries = ['France', 'Germany', 'Italy', 'Belgium', 'Netherlands', 'Luxembourg', 'Estonia'];
+    
+    const availableCountries = isStudyTrip 
+      ? studyCountries
+      : selectedRegion
+        ? regions.find(r => r.name === selectedRegion)?.countries || []
+        : regions.flatMap(r => r.countries);
 
     const filters: { [key: string]: JSX.Element } = {
       'University finder': (
@@ -1290,18 +1469,36 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
           onClose={() => setShowUniversityModal(false)}
           onSelect={(university) => {
             setSelectedUniversity(university);
+            // Auto-populate university form fields
+            const firstProgram = university.programs && university.programs[0] ? university.programs[0] : null;
+            const universitySelections = {
+              country: university.country,
+              field: firstProgram?.name || university.specialty || '',
+              level: firstProgram?.level || '',
+              startDate: tripData.startDate
+            };
             setTripData({
               ...tripData,
               services: {
                 ...tripData.services,
                 'University finder': {
                   ...tripData.services['University finder'],
-                  selectedUniversity: university
+                  selectedUniversity: university,
+                  selections: {
+                    ...tripData.services['University finder']?.selections,
+                    ...universitySelections
+                  }
                 }
               }
             });
           }}
           preselectedCountry={tripData.destination}
+        />
+
+        {/* Document Legalization Modal */}
+        <DocumentLegalizationModal
+          isOpen={showDocumentLegalizationModal}
+          onClose={() => setShowDocumentLegalizationModal(false)}
         />
 
         {/* Accommodation Modal */}
