@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import TripForm from './TripForm';
 import TripWizard from './TripWizard';
+import TripBuilder from './TripBuilder';
 
 interface Trip {
   id: string;
@@ -31,6 +32,7 @@ const Dashboard: React.FC = () => {
   const [showTripWizard, setShowTripWizard] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [showTripBuilder, setShowTripBuilder] = useState(false);
 
   const ongoingTrips = trips.filter(trip => trip.status !== 'completed');
   const completedTrips = trips.filter(trip => trip.status === 'completed');
@@ -127,14 +129,11 @@ const Dashboard: React.FC = () => {
             <span>Check Trip</span>
           </button>
           <button
-            onClick={() => {
-              setSelectedTrip(null);
-              setShowTripWizard(true);
-            }}
-            className="flex items-center gap-2 bg-secondary text-white px-6 py-3 rounded-full font-medium hover:bg-secondary/90 transition-colors shadow-lg group"
+            onClick={() => setShowTripBuilder(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 rounded-full font-semibold hover:shadow-xl transition-all transform hover:scale-105 group"
           >
             <PlusCircleIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span>Add Trip</span>
+            <span>Planifier mes Études</span>
           </button>
         </div>
 
@@ -387,6 +386,19 @@ const Dashboard: React.FC = () => {
           onClose={() => setShowTripWizard(false)}
           onSave={handleSaveTrip}
         />
+
+        {/* Trip Builder Full Page */}
+        {showTripBuilder && (
+          <div className="fixed inset-0 z-50 bg-white">
+            <button
+              onClick={() => setShowTripBuilder(false)}
+              className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+            >
+              <XMarkIcon className="w-6 h-6 text-gray-600" />
+            </button>
+            <TripBuilder />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -683,6 +683,8 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
     endDate: '',
     services: {}
   });
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -704,6 +706,58 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
       });
     }
   }, [isOpen]);
+
+  const validateField = (field: string, value: string) => {
+    const errors: {[key: string]: string} = {};
+    
+    switch(field) {
+      case 'title':
+        if (!value.trim()) errors.title = 'Trip title is required';
+        else if (value.length < 3) errors.title = 'Title must be at least 3 characters';
+        break;
+      case 'destination':
+        if (!value) errors.destination = 'Please select a destination';
+        break;
+      case 'startDate':
+        if (!value) {
+          errors.startDate = 'Start date is required';
+        } else {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const start = new Date(value);
+          if (start < today) errors.startDate = 'Start date cannot be in the past';
+        }
+        break;
+      case 'endDate':
+        if (!value) {
+          errors.endDate = 'End date is required';
+        } else if (tripData.startDate) {
+          const start = new Date(tripData.startDate);
+          const end = new Date(value);
+          if (end < start) errors.endDate = 'End date must be after start date';
+        }
+        break;
+    }
+    
+    return errors;
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    const errors = validateField(field, value);
+    setFormErrors(prev => ({ ...prev, ...errors }));
+    
+    // Clear error for this field if valid
+    if (!errors[field]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    setTripData(prev => ({ ...prev, [field]: value }));
+    setIsDirty(true);
+  };
 
   const validateDates = (startDate: string, endDate: string) => {
     const today = new Date();
@@ -789,24 +843,46 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
   };
 
   const renderCategorySelection = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Select Trip Category</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {categories.map((category) => (
+    <div className="space-y-8">
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">✈️ What type of adventure awaits?</h2>
+        <p className="text-gray-600 text-lg">Choose your trip category to get started with personalized recommendations</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {categories.map((category, index) => (
           <button
             key={category.id}
             onClick={() => handleCategorySelect(category.id)}
-            className={`p-6 rounded-lg text-left transition-all ${
+            className={`group p-8 rounded-xl text-left transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
               selectedCategory === category.id
-                ? 'border-2 border-primary bg-primary/5'
-                : 'border-2 border-gray-200 hover:border-primary/50'
+                ? 'border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg'
+                : 'border-2 border-gray-200 hover:border-primary/50 bg-white hover:bg-gray-50'
             }`}
+            style={{ animationDelay: `${index * 100}ms` }}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{category.icon}</span>
-              <div>
-                <h3 className="font-semibold text-lg">{category.name}</h3>
-                <p className="text-gray-600 text-sm">{category.description}</p>
+            <div className="flex items-start gap-4">
+              <div className={`p-3 rounded-lg transition-colors ${
+                selectedCategory === category.id 
+                  ? 'bg-primary text-white' 
+                  : 'bg-gray-100 group-hover:bg-primary/10'
+              }`}>
+                <span className="text-2xl">{category.icon}</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="font-bold text-xl text-gray-900 group-hover:text-primary transition-colors">
+                    {category.name}
+                  </h3>
+                  {selectedCategory === category.id && (
+                    <span className="text-primary">✓</span>
+                  )}
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-3">{category.description}</p>
+                <div className="flex items-center text-xs text-primary font-medium">
+                  <span>Get started</span>
+                  <span className="ml-1 transform group-hover:translate-x-1 transition-transform">→</span>
+                </div>
               </div>
             </div>
           </button>
@@ -816,9 +892,7 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
   );
 
   const renderBasicInfo = () => {
-    // For study trips, only show Europe region and specific countries
     const isStudyTrip = selectedCategory === 'study';
-    
     const studyCountries = ['France', 'Germany', 'Italy', 'Belgium', 'Netherlands', 'Luxembourg', 'Estonia'];
     
     const availableRegions = isStudyTrip 
@@ -831,75 +905,181 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
         ? regions.find(r => r.name === selectedRegion)?.countries || []
         : regions.flatMap(r => r.countries);
 
+    const category = categories.find(c => c.id === selectedCategory);
+    const completionPercentage = [
+      tripData.title,
+      tripData.destination,
+      tripData.startDate,
+      tripData.endDate
+    ].filter(Boolean).length * 25;
+
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-gray-900">Basic Trip Information</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Trip Title
-            </label>
-            <input
-              type="text"
-              value={tripData.title}
-              onChange={(e) => setTripData({ ...tripData, title: e.target.value })}
-              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              placeholder="Enter trip title"
-            />
+      <div className="space-y-8">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-primary to-secondary rounded-full mb-4">
+            <span className="text-2xl text-white">{category?.icon}</span>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Region
-            </label>
-            <select
-              value={selectedRegion}
-              onChange={(e) => setSelectedRegion(e.target.value)}
-              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-            >
-              <option value="">Select Region</option>
-              {availableRegions.map(region => (
-                <option key={region.name} value={region.name}>{region.name}</option>
-              ))}
-            </select>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Tell us about your {category?.name.toLowerCase()} trip</h2>
+          <p className="text-gray-600">We'll use this information to create a personalized itinerary for you</p>
+          
+          {/* Progress indicator */}
+          <div className="mt-6">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Progress</span>
+              <span>{completionPercentage}% complete</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500"
+                style={{ width: `${completionPercentage}%` }}
+              ></div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Destination Country
-            </label>
-            <select
-              value={tripData.destination}
-              onChange={(e) => setTripData({ ...tripData, destination: e.target.value })}
-              className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-            >
-              <option value="">Select Country</option>
-              {availableCountries.map(country => (
-                <option key={country} value={country}>{country}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="space-y-6">
+            {/* Trip Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Start Date
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-primary">✨</span>
+                  What should we call your trip?
+                </div>
               </label>
               <input
-                type="date"
-                value={tripData.startDate}
-                onChange={(e) => setTripData({ ...tripData, startDate: e.target.value })}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                type="text"
+                value={tripData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl shadow-sm transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary ${
+                  formErrors.title ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+                placeholder="e.g., My Summer Study Adventure in France"
               />
+              {formErrors.title && (
+                <div className="mt-2 flex items-center gap-1 text-red-600 text-sm">
+                  <span>⚠️</span>
+                  {formErrors.title}
+                </div>
+              )}
+              {tripData.title && !formErrors.title && (
+                <div className="mt-2 flex items-center gap-1 text-green-600 text-sm">
+                  <span>✅</span>
+                  Perfect! That sounds amazing
+                </div>
+              )}
             </div>
+
+            {/* Region Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                End Date
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-primary">🗺️</span>
+                  Which region interests you?
+                </div>
               </label>
-              <input
-                type="date"
-                value={tripData.endDate}
-                onChange={(e) => setTripData({ ...tripData, endDate: e.target.value })}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              />
+              <select
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              >
+                <option value="">Choose a region to explore</option>
+                {availableRegions.map(region => (
+                  <option key={region.name} value={region.name}>{region.name}</option>
+                ))}
+              </select>
             </div>
+
+            {/* Destination Country */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-primary">📍</span>
+                  Your dream destination
+                </div>
+              </label>
+              <select
+                value={tripData.destination}
+                onChange={(e) => handleInputChange('destination', e.target.value)}
+                className={`w-full px-4 py-3 border rounded-xl shadow-sm transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary ${
+                  formErrors.destination ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Select your destination country</option>
+                {availableCountries.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
+              {formErrors.destination && (
+                <div className="mt-2 flex items-center gap-1 text-red-600 text-sm">
+                  <span>⚠️</span>
+                  {formErrors.destination}
+                </div>
+              )}
+            </div>
+
+            {/* Date Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-primary">🗓️</span>
+                    When do you start?
+                  </div>
+                </label>
+                <input
+                  type="date"
+                  value={tripData.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className={`w-full px-4 py-3 border rounded-xl shadow-sm transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary ${
+                    formErrors.startDate ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {formErrors.startDate && (
+                  <div className="mt-2 flex items-center gap-1 text-red-600 text-sm">
+                    <span>⚠️</span>
+                    {formErrors.startDate}
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-primary">🗓️</span>
+                    When do you return?
+                  </div>
+                </label>
+                <input
+                  type="date"
+                  value={tripData.endDate}
+                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                  min={tripData.startDate || new Date().toISOString().split('T')[0]}
+                  className={`w-full px-4 py-3 border rounded-xl shadow-sm transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary ${
+                    formErrors.endDate ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {formErrors.endDate && (
+                  <div className="mt-2 flex items-center gap-1 text-red-600 text-sm">
+                    <span>⚠️</span>
+                    {formErrors.endDate}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Trip Duration Display */}
+            {tripData.startDate && tripData.endDate && !formErrors.startDate && !formErrors.endDate && (
+              <div className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-primary">
+                  <span>ℹ️</span>
+                  <span className="font-medium">
+                    Your trip duration: {Math.ceil((new Date(tripData.endDate).getTime() - new Date(tripData.startDate).getTime()) / (1000 * 60 * 60 * 24))} days
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1344,70 +1524,114 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
   const isLastStep = currentStep === totalSteps - 1;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Plan Your Trip
-          </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <XMarkIcon className="w-6 h-6" />
-          </button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-primary to-secondary p-6 text-white">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">
+                ✈️ Create Your Perfect Trip
+              </h2>
+              <p className="text-white/90">
+                {currentStep === 0 && "Choose your adventure type"}
+                {currentStep === 1 && "Tell us about your journey"}
+                {currentStep > 1 && `Step ${currentStep} of ${totalSteps - 1}: Services & Preferences`}
+              </p>
+            </div>
+            <button
+              onClick={handleClose}
+              className="p-2 rounded-full hover:bg-white/20 transition-colors"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
         </div>
+        
+        <div className="flex-1 overflow-y-auto p-6">
 
         {selectedCategory && (
           <div className="mb-8">
-            <div className="h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              />
+            <div className="relative">
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                />
+              </div>
+              <div className="mt-3 flex justify-between text-sm">
+                <span className="text-gray-600">
+                  Step {currentStep + 1} of {totalSteps}
+                </span>
+                <span className="text-primary font-medium">
+                  {Math.round((currentStep / totalSteps) * 100)}% complete
+                </span>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="mb-8">
+        <div className="mb-8 min-h-[400px]">
           {currentStep === 0 && renderCategorySelection()}
           {currentStep === 1 && renderBasicInfo()}
           {currentStep > 1 && renderServiceStep()}
         </div>
 
-        <div className="flex justify-between">
+        </div>
+
+        <div className="flex-shrink-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-between items-center">
           <button
             onClick={handlePrevious}
-            className={`flex items-center px-4 py-2 rounded-md ${
+            className={`flex items-center px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
               currentStep === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-primary hover:text-primary transform hover:scale-105'
             }`}
             disabled={currentStep === 0}
           >
             <ArrowLeftIcon className="w-5 h-5 mr-2" />
             Previous
           </button>
-          <div className="flex gap-2">
+          
+          <div className="flex items-center gap-2">
+            {selectedCategory && (
+              <div className="flex items-center gap-1 mx-4">
+                {Array.from({ length: totalSteps }, (_, index) => (
+                  <div
+                    key={index}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      index <= currentStep
+                        ? 'bg-primary'
+                        : index === currentStep + 1
+                        ? 'bg-primary/30 animate-pulse'
+                        : 'bg-gray-200'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-3">
             <button
               onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:border-red-300 hover:text-red-600 font-medium transition-all duration-200 transform hover:scale-105"
             >
               Close
             </button>
             {isLastStep ? (
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+                className="flex items-center px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg font-medium transition-all duration-200 transform hover:scale-105"
               >
-                Save Trip
+                <span className="mr-2">✓</span>
+                Complete Trip Setup
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+                className="flex items-center px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg font-medium transition-all duration-200 transform hover:scale-105"
               >
-                Next
+                Continue
                 <ArrowRightIcon className="w-5 h-5 ml-2" />
               </button>
             )}
