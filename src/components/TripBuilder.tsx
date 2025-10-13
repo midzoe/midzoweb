@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { 
   CheckCircleIcon,
@@ -15,7 +14,8 @@ import {
   CalendarDaysIcon,
   MapPinIcon,
   UserIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  LanguageIcon
 } from '@heroicons/react/24/outline';
 
 interface TripData {
@@ -46,6 +46,16 @@ interface TripData {
   // Étape 5: Mon Voyage
   flightBooked: boolean;
   insuranceStatus: string;
+  transferBooked?: boolean;
+  emergencyContact?: string;
+  localContact?: string;
+  
+  // Étape 3: Mon Logement (additional properties)
+  maxDistance?: string;
+  
+  // Étape 4: Mes Documents (additional properties)
+  languageLevel?: string;
+  hasVisa?: boolean;
   
   // Progression
   completedSteps: string[];
@@ -333,13 +343,6 @@ const TripBuilder: React.FC = () => {
     }
   }, [tripData.destination, currentStep]);
 
-  const markStepCompleted = (stepId: string) => {
-    if (!tripData.completedSteps.includes(stepId)) {
-      updateTripData({ 
-        completedSteps: [...tripData.completedSteps, stepId] 
-      });
-    }
-  };
 
   const canProceedToNextStep = () => {
     switch (currentStep) {
@@ -759,7 +762,7 @@ const TripBuilder: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-2">Programmes disponibles:</p>
                       <div className="flex flex-wrap gap-1">
-                        {university.programs.map((program, idx) => (
+                        {university.programs.map((program: any, idx: number) => (
                           <span key={idx} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                             {program}
                           </span>
@@ -777,7 +780,7 @@ const TripBuilder: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-2">Prérequis:</p>
                       <div className="space-y-1">
-                        {university.requirements.map((req, idx) => (
+                        {university.requirements.map((req: any, idx: number) => (
                           <div key={idx} className="flex items-center gap-2 text-xs text-gray-600">
                             <CheckCircleIcon className="w-3 h-3 text-green-500" />
                             {req}
@@ -1028,7 +1031,6 @@ const TripBuilder: React.FC = () => {
     };
 
     const completedCount = (tripData.documentsNeeded || []).length;
-    const requiredCount = allDocuments.filter(doc => doc.required).length;
 
     return (
       <div className="space-y-6 sm:space-y-8">
@@ -1852,7 +1854,7 @@ const TripBuilder: React.FC = () => {
                   </button>
 
                   <div className="flex items-center gap-2">
-                    {steps.map((step, index) => (
+                    {steps.map((step) => (
                       <div
                         key={step.id}
                         className={`w-2 h-2 rounded-full transition-all ${

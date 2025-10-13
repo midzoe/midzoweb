@@ -4,11 +4,10 @@ import { useAuth } from '../context/AuthContext';
 import { categories } from '../data/categories';
 import { format } from 'date-fns';
 import { 
-  PlusCircleIcon, StarIcon, CalendarIcon, ChevronLeftIcon, 
-  ChevronRightIcon, ExclamationCircleIcon, XMarkIcon,
+  PlusCircleIcon, StarIcon, XMarkIcon,
   AcademicCapIcon, DocumentCheckIcon, HomeIcon, LanguageIcon,
-  MapPinIcon, ClockIcon, CheckCircleIcon, BriefcaseIcon,
-  GlobeAltIcon, BookOpenIcon, UserGroupIcon, CurrencyDollarIcon,
+  MapPinIcon,  CheckCircleIcon, BriefcaseIcon,
+  GlobeAltIcon,  UserGroupIcon, 
   CheckIcon, ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import TripForm from './TripForm';
@@ -53,11 +52,6 @@ const Dashboard: React.FC = () => {
     setSelectedTrip(null);
   };
 
-  const handleDeleteTrip = (tripId: string) => {
-    setTrips(trips.filter(t => t.id !== tripId));
-    setShowTripForm(false);
-    setSelectedTrip(null);
-  };
 
   const getServiceIcon = (service: string) => {
     const iconMap: { [key: string]: React.ReactNode } = {
@@ -377,7 +371,7 @@ const Dashboard: React.FC = () => {
           }}
           existingTrip={selectedTrip}
           onSave={handleSaveTrip}
-          onDelete={handleDeleteTrip}
+       
         />
 
         {/* Trip Wizard Modal */}

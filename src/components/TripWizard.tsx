@@ -19,6 +19,7 @@ interface ServiceSelection {
     [key: string]: any;
   };
   selectedAccommodation?: any;
+  selectedUniversity?: any;
 }
 
 interface TripData {
@@ -684,7 +685,6 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
     services: {}
   });
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
-  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -756,7 +756,6 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
     }
     
     setTripData(prev => ({ ...prev, [field]: value }));
-    setIsDirty(true);
   };
 
   const validateDates = (startDate: string, endDate: string) => {

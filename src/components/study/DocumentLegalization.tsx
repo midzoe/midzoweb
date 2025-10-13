@@ -83,32 +83,7 @@ const DocumentServices: React.FC = () => {
   const [serviceType, setServiceType] = useState<'legalization' | 'recognition' | 'all'>('all');
 
   const allCountries = regions.flatMap(region => region.countries).sort();
-  const documentTypes = [
-    // Academic Documents
-    "High School Diploma",
-    "Bachelor's Degree",
-    "Master's Degree",
-    "PhD Degree",
-    "Transcripts",
-    "Language Certificates",
-    "Professional Qualifications",
-    // Personal Documents
-    "Birth Certificate",
-    "Marriage Certificate",
-    "Divorce Certificate",
-    "Death Certificate",
-    "Police Clearance",
-    "Medical Records",
-    "Passport",
-    "National ID",
-    "Driver's License",
-    "Power of Attorney",
-    "Employment Records",
-    "Tax Documents",
-    // Other Documents
-    "Other Academic Documents",
-    "Other Personal Documents"
-  ].sort();
+ 
 
   const filteredServices = mockServices.filter(service => {
     if (destinationCountry && service.country !== destinationCountry) return false;

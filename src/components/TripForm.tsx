@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, ArrowLeftIcon, ArrowRightIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { categories } from '../data/categories';
 
 interface TripFormProps {

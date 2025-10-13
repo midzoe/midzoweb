@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { categories } from '../data/categories';
 import { serviceDetails } from '../data/services';
 import { Link } from 'react-router-dom';

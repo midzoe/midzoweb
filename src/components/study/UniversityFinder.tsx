@@ -19,80 +19,7 @@ interface UniversityProgram {
   level: string;
 }
 
-const mockUniversities: University[] = [
-  {
-    name: "University of Cambridge",
-    country: "United Kingdom",
-    city: "Cambridge",
-    programs: ["Computer Science", "Engineering", "Business", "Law", "Medicine", "Literature", "History", "Physics"],
-    tuitionRange: "£25,000 - £35,000",
-    language: "English",
-    ranking: 3,
-    image: "https://images.unsplash.com/photo-1501503069356-3c6b82a17d89?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "A prestigious institution known for academic excellence and groundbreaking research.",
-    website: "https://www.cam.ac.uk"
-  },
-  {
-    name: "Oxford University",
-    country: "United Kingdom",
-    city: "Oxford",
-    programs: ["Philosophy", "Economics", "Law", "Medicine", "Literature", "Mathematics", "Chemistry", "Politics"],
-    tuitionRange: "£27,000 - £38,000",
-    language: "English",
-    ranking: 2,
-    image: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "World-renowned university with centuries of academic tradition and innovation.",
-    website: "https://www.ox.ac.uk"
-  },
-  {
-    name: "Technical University of Munich",
-    country: "Germany",
-    city: "Munich",
-    programs: ["Engineering", "Computer Science", "Medicine", "Architecture", "Physics", "Chemistry", "Mathematics"],
-    tuitionRange: "€500/semester",
-    language: "German/English",
-    ranking: 15,
-    image: "https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Leading technical university known for engineering and innovation.",
-    website: "https://www.tum.de/en"
-  },
-  {
-    name: "Humboldt University Berlin",
-    country: "Germany",
-    city: "Berlin",
-    programs: ["Philosophy", "Law", "Economics", "Literature", "History", "Social Sciences", "Psychology"],
-    tuitionRange: "€300/semester",
-    language: "German/English",
-    ranking: 25,
-    image: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Historic institution in the heart of Berlin with strong humanities programs.",
-    website: "https://www.hu-berlin.de/en"
-  },
-  {
-    name: "Sorbonne University",
-    country: "France",
-    city: "Paris",
-    programs: ["Arts", "Literature", "Law", "Medicine", "History", "Philosophy", "Languages"],
-    tuitionRange: "€3,000/year",
-    language: "French/English",
-    ranking: 25,
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Prestigious French university with rich cultural heritage.",
-    website: "https://www.sorbonne-universite.fr/en"
-  },
-  {
-    name: "Sciences Po Paris",
-    country: "France",
-    city: "Paris",
-    programs: ["Political Science", "International Relations", "Law", "Economics", "Journalism", "Public Policy"],
-    tuitionRange: "€12,000/year",
-    language: "French/English",
-    ranking: 30,
-    image: "https://images.unsplash.com/photo-1537202108838-e7072bad1927?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Leading institution for political science and international affairs.",
-    website: "https://www.sciencespo.fr/en"
-  }
-];
+
 
 const UniversityFinder: React.FC = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>("");
@@ -141,13 +68,7 @@ const UniversityFinder: React.FC = () => {
     } catch (err) {
       console.error("Error loading universities:", err);
       setError("Error loading universities. Please try again.");
-      // Fallback to mock data if API fails
-      setUniversities(mockUniversities.filter(uni => {
-        if (selectedCountry && uni.country !== selectedCountry) return false;
-        if (selectedProgram && !uni.programs.map(p => p.name).includes(selectedProgram)) return false;
-        if (searchQuery && !uni.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-        return true;
-      }));
+    
     } finally {
       setLoading(false);
     }
