@@ -15,21 +15,21 @@ export const categories = [
       'Flight booking'
     ]
   },
-  {
-    id: 'professional',
-    name: 'Professional Training & Job',
-    description: 'Career development and job opportunities',
-    icon: '💼',
-    services: [
-      'Professional training finder',
-      'Jobs finder',
-      'Work visa assistance',
-      'Skills certification',
-      'Insurance',
-      'Language center',
-      'Flight booking'
-    ]
-  },
+  // {
+  //   id: 'professional',
+  //   name: 'Professional Training & Job',
+  //   description: 'Career development and job opportunities',
+  //   icon: '💼',
+  //   services: [
+  //     'Professional training finder',
+  //     'Jobs finder',
+  //     'Work visa assistance',
+  //     'Skills certification',
+  //     'Insurance',
+  //     'Language center',
+  //     'Flight booking'
+  //   ]
+  // },
   {
     id: 'tourism',
     name: 'Tourism',
@@ -45,21 +45,21 @@ export const categories = [
       'Language center'
     ]
   },
-  {
-    id: 'business',
-    name: 'Business',
-    description: 'Business travel and networking',
-    icon: '🤝',
-    services: [
-      'Business networking events',
-      'Corporate accommodation',
-      'Business visa assistance',
-      'Transportation services',
-      'Meeting venues',
-      'Restaurant reservations',
-      'Insurance',
-      'Language center',
-      'Flight booking'
-    ]
-  }
+  // {
+  //   id: 'business',
+  //   name: 'Business',
+  //   description: 'Business travel and networking',
+  //   icon: '🤝',
+  //   services: [
+  //     'Business networking events',
+  //     'Corporate accommodation',
+  //     'Business visa assistance',
+  //     'Transportation services',
+  //     'Meeting venues',
+  //     'Restaurant reservations',
+  //     'Insurance',
+  //     'Language center',
+  //     'Flight booking'
+  //   ]
+  // }
 ];

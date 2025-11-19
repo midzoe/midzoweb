@@ -22,7 +22,7 @@ const Hero = () => {
               <span className="block text-primary">Global Opportunities</span>
             </h1>
             <p className="text-xl text-white/90 mb-8 leading-relaxed">
-              Let Midzo be your trusted companion in every international journey. Whether you're pursuing education abroad 🎓, seeking professional growth 💼, exploring new destinations 🌍, or expanding your business ventures 🤝, we're here to make your global experience seamless and memorable.
+              Let Midzoe be your trusted companion in every international journey. Whether you're pursuing education abroad 🎓, seeking professional growth 💼, exploring new destinations 🌍, or expanding your business ventures 🤝, we're here to make your global experience seamless and memorable.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -46,7 +46,7 @@ const Hero = () => {
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">Why Choose Midzo?</h2>
+            <h2 className="text-3xl font-bold text-gray-900">Why Choose Midzoe?</h2>
             <p className="mt-4 text-lg text-gray-600">
               We make your international journey smooth, safe, and memorable
             </p>

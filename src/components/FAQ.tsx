@@ -9,8 +9,8 @@ interface FAQItem {
 const faqItems: FAQItem[] = [
   {
     category: "General",
-    question: "What is Midzo?",
-    answer: "Midzo is a comprehensive travel companion platform that provides services for study, work, tourism, and business across the globe. We help users with everything from visa applications to accommodation booking."
+    question: "What is Midzoe?",
+    answer: "Midzoe is a comprehensive travel companion platform that provides services for study, work, tourism, and business across the globe. We help users with everything from visa applications to accommodation booking."
   },
   {
     category: "General",
@@ -29,7 +29,7 @@ const faqItems: FAQItem[] = [
   },
   {
     category: "Tourism",
-    question: "Can I book flights through Midzo?",
+    question: "Can I book flights through Midzoe?",
     answer: "Yes, we offer flight booking services with competitive rates and special deals. You can search and compare flights in our Tourism section under 'Flight Booking'."
   },
   {

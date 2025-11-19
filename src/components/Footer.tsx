@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div>
-            <h3 className="text-2xl font-bold mb-4">Midzo</h3>
+            <h3 className="text-2xl font-bold mb-4">Midzoe</h3>
             <p className="text-gray-400 mb-4">
               Your comprehensive travel companion for study, work, tourism, and business across the globe.
             </p>
@@ -113,7 +113,7 @@ const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="mt-8 pt-8 border-t border-gray-800">
           <p className="text-center text-gray-400">
-            © {currentYear} Midzo. All rights reserved.
+            © {currentYear} Midzoe. All rights reserved.
           </p>
         </div>
       </div>

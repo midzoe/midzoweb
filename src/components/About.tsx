@@ -15,7 +15,7 @@ const About: React.FC = () => {
         <div className="absolute inset-0 bg-primary/80"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <h1 className="text-4xl md:text-5xl font-bold text-center mb-6">
-            About Midzo
+            About Midzoe
           </h1>
           <p className="text-xl text-center max-w-3xl mx-auto">
             Connecting people across borders through comprehensive travel, education, and business solutions.
@@ -83,7 +83,7 @@ const About: React.FC = () => {
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  Founded in 2023, Midzo emerged from a simple observation: international mobility shouldn't be complicated. Our founders, having experienced the challenges of studying and working abroad, decided to create a comprehensive solution.
+                  Founded in 2023, Midzoe emerged from a simple observation: international mobility shouldn't be complicated. Our founders, having experienced the challenges of studying and working abroad, decided to create a comprehensive solution.
                 </p>
                 <p>
                   Starting with student services, we quickly expanded to cover all aspects of international mobility, from tourism to business travel. Today, we're rapidly growing and helping students, professionals, and travelers navigate their international journeys with ease.
