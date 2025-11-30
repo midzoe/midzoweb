@@ -1,12 +1,26 @@
-import  { useState } from 'react';
+import  { useState, useEffect } from 'react';
 import { categories } from '../data/categories';
 import { serviceDetails } from '../data/services';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Services = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const location = useLocation();
 
-  const displayedCategories = selectedCategory 
+  // Synchronize category with URL hash on mount and when location changes
+  useEffect(() => {
+    const hash = location.hash.slice(1); // Remove '#' from hash
+    if (hash && categories.some(cat => cat.id === hash)) {
+      setSelectedCategory(hash);
+      // Scroll to the category section
+      setTimeout(() => {
+        const element = document.getElementById(hash);
+        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
+    }
+  }, [location.hash]);
+
+  const displayedCategories = selectedCategory
     ? categories.filter(category => category.id === selectedCategory)
     : categories;
 
@@ -53,8 +67,9 @@ const Services = () => {
         {/* Services Grid */}
         <div className="grid gap-12">
           {displayedCategories.map((category) => (
-            <div 
+            <div
               key={category.id}
+              id={category.id}
               className="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-transparent hover:border-secondary transition-all duration-300"
             >
               <div className="p-8">

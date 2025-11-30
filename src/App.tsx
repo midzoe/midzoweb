@@ -3,7 +3,6 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Hero from './components/Hero';
-import Destinations from './components/Destinations';
 import NewsSlider from './components/NewsSlider';
 import Services from './components/Services';
 import About from './components/About';
@@ -50,7 +49,6 @@ function App() {
                 <>
                   <Hero />
                   <NewsSlider />
-                  <Destinations />
                 </>
               } />
               <Route path="/about" element={<About />} />

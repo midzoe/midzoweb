@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { countryDetails } from '../data/countryDetails';
 
 const CountryDetail: React.FC = () => {
@@ -27,9 +27,17 @@ const CountryDetail: React.FC = () => {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-          <div className="absolute bottom-0 left-0 p-8">
-            <h1 className="text-5xl font-bold text-white mb-4">{country}</h1>
-            <p className="text-xl text-white/90">{details.motto}</p>
+          <div className="absolute bottom-0 left-0 right-0 p-8 flex justify-between items-end">
+            <div>
+              <h1 className="text-5xl font-bold text-white mb-4">{country}</h1>
+              <p className="text-xl text-white/90">{details.motto}</p>
+            </div>
+            <Link
+              to="/login"
+              className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-lg"
+            >
+              Plan Your Journey →
+            </Link>
           </div>
         </div>
 
