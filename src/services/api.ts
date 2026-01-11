@@ -1,4 +1,4 @@
-const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'https://midzobackend.vercel.app/api';
 
 // interface ApiResponse<T> {
 //   success: boolean;
