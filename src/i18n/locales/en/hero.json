@@ -19,11 +19,14 @@
   "study_countries": "Countries",
   "study_click_explore": "Click to explore",
   "study_country_details": "Each country has detailed info",
+  "study_more": "more",
+  "explore_services": "Explore Services",
   "tourism_title": "Global Tourism",
   "tourism_description": "Explore experiences across all continents with curated travel packages and local insights",
   "tourism_cta": "Explore Destinations",
   "tourism_available": "Available in",
   "tourism_countries": "Countries",
   "tourism_click_explore": "Click to explore",
-  "tourism_country_details": "Each country has detailed info"
+  "tourism_country_details": "Each country has detailed info",
+  "tourism_more": "more"
 }

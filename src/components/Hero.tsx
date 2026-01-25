@@ -5,8 +5,13 @@ import { studyCountries, tourismCountries, getContinentForCountry } from '../dat
 
 const Hero = () => {
   const { t } = useTranslation('hero');
+  const { t: tCountries } = useTranslation('countries');
   const [expandedStudy, setExpandedStudy] = useState(false);
   const [expandedTourism, setExpandedTourism] = useState(false);
+
+  const getCountryName = (country: string) => {
+    return tCountries(`names.${country}`, country);
+  };
 
   return (
     <div className="relative bg-white">
@@ -124,14 +129,14 @@ const Hero = () => {
                         to={`/country/${country}`}
                         className="px-4 py-2 bg-blue-500 rounded-full text-sm font-medium hover:bg-blue-400 transition cursor-pointer"
                       >
-                        {getContinentForCountry(country)} {country}
+                        {getContinentForCountry(country)} {getCountryName(country)}
                       </Link>
                     ))}
                     <button
                       onClick={() => setExpandedStudy(!expandedStudy)}
                       className="px-4 py-2 bg-blue-400/60 rounded-full text-sm font-medium hover:bg-blue-400 transition"
                     >
-                      +{studyCountries.length - 4} {t('common:buttons.next')}
+                      +{studyCountries.length - 4} {t('study_more')}
                     </button>
                   </div>
 
@@ -144,7 +149,7 @@ const Hero = () => {
                           to={`/country/${country}`}
                           className="px-3 py-2 bg-blue-600 rounded-lg text-sm hover:bg-blue-500 transition text-center font-medium"
                         >
-                          {getContinentForCountry(country)} {country}
+                          {getContinentForCountry(country)} {getCountryName(country)}
                         </Link>
                       ))}
                     </div>
@@ -192,14 +197,14 @@ const Hero = () => {
                         to={`/country/${country}`}
                         className="px-4 py-2 bg-emerald-400 rounded-full text-sm font-medium hover:bg-emerald-300 transition cursor-pointer"
                       >
-                        {getContinentForCountry(country)} {country}
+                        {getContinentForCountry(country)} {getCountryName(country)}
                       </Link>
                     ))}
                     <button
                       onClick={() => setExpandedTourism(!expandedTourism)}
                       className="px-4 py-2 bg-emerald-400/60 rounded-full text-sm font-medium hover:bg-emerald-400 transition"
                     >
-                      +{tourismCountries.length - 6} {t('common:buttons.next')}
+                      +{tourismCountries.length - 6} {t('tourism_more')}
                     </button>
                   </div>
 
@@ -212,7 +217,7 @@ const Hero = () => {
                           to={`/country/${country}`}
                           className="px-3 py-2 bg-emerald-600 rounded-lg text-sm hover:bg-emerald-500 transition text-center font-medium"
                         >
-                          {getContinentForCountry(country)} {country}
+                          {getContinentForCountry(country)} {getCountryName(country)}
                         </Link>
                       ))}
                     </div>
