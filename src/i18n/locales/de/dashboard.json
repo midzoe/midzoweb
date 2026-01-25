@@ -1,0 +1,36 @@
+{
+  "welcome": "Willkommen zurück, {{name}}! 👋",
+  "welcome_subtitle": "Ihre Reisereise auf einen Blick",
+  "statistics": {
+    "total_trips": "Gesamtfahrten",
+    "continents_visited": "Kontinente",
+    "cities_explored": "Städte",
+    "services_used": "Abgeschlossen"
+  },
+  "next_trip": "Nächste Abreise",
+  "countdown_to": "Countdown zu {{destination}}",
+  "days_away": "Tage bis zur Abreise",
+  "active_trips": "Aktive Fahrten",
+  "completed_trips": "Abgeschlossene Fahrten",
+  "no_trips": "Noch keine Fahrten. Erstellen Sie eine, um zu beginnen!",
+  "create_trip": "Fahrt Erstellen",
+  "view_trip": "Fahrt Anzeigen",
+  "edit_trip": "Bearbeiten",
+  "delete_trip": "Löschen",
+  "trip_status": {
+    "ongoing": "Laufend",
+    "completed": "Abgeschlossen",
+    "planned": "Geplant"
+  },
+  "quick_services": "Schnelle Links",
+  "view_services": "Alle Services Anzeigen",
+  "recent_activity": "Neueste Aktivität",
+  "activity_empty": "Keine neueste Aktivität",
+  "favorite_destinations": "Lieblingsziele",
+  "no_favorites": "Noch keine Favoriten",
+  "all_categories": "Alle Kategorien",
+  "check_trip": "Fahrt Prüfen",
+  "plan_studies": "Planifier mes Études",
+  "view_profile": "Profil Anzeigen",
+  "select_category_message": "Bitte wählen Sie eine Kategorie aus, um die relevanten schnellen Links anzuzeigen"
+}

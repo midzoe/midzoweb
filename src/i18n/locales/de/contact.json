@@ -1,0 +1,36 @@
+{
+  "page_title": "Kontaktieren Sie Uns",
+  "page_subtitle": "Wir würden gerne von Ihnen hören. Nehmen Sie Kontakt mit unserem Team auf.",
+  "form_title": "Senden Sie uns eine Nachricht",
+  "form_subtitle": "Erzählen Sie uns mehr über Ihre Anfrage",
+  "fields": {
+    "name": "Vollständiger Name",
+    "email": "E-Mail-Adresse",
+    "subject": "Betreff",
+    "message": "Nachricht"
+  },
+  "placeholders": {
+    "name": "Geben Sie Ihren vollständigen Namen ein",
+    "email": "Geben Sie Ihre E-Mail-Adresse ein",
+    "subject": "Worum geht es?",
+    "message": "Erzählen Sie uns mehr..."
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich",
+    "email_invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein"
+  },
+  "buttons": {
+    "send": "Nachricht Senden",
+    "sending": "Wird gesendet..."
+  },
+  "messages": {
+    "success": "Vielen Dank für Ihre Nachricht! Wir melden uns bald bei Ihnen.",
+    "error": "Beim Senden ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+  },
+  "info": {
+    "phone": "Telefon",
+    "email": "E-Mail",
+    "address": "Adresse",
+    "hours": "Öffnungszeiten"
+  }
+}

@@ -1,9 +1,11 @@
 import  { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { categories } from '../data/categories';
 import { serviceDetails } from '../data/services';
 import { Link, useLocation } from 'react-router-dom';
 
 const Services = () => {
+  const { t } = useTranslation('services');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const location = useLocation();
 
@@ -29,10 +31,10 @@ const Services = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-extrabold text-primary sm:text-5xl">
-            Our Services
+            {t('page_title')}
           </h1>
           <p className="mt-4 text-xl text-gray-600">
-            Comprehensive solutions for all your international needs
+            {t('page_subtitle')}
           </p>
         </div>
 
@@ -41,12 +43,12 @@ const Services = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 
-                ${!selectedCategory 
-                  ? 'bg-primary text-white shadow-lg' 
+              className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300
+                ${!selectedCategory
+                  ? 'bg-primary text-white shadow-lg'
                   : 'bg-white text-gray-600 hover:bg-gray-100'}`}
             >
-              All Categories
+              {t('filters.all')}
             </button>
             {categories.map((category) => (
               <button
@@ -105,7 +107,7 @@ const Services = () => {
                             to={serviceDetail.learnMoreLink}
                             className="inline-flex items-center text-secondary hover:text-primary transition-colors duration-300"
                           >
-                            Learn More
+                            {t('services.learn_more')}
                             <svg
                               className="w-5 h-5 ml-2"
                               fill="none"

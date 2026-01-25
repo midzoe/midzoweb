@@ -1,0 +1,90 @@
+{
+  "page_title": "Nos Services",
+  "page_subtitle": "Support complet pour votre voyage international",
+  "filters": {
+    "all": "Tous les Services",
+    "study": "Études à l'Étranger",
+    "tourism": "Tourisme",
+    "professional": "Professionnel",
+    "business": "Affaires"
+  },
+  "study": {
+    "title": "Services d'Études à l'Étranger",
+    "description": "Tout ce dont vous avez besoin pour réussir votre parcours éducatif à l'étranger",
+    "universityFinder": {
+      "name": "Recherche d'Université",
+      "description": "Découvrez l'université parfaite pour vos objectifs académiques"
+    },
+    "studentVisa": {
+      "name": "Visa Étudiant",
+      "description": "Expertise complète pour la demande de visa étudiant"
+    },
+    "studentAccommodation": {
+      "name": "Logement Étudiant",
+      "description": "Trouvez un logement sûr et abordable près de votre université"
+    },
+    "bankAccount": {
+      "name": "Ouverture de Compte Bancaire",
+      "description": "Ouvrez et gérez un compte bancaire dans votre pays de destination"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Préparez-vous à vos études avec des cours de langue"
+    },
+    "documentLegalization": {
+      "name": "Légalisation de Documents",
+      "description": "Faites officialiser vos documents à l'étranger"
+    },
+    "diploMissingKey": {
+      "name": "Reconnaissance de Diplôme",
+      "description": "Assurez-vous que vos qualifications sont reconnues internationalement"
+    },
+    "studentFlights": {
+      "name": "Vols Étudiants",
+      "description": "Trouvez des options de vol abordables pour les étudiants"
+    }
+  },
+  "tourism": {
+    "title": "Services de Tourisme",
+    "description": "Explorez le monde avec confiance et expertise locale",
+    "accommodation": {
+      "name": "Hébergement Touristique",
+      "description": "Réservez des hôtels et hébergements vérifiés mondialement"
+    },
+    "restaurants": {
+      "name": "Restaurants & Gastronomie",
+      "description": "Découvrez des expériences culinaires locales authentiques"
+    },
+    "touristSites": {
+      "name": "Sites Touristiques",
+      "description": "Trouvez les attractions incontournables et les joyaux cachés"
+    },
+    "touristVisa": {
+      "name": "Visa Touristique",
+      "description": "Naviguez les exigences de visa pour destinations touristiques"
+    },
+    "travelInsurance": {
+      "name": "Assurance Voyage",
+      "description": "Couverture complète pour un voyage sans souci"
+    }
+  },
+  "professional": {
+    "title": "Services Professionnels",
+    "description": "Avancez votre carrière avec opportunités internationales",
+    "trainingFinder": {
+      "name": "Recherche de Formation",
+      "description": "Accédez à des cours de développement professionnel mondiaux"
+    },
+    "jobsFinder": {
+      "name": "Recherche d'Emploi",
+      "description": "Découvrez des opportunités de carrière dans votre domaine"
+    },
+    "workVisa": {
+      "name": "Visa de Travail",
+      "description": "Orientation complète pour les demandes de visa de travail"
+    }
+  },
+  "services": {
+    "learn_more": "En Savoir Plus"
+  }
+}

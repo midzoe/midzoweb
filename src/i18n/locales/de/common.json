@@ -1,0 +1,52 @@
+{
+  "buttons": {
+    "learnMore": "Mehr Erfahren",
+    "getStarted": "Erste Schritte",
+    "contactUs": "Kontaktieren Sie Uns",
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "view": "Anzeigen",
+    "download": "Herunterladen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "close": "Schließen",
+    "download_guide": "Laden Sie Ihren kostenlosen Leitfaden herunter",
+    "explore_services": "Erkunden Sie Unsere Dienstleistungen",
+    "explore_destinations": "Erkunden Sie die Ziele",
+    "explore_programs": "Erkunden Sie die Programme"
+  },
+  "status": {
+    "loading": "Wird geladen",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "pending": "Ausstehend",
+    "completed": "Abgeschlossen",
+    "in_progress": "In Bearbeitung"
+  },
+  "actions": {
+    "register": "Registrieren",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "signin": "Anmelden",
+    "signup": "Registrieren",
+    "profile": "Profil",
+    "dashboard": "Dashboard"
+  },
+  "time": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "week": "Woche",
+    "month": "Monat",
+    "year": "Jahr"
+  },
+  "messages": {
+    "welcome": "Willkommen",
+    "goodbye": "Auf Wiedersehen",
+    "error_occurred": "Es ist ein Fehler aufgetreten",
+    "something_wrong": "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut.",
+    "success_message": "Operation erfolgreich abgeschlossen"
+  }
+}

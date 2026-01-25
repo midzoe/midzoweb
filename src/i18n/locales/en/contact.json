@@ -1,0 +1,36 @@
+{
+  "page_title": "Contact Us",
+  "page_subtitle": "We'd love to hear from you. Get in touch with our team.",
+  "form_title": "Send us a Message",
+  "form_subtitle": "Tell us more about your inquiry",
+  "fields": {
+    "name": "Full Name",
+    "email": "Email Address",
+    "subject": "Subject",
+    "message": "Message"
+  },
+  "placeholders": {
+    "name": "Enter your full name",
+    "email": "Enter your email address",
+    "subject": "What is this about?",
+    "message": "Tell us more..."
+  },
+  "validation": {
+    "required": "This field is required",
+    "email_invalid": "Please enter a valid email"
+  },
+  "buttons": {
+    "send": "Send Message",
+    "sending": "Sending..."
+  },
+  "messages": {
+    "success": "Thank you for your message! We'll get back to you soon.",
+    "error": "An error occurred while sending. Please try again."
+  },
+  "info": {
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "hours": "Hours"
+  }
+}

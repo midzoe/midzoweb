@@ -1,0 +1,61 @@
+{
+  "fields": {
+    "email": "E-Mail",
+    "password": "Passwort",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "fullName": "Vollständiger Name",
+    "phone": "Telefonnummer",
+    "country": "Land",
+    "city": "Stadt",
+    "address": "Adresse",
+    "zipCode": "Postleitzahl",
+    "message": "Nachricht",
+    "subject": "Betreff",
+    "username": "Benutzername",
+    "confirmPassword": "Passwort Bestätigen",
+    "dateOfBirth": "Geburtsdatum",
+    "nationality": "Nationalität",
+    "countryOfInterest": "Land von Interesse",
+    "studyLevel": "Studienstufe"
+  },
+  "placeholders": {
+    "email": "Geben Sie Ihre E-Mail ein",
+    "password": "Geben Sie Ihr Passwort ein",
+    "firstName": "Geben Sie Ihren Vornamen ein",
+    "lastName": "Geben Sie Ihren Nachnamen ein",
+    "phone": "Geben Sie Ihre Telefonnummer ein",
+    "country": "Wählen Sie ein Land",
+    "city": "Geben Sie Ihre Stadt ein",
+    "message": "Schreiben Sie Ihre Nachricht hier",
+    "subject": "Betreff eingeben"
+  },
+  "validation": {
+    "required": "Dieses Feld ist erforderlich",
+    "email_invalid": "Bitte geben Sie eine gültige E-Mail ein",
+    "password_short": "Das Passwort muss mindestens 6 Zeichen lang sein",
+    "passwords_mismatch": "Passwörter stimmen nicht überein",
+    "name_short": "Name muss mindestens 2 Zeichen lang sein",
+    "phone_invalid": "Bitte geben Sie eine gültige Telefonnummer ein"
+  },
+  "errors": {
+    "field_required": "{{field}} ist erforderlich",
+    "invalid_email": "Ungültige E-Mail-Adresse",
+    "invalid_password": "Das Passwort muss mindestens 6 Zeichen lang sein",
+    "password_mismatch": "Passwörter stimmen nicht überein",
+    "unknown_error": "Ein unbekannter Fehler ist aufgetreten"
+  },
+  "buttons": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "submit": "Absenden",
+    "cancel": "Abbrechen",
+    "save": "Änderungen Speichern",
+    "reset": "Zurücksetzen"
+  },
+  "messages": {
+    "success": "Formular erfolgreich eingereicht",
+    "error": "Beim Absenden des Formulars ist ein Fehler aufgetreten",
+    "loading": "Wird geladen..."
+  }
+}

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Contact: React.FC = () => {
+  const { t } = useTranslation('contact');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -52,20 +54,20 @@ const Contact: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-primary mb-4">Contact Us</h1>
+          <h1 className="text-4xl font-bold text-primary mb-4">{t('page_title')}</h1>
           <p className="text-xl text-gray-600">
-            Get in touch with our team for any questions or assistance
+            {t('page_subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('form_title')}</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
+                  {t('fields.name')}
                 </label>
                 <input
                   type="text"
@@ -80,7 +82,7 @@ const Contact: React.FC = () => {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                  {t('fields.email')}
                 </label>
                 <input
                   type="email"
@@ -95,7 +97,7 @@ const Contact: React.FC = () => {
 
               <div>
                 <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject
+                  {t('fields.subject')}
                 </label>
                 <select
                   id="subject"
@@ -116,7 +118,7 @@ const Contact: React.FC = () => {
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Message
+                  {t('fields.message')}
                 </label>
                 <textarea
                   id="message"
@@ -133,7 +135,7 @@ const Contact: React.FC = () => {
                 type="submit"
                 className="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors"
               >
-                Send Message
+                {t('buttons.send')}
               </button>
             </form>
           </div>
@@ -170,9 +172,9 @@ const Contact: React.FC = () => {
                     </h3>
                     <div className="space-y-2 text-gray-600">
                       <p>{office.address}</p>
-                      <p>Phone: {office.phone}</p>
-                      <p>Email: {office.email}</p>
-                      <p>Hours: {office.hours}</p>
+                      <p>{t('info.phone')}: {office.phone}</p>
+                      <p>{t('info.email')}: {office.email}</p>
+                      <p>{t('info.hours')}: {office.hours}</p>
                     </div>
                   </div>
                 ))}
