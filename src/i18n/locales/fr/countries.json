@@ -1,0 +1,18 @@
+{
+  "explore_country": "Explorez {{country}}",
+  "country_info": "Informations sur le Pays",
+  "history": "Histoire",
+  "traditions": "Traditions",
+  "cuisine": "Gastronomie",
+  "attractions": "Principales Attractions",
+  "climate": "Climat",
+  "language": "Langue",
+  "currency": "Devise",
+  "population": "Population",
+  "capital": "Capitale",
+  "services_available": "Services Disponibles dans {{country}}",
+  "no_services": "Aucun service actuellement disponible pour ce pays",
+  "back_to_destinations": "Retour aux Destinations",
+  "visit_website": "Visiter le Site Officiel",
+  "learn_more": "En Savoir Plus"
+}

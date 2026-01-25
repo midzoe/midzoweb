@@ -1,0 +1,15 @@
+{
+  "brand": "Midzoe",
+  "home": "Home",
+  "about": "About",
+  "services": "Services",
+  "contact": "Contact",
+  "dashboard": "Dashboard",
+  "login": "Login",
+  "logout": "Logout",
+  "profile": "Profile",
+  "language": "Language",
+  "language_en": "English",
+  "language_fr": "Français",
+  "language_de": "Deutsch"
+}

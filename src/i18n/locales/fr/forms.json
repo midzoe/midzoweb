@@ -1,0 +1,61 @@
+{
+  "fields": {
+    "email": "Email",
+    "password": "Mot de passe",
+    "firstName": "Prénom",
+    "lastName": "Nom de famille",
+    "fullName": "Nom Complet",
+    "phone": "Numéro de Téléphone",
+    "country": "Pays",
+    "city": "Ville",
+    "address": "Adresse",
+    "zipCode": "Code Postal",
+    "message": "Message",
+    "subject": "Sujet",
+    "username": "Nom d'utilisateur",
+    "confirmPassword": "Confirmer le Mot de passe",
+    "dateOfBirth": "Date de Naissance",
+    "nationality": "Nationalité",
+    "countryOfInterest": "Pays d'Intérêt",
+    "studyLevel": "Niveau d'Étude"
+  },
+  "placeholders": {
+    "email": "Entrez votre email",
+    "password": "Entrez votre mot de passe",
+    "firstName": "Entrez votre prénom",
+    "lastName": "Entrez votre nom de famille",
+    "phone": "Entrez votre numéro de téléphone",
+    "country": "Sélectionnez un pays",
+    "city": "Entrez votre ville",
+    "message": "Écrivez votre message ici",
+    "subject": "Entrez le sujet"
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "email_invalid": "Veuillez entrer un email valide",
+    "password_short": "Le mot de passe doit contenir au moins 6 caractères",
+    "passwords_mismatch": "Les mots de passe ne correspondent pas",
+    "name_short": "Le nom doit contenir au moins 2 caractères",
+    "phone_invalid": "Veuillez entrer un numéro de téléphone valide"
+  },
+  "errors": {
+    "field_required": "{{field}} est obligatoire",
+    "invalid_email": "Adresse email invalide",
+    "invalid_password": "Le mot de passe doit contenir au moins 6 caractères",
+    "password_mismatch": "Les mots de passe ne correspondent pas",
+    "unknown_error": "Une erreur inconnue s'est produite"
+  },
+  "buttons": {
+    "login": "Se Connecter",
+    "register": "S'inscrire",
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "save": "Enregistrer les Modifications",
+    "reset": "Réinitialiser"
+  },
+  "messages": {
+    "success": "Formulaire soumis avec succès",
+    "error": "Une erreur s'est produite lors de la soumission du formulaire",
+    "loading": "Chargement..."
+  }
+}

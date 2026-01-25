@@ -1,5 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider } from './context/AuthContext';
+import LeadMagnetModal from './components/leadMagnet/LeadMagnetModal';
+import { useLeadCapture } from './hooks/useLeadCapture';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Hero from './components/Hero';
@@ -37,59 +41,75 @@ import JobsFinder from './components/professional/JobsFinder';
 import WorkVisa from './components/professional/WorkVisa';
 import DocumentLegalization from './components/professional/DocumentLegalization';
 
+function AppContent() {
+  const { i18n } = useTranslation();
+  const { isModalOpen, closeModal } = useLeadCapture();
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  return (
+    <>
+      <LeadMagnetModal isOpen={isModalOpen} onClose={closeModal} />
+      <Router>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={
+              <>
+                <Hero />
+                <NewsSlider />
+              </>
+            } />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/flights" element={<FlightBooking />} />
+            <Route path="/insurance" element={<Insurance />} />
+
+            {/* Study Routes */}
+            <Route path="/services/university-finder" element={<UniversityFinder />} />
+            <Route path="/services/document-legalization" element={<DocumentServices />} />
+            <Route path="/services/student-visa" element={<StudentVisa />} />
+            <Route path="/services/student-accommodation" element={<StudentAccommodation />} />
+            <Route path="/services/bank-account" element={<BankAccount />} />
+            <Route path="/services/language-center" element={<LanguageCenter />} />
+
+            {/* Tourism Routes */}
+            <Route path="/services/accommodation" element={<TourismAccommodation />} />
+            <Route path="/services/restaurants" element={<TourismRestaurants />} />
+            <Route path="/services/tourist-sites" element={<TouristSites />} />
+            <Route path="/services/tourist-visa" element={<TouristVisa />} />
+
+            {/* Professional Routes */}
+            <Route path="/services/training-finder" element={<TrainingFinder />} />
+            <Route path="/services/jobs-finder" element={<JobsFinder />} />
+            <Route path="/services/work-visa" element={<WorkVisa />} />
+            <Route path="/services/document-legalization" element={<DocumentLegalization />} />
+
+            {/* Country Detail Route */}
+            <Route path="/country/:country" element={<CountryDetail />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
+    </>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={
-                <>
-                  <Hero />
-                  <NewsSlider />
-                </>
-              } />
-              <Route path="/about" element={<About />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/flights" element={<FlightBooking />} />
-              <Route path="/insurance" element={<Insurance />} />
-              
-              {/* Study Routes */}
-              <Route path="/services/university-finder" element={<UniversityFinder />} />
-              <Route path="/services/document-legalization" element={<DocumentServices />} />
-              <Route path="/services/student-visa" element={<StudentVisa />} />
-              <Route path="/services/student-accommodation" element={<StudentAccommodation />} />
-              <Route path="/services/bank-account" element={<BankAccount />} />
-              <Route path="/services/language-center" element={<LanguageCenter />} />
-
-              {/* Tourism Routes */}
-              <Route path="/services/accommodation" element={<TourismAccommodation />} />
-              <Route path="/services/restaurants" element={<TourismRestaurants />} />
-              <Route path="/services/tourist-sites" element={<TouristSites />} />
-              <Route path="/services/tourist-visa" element={<TouristVisa />} />
-
-              {/* Professional Routes */}
-              <Route path="/services/training-finder" element={<TrainingFinder />} />
-              <Route path="/services/jobs-finder" element={<JobsFinder />} />
-              <Route path="/services/work-visa" element={<WorkVisa />} />
-              <Route path="/services/document-legalization" element={<DocumentLegalization />} />
-
-              {/* Country Detail Route */}
-              <Route path="/country/:country" element={<CountryDetail />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
+      <AppContent />
     </AuthProvider>
   );
 }

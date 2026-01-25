@@ -1,0 +1,90 @@
+{
+  "page_title": "Our Services",
+  "page_subtitle": "Comprehensive support for your international journey",
+  "filters": {
+    "all": "All Services",
+    "study": "Study Abroad",
+    "tourism": "Tourism",
+    "professional": "Professional",
+    "business": "Business"
+  },
+  "study": {
+    "title": "Study Abroad Services",
+    "description": "Everything you need to succeed in your educational journey abroad",
+    "universityFinder": {
+      "name": "University Finder",
+      "description": "Discover the perfect university for your academic goals"
+    },
+    "studentVisa": {
+      "name": "Student Visa",
+      "description": "Expert guidance through the student visa application process"
+    },
+    "studentAccommodation": {
+      "name": "Student Accommodation",
+      "description": "Find safe, affordable housing near your university"
+    },
+    "bankAccount": {
+      "name": "Bank Account Setup",
+      "description": "Open and manage a bank account in your destination country"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Prepare for your studies with language courses"
+    },
+    "documentLegalization": {
+      "name": "Document Legalization",
+      "description": "Get your documents officially recognized abroad"
+    },
+    "diploMissingKey": {
+      "name": "Diploma Recognition",
+      "description": "Ensure your qualifications are recognized internationally"
+    },
+    "studentFlights": {
+      "name": "Student Flights",
+      "description": "Find affordable flight options for students"
+    }
+  },
+  "tourism": {
+    "title": "Tourism Services",
+    "description": "Explore the world with confidence and expert local knowledge",
+    "accommodation": {
+      "name": "Tourism Accommodation",
+      "description": "Book verified hotels and accommodations worldwide"
+    },
+    "restaurants": {
+      "name": "Restaurants & Food",
+      "description": "Discover authentic local dining experiences"
+    },
+    "touristSites": {
+      "name": "Tourist Sites",
+      "description": "Find must-see attractions and hidden gems"
+    },
+    "touristVisa": {
+      "name": "Tourist Visa",
+      "description": "Navigate visa requirements for tourism destinations"
+    },
+    "travelInsurance": {
+      "name": "Travel Insurance",
+      "description": "Comprehensive coverage for worry-free travel"
+    }
+  },
+  "professional": {
+    "title": "Professional Services",
+    "description": "Advance your career with international opportunities",
+    "trainingFinder": {
+      "name": "Training Finder",
+      "description": "Access professional development courses worldwide"
+    },
+    "jobsFinder": {
+      "name": "Jobs Finder",
+      "description": "Discover career opportunities in your field"
+    },
+    "workVisa": {
+      "name": "Work Visa",
+      "description": "Complete guidance on work visa applications"
+    }
+  },
+  "services": {
+    "learn_more": "Learn More"
+  }
+}

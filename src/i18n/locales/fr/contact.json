@@ -1,0 +1,36 @@
+{
+  "page_title": "Nous Contacter",
+  "page_subtitle": "Nous aimerions avoir de vos nouvelles. Mettez-vous en contact avec notre équipe.",
+  "form_title": "Envoyez-nous un Message",
+  "form_subtitle": "Dites-nous en plus sur votre demande",
+  "fields": {
+    "name": "Nom Complet",
+    "email": "Adresse E-mail",
+    "subject": "Sujet",
+    "message": "Message"
+  },
+  "placeholders": {
+    "name": "Entrez votre nom complet",
+    "email": "Entrez votre adresse e-mail",
+    "subject": "De quoi s'agit-il?",
+    "message": "Dites-nous plus..."
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "email_invalid": "Veuillez entrer une adresse e-mail valide"
+  },
+  "buttons": {
+    "send": "Envoyer le Message",
+    "sending": "Envoi..."
+  },
+  "messages": {
+    "success": "Merci pour votre message! Nous vous répondrons bientôt.",
+    "error": "Une erreur s'est produite lors de l'envoi. Veuillez réessayer."
+  },
+  "info": {
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "address": "Adresse",
+    "hours": "Horaires"
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { categories } from '../data/categories';
 import { format } from 'date-fns';
@@ -25,6 +26,7 @@ interface Trip {
 }
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showTripForm, setShowTripForm] = useState(false);
@@ -120,14 +122,14 @@ const Dashboard: React.FC = () => {
             className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-medium hover:bg-primary/90 transition-colors shadow-lg group"
           >
             <PlusCircleIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span>Check Trip</span>
+            <span>{t('check_trip')}</span>
           </button>
           <button
             onClick={() => setShowTripBuilder(true)}
             className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 rounded-full font-semibold hover:shadow-xl transition-all transform hover:scale-105 group"
           >
             <PlusCircleIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span>Planifier mes Études</span>
+            <span>{t('plan_studies')}</span>
           </button>
         </div>
 
@@ -156,7 +158,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="text-center md:text-left">
                   <h1 className="text-3xl font-bold text-white mb-2">
-                    Welcome back, {user?.username}! 👋
+                    {t('welcome', { name: user?.username })}
                   </h1>
                   <p className="text-white/90 text-lg">
                     Here's an overview of your {selectedCategory !== 'all' ? categories.find(c => c.id === selectedCategory)?.name.toLowerCase() : ''} activities and plans
@@ -169,7 +171,7 @@ const Dashboard: React.FC = () => {
                   className="flex items-center gap-2 bg-white text-primary px-6 py-3 rounded-full font-medium hover:bg-gray-50 transition-colors shadow-lg group"
                 >
                   <UserGroupIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                  <span>View Profile</span>
+                  <span>{t('view_profile')}</span>
                 </Link>
               </div>
             </div>
@@ -181,12 +183,12 @@ const Dashboard: React.FC = () => {
           <div className="flex flex-wrap gap-4">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 
+              className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300
                 ${!selectedCategory || selectedCategory === 'all'
-                  ? 'bg-primary text-white shadow-lg' 
+                  ? 'bg-primary text-white shadow-lg'
                   : 'bg-white text-gray-600 hover:bg-gray-100'}`}
             >
-              All Categories
+              {t('all_categories')}
             </button>
             {categories.map((category) => (
               <button
@@ -209,7 +211,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Trips</p>
+                <p className="text-sm text-gray-600">{t('statistics.total_trips')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.totalTrips}</p>
               </div>
               <div className="p-4 rounded-full bg-primary/10 text-primary">
@@ -221,7 +223,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Continents</p>
+                <p className="text-sm text-gray-600">{t('statistics.continents_visited')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.continents}</p>
               </div>
               <div className="p-4 rounded-full bg-secondary/10 text-secondary">
@@ -233,7 +235,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Cities</p>
+                <p className="text-sm text-gray-600">{t('statistics.cities_explored')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.cities}</p>
               </div>
               <div className="p-4 rounded-full bg-green-100 text-green-600">
@@ -245,7 +247,7 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-sm text-gray-600">{t('statistics.services_used')}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.completedTrips}</p>
               </div>
               <div className="p-4 rounded-full bg-purple-100 text-purple-600">
@@ -260,12 +262,12 @@ const Dashboard: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Next Departure</h2>
+                <h2 className="text-xl font-semibold text-gray-900">{t('next_trip')}</h2>
                 <p className="text-gray-600">{nextDeparture.trip.title} - {nextDeparture.trip.destination}</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-primary">{nextDeparture.daysUntil}</p>
-                <p className="text-sm text-gray-600">days until departure</p>
+                <p className="text-sm text-gray-600">{t('days_away')}</p>
               </div>
             </div>
             <div className="mt-4 h-2 bg-gray-200 rounded-full">
@@ -279,7 +281,7 @@ const Dashboard: React.FC = () => {
 
         {/* Quick Links Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Links</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('quick_services')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {selectedCategory !== 'all' ? (
               // Show subcategories based on selected category
@@ -297,7 +299,7 @@ const Dashboard: React.FC = () => {
                 ))
             ) : (
               <div className="col-span-full text-center text-gray-500">
-                Please select a category to see relevant quick links
+                {t('select_category_message')}
               </div>
             )}
           </div>
@@ -307,7 +309,7 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Ongoing Trips */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ongoing Trips</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('active_trips')}</h2>
             <div className="space-y-4">
               {ongoingTrips.map(trip => (
                 <div 
@@ -328,14 +330,14 @@ const Dashboard: React.FC = () => {
                 </div>
               ))}
               {ongoingTrips.length === 0 && (
-                <p className="text-gray-500 text-center py-4">No ongoing trips in this category</p>
+                <p className="text-gray-500 text-center py-4">{t('no_trips')}</p>
               )}
             </div>
           </div>
 
           {/* Completed Trips */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Completed Trips</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('completed_trips')}</h2>
             <div className="space-y-4">
               {completedTrips.map(trip => (
                 <div 
@@ -346,7 +348,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-900">{trip.title}</h3>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                      Completed
+                      {t('trip_status.completed')}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{trip.destination}</p>
@@ -356,7 +358,7 @@ const Dashboard: React.FC = () => {
                 </div>
               ))}
               {completedTrips.length === 0 && (
-                <p className="text-gray-500 text-center py-4">No completed trips in this category</p>
+                <p className="text-gray-500 text-center py-4">{t('no_trips')}</p>
               )}
             </div>
           </div>

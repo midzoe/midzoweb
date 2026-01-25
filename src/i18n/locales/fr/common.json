@@ -1,0 +1,52 @@
+{
+  "buttons": {
+    "learnMore": "En Savoir Plus",
+    "getStarted": "Commencer",
+    "contactUs": "Nous Contacter",
+    "submit": "Soumettre",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "view": "Afficher",
+    "download": "Télécharger",
+    "back": "Retour",
+    "next": "Suivant",
+    "close": "Fermer",
+    "download_guide": "Téléchargez Votre Guide Gratuit",
+    "explore_services": "Explorez les Services",
+    "explore_destinations": "Explorez les Destinations",
+    "explore_programs": "Explorez les Programmes"
+  },
+  "status": {
+    "loading": "Chargement",
+    "error": "Erreur",
+    "success": "Succès",
+    "pending": "En attente",
+    "completed": "Terminé",
+    "in_progress": "En cours"
+  },
+  "actions": {
+    "register": "S'inscrire",
+    "login": "Se Connecter",
+    "logout": "Se Déconnecter",
+    "signin": "Connexion",
+    "signup": "Inscription",
+    "profile": "Profil",
+    "dashboard": "Tableau de Bord"
+  },
+  "time": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "week": "Semaine",
+    "month": "Mois",
+    "year": "Année"
+  },
+  "messages": {
+    "welcome": "Bienvenue",
+    "goodbye": "Au Revoir",
+    "error_occurred": "Une erreur s'est produite",
+    "something_wrong": "Quelque chose s'est mal passé. Veuillez réessayer.",
+    "success_message": "Opération réussie"
+  }
+}

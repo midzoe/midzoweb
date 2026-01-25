@@ -1,0 +1,36 @@
+{
+  "welcome": "Welcome back, {{name}}! 👋",
+  "welcome_subtitle": "Your travel journey at a glance",
+  "statistics": {
+    "total_trips": "Total Trips",
+    "continents_visited": "Continents",
+    "cities_explored": "Cities",
+    "services_used": "Completed"
+  },
+  "next_trip": "Next Departure",
+  "countdown_to": "Countdown to {{destination}}",
+  "days_away": "days until departure",
+  "active_trips": "Ongoing Trips",
+  "completed_trips": "Completed Trips",
+  "no_trips": "No trips yet. Create one to get started!",
+  "create_trip": "Create Trip",
+  "view_trip": "View Trip",
+  "edit_trip": "Edit",
+  "delete_trip": "Delete",
+  "trip_status": {
+    "ongoing": "Ongoing",
+    "completed": "Completed",
+    "planned": "Planned"
+  },
+  "quick_services": "Quick Links",
+  "view_services": "View All Services",
+  "recent_activity": "Recent Activity",
+  "activity_empty": "No recent activity",
+  "favorite_destinations": "Favorite Destinations",
+  "no_favorites": "No favorites yet",
+  "all_categories": "All Categories",
+  "check_trip": "Check Trip",
+  "plan_studies": "Planifier mes Études",
+  "view_profile": "View Profile",
+  "select_category_message": "Please select a category to see relevant quick links"
+}

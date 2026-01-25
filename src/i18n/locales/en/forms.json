@@ -1,0 +1,61 @@
+{
+  "fields": {
+    "email": "Email",
+    "password": "Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "country": "Country",
+    "city": "City",
+    "address": "Address",
+    "zipCode": "ZIP Code",
+    "message": "Message",
+    "subject": "Subject",
+    "username": "Username",
+    "confirmPassword": "Confirm Password",
+    "dateOfBirth": "Date of Birth",
+    "nationality": "Nationality",
+    "countryOfInterest": "Country of Interest",
+    "studyLevel": "Study Level"
+  },
+  "placeholders": {
+    "email": "Enter your email",
+    "password": "Enter your password",
+    "firstName": "Enter your first name",
+    "lastName": "Enter your last name",
+    "phone": "Enter your phone number",
+    "country": "Select a country",
+    "city": "Enter your city",
+    "message": "Write your message here",
+    "subject": "Enter subject"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email_invalid": "Please enter a valid email",
+    "password_short": "Password must be at least 6 characters",
+    "passwords_mismatch": "Passwords do not match",
+    "name_short": "Name must be at least 2 characters",
+    "phone_invalid": "Please enter a valid phone number"
+  },
+  "errors": {
+    "field_required": "{{field}} is required",
+    "invalid_email": "Invalid email address",
+    "invalid_password": "Password must be at least 6 characters",
+    "password_mismatch": "Passwords do not match",
+    "unknown_error": "An unknown error occurred"
+  },
+  "buttons": {
+    "login": "Log In",
+    "register": "Register",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save Changes",
+    "reset": "Reset"
+  },
+  "messages": {
+    "success": "Form submitted successfully",
+    "error": "An error occurred while submitting the form",
+    "loading": "Loading..."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "buttons": {
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "contactUs": "Contact Us",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "download": "Download",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "download_guide": "Download Your Free Guide",
+    "explore_services": "Explore Services",
+    "explore_destinations": "Explore Destinations",
+    "explore_programs": "Explore Programs"
+  },
+  "status": {
+    "loading": "Loading",
+    "error": "Error",
+    "success": "Success",
+    "pending": "Pending",
+    "completed": "Completed",
+    "in_progress": "In Progress"
+  },
+  "actions": {
+    "register": "Register",
+    "login": "Log In",
+    "logout": "Log Out",
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "profile": "Profile",
+    "dashboard": "Dashboard"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year"
+  },
+  "messages": {
+    "welcome": "Welcome",
+    "goodbye": "Goodbye",
+    "error_occurred": "An error occurred",
+    "something_wrong": "Something went wrong. Please try again.",
+    "success_message": "Operation completed successfully"
+  }
+}
