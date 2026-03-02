@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 
@@ -84,6 +84,12 @@ const Login: React.FC = () => {
               </button>
             </div>
           </form>
+          <p className="mt-6 text-center text-sm text-gray-600">
+            {t('register.no_account')}{' '}
+            <Link to="/register" className="font-medium text-primary hover:text-primary/80">
+              {t('buttons.register')}
+            </Link>
+          </p>
         </div>
       </div>
     </div>

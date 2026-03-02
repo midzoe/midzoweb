@@ -42,6 +42,14 @@
     "studentFlights": {
       "name": "Studentenflüge",
       "description": "Finden Sie erschwingliche Flugoptionen für Studierende"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Umfassender Versicherungsschutz für Ihr Auslandsstudium"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Buchen Sie Ihre Flüge zu Studentenpreisen mit flexiblen Optionen"
     }
   },
   "tourism": {
@@ -66,6 +74,18 @@
     "travelInsurance": {
       "name": "Reiseversicherung",
       "description": "Umfassender Schutz für sorgenfreies Reisen"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Zugang zu wettbewerbsfähigen Flugpreisen weltweit"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Umfassender Versicherungsschutz für Ihre Reisebedürfnisse"
+    },
+    "languageCenter": {
+      "name": "Sprachzentrum",
+      "description": "Hochwertige Sprachkurse für Reisende"
     }
   },
   "professional": {
@@ -82,6 +102,62 @@
     "workVisa": {
       "name": "Arbeitsvisum",
       "description": "Umfassende Anleitung zu Arbeitsvisum-Anträgen"
+    },
+    "skillsCertification": {
+      "name": "Kompetenzzertifizierung",
+      "description": "Lassen Sie Ihre beruflichen Kompetenzen international zertifizieren"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Umfassender Versicherungsschutz für Ihre beruflichen Bedürfnisse"
+    },
+    "languageCenter": {
+      "name": "Sprachzentrum",
+      "description": "Sprachkurse zur Verbesserung Ihrer beruflichen Kommunikationsfähigkeiten"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Praktische Flugbuchung mit flexiblen Reisearrangements"
+    }
+  },
+  "business": {
+    "title": "Business Services",
+    "description": "Geschäftsreise- und Netzwerklösungen",
+    "networkingEvents": {
+      "name": "Business-Networking-Events",
+      "description": "Nehmen Sie an kuratierten Geschäftsveranstaltungen teil"
+    },
+    "corporateAccommodation": {
+      "name": "Unternehmensunterkunft",
+      "description": "Premium-Unterkunftslösungen für Geschäftsreisende"
+    },
+    "businessVisa": {
+      "name": "Geschäftsvisum",
+      "description": "Fachkundige Unterstützung bei Geschäftsvisum-Anträgen"
+    },
+    "transportation": {
+      "name": "Transportdienstleistungen",
+      "description": "Zuverlässige Transportlösungen für Geschäftsreisende"
+    },
+    "meetingVenues": {
+      "name": "Besprechungsräume",
+      "description": "Zugang zu professionellen Besprechungsräumen und Konferenzeinrichtungen"
+    },
+    "restaurants": {
+      "name": "Restaurantreservierungen",
+      "description": "Tische in geschäftsgeeigneten Restaurants buchen"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Umfassender Versicherungsschutz für Ihre Geschäftsreisebedürfnisse"
+    },
+    "languageCenter": {
+      "name": "Sprachzentrum",
+      "description": "Sprachkurse und Programme zur Entwicklung von Geschäftskommunikationsfähigkeiten"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Premium-Flugbuchung mit Business-Class-Optionen"
     }
   },
   "services": {

@@ -57,5 +57,23 @@
     "success": "Formular erfolgreich eingereicht",
     "error": "Beim Absenden des Formulars ist ein Fehler aufgetreten",
     "loading": "Wird geladen..."
+  },
+  "register": {
+    "title": "Konto Erstellen",
+    "subtitle": "Treten Sie Midzoe bei, um alle unsere Services zu nutzen",
+    "have_account": "Haben Sie bereits ein Konto?",
+    "sign_in": "Anmelden",
+    "no_account": "Noch kein Konto?",
+    "success": "Konto erfolgreich erstellt! Willkommen bei Midzoe.",
+    "error_email_exists": "Ein Konto mit dieser E-Mail existiert bereits.",
+    "error_generic": "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "verify_title": "E-Mail Bestätigen",
+    "verify_subtitle": "Wir haben einen 6-stelligen Code an {{email}} gesendet",
+    "verify_code_label": "Bestätigungscode",
+    "verify_code_placeholder": "000000",
+    "verify_button": "E-Mail Bestätigen",
+    "verify_error": "Ungültiger oder abgelaufener Code. Bitte versuchen Sie es erneut.",
+    "resend_code": "Code Erneut Senden",
+    "resend_success": "Ein neuer Code wurde an Ihre E-Mail gesendet."
   }
 }

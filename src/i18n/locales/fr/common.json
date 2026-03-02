@@ -42,6 +42,10 @@
     "month": "Mois",
     "year": "Année"
   },
+  "news": {
+    "title": "Dernières Tendances de Voyage",
+    "subtitle": "Restez informé des dernières nouvelles et opportunités"
+  },
   "messages": {
     "welcome": "Bienvenue",
     "goodbye": "Au Revoir",

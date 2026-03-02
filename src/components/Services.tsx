@@ -54,13 +54,13 @@ const Services = () => {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 
-                  ${selectedCategory === category.id 
-                    ? 'bg-primary text-white shadow-lg' 
+                className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300
+                  ${selectedCategory === category.id
+                    ? 'bg-primary text-white shadow-lg'
                     : 'bg-white text-gray-600 hover:bg-gray-100'}`}
               >
                 <span className="mr-2">{category.icon}</span>
-                {category.name}
+                {t(`filters.${category.id}`)}
               </button>
             ))}
           </div>
@@ -78,8 +78,8 @@ const Services = () => {
                 <div className="flex items-center gap-4 mb-6">
                   <span className="text-4xl">{category.icon}</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-primary">{category.name}</h2>
-                    <p className="text-gray-600 mt-1">{category.description}</p>
+                    <h2 className="text-2xl font-bold text-primary">{t(`${category.id}.title`)}</h2>
+                    <p className="text-gray-600 mt-1">{t(`${category.id}.description`)}</p>
                   </div>
                 </div>
                 
@@ -98,10 +98,10 @@ const Services = () => {
                         />
                         <div className="p-6">
                           <h3 className="text-xl font-bold text-primary mb-2">
-                            {serviceDetail.name}
+                            {t(`${serviceDetail.translationKey}.name`)}
                           </h3>
                           <p className="text-gray-600 mb-4">
-                            {serviceDetail.description}
+                            {t(`${serviceDetail.translationKey}.description`)}
                           </p>
                           <Link
                             to={serviceDetail.learnMoreLink}

@@ -21,9 +21,20 @@ interface User {
   recentServices: string[];
 }
 
+interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   login: (username: string, password: string) => Promise<boolean>;
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  verifyEmail: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   addActivity: (activity: Omit<UserActivity, 'timestamp'>) => void;
   addRecentService: (service: string) => void;
@@ -128,6 +139,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    try {
+      const response = await apiService.register(data);
+      if (response.success) {
+        // Do NOT set user yet — email must be verified first
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'registration_failed' };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'registration_failed' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyEmail = async (email: string, code: string): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    try {
+      const response = await apiService.verifyEmail(email, code);
+      if (response.success) {
+        setUser({
+          ...response.user,
+          recentActivities: [],
+          favoriteCategories: {},
+          favoriteCountries: {},
+          recentServices: [],
+        });
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'verification_failed' };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'verification_failed' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     apiService.logout();
     setUser(null);
@@ -172,7 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, addActivity, addRecentService, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, verifyEmail, logout, addActivity, addRecentService, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

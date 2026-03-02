@@ -12,6 +12,7 @@ import Services from './components/Services';
 import About from './components/About';
 import Contact from './components/Contact';
 import Login from './components/Login';
+import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
 import FAQ from './components/FAQ';
@@ -67,6 +68,7 @@ function AppContent() {
             <Route path="/services" element={<Services />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/faq" element={<FAQ />} />

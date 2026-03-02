@@ -57,5 +57,23 @@
     "success": "Form submitted successfully",
     "error": "An error occurred while submitting the form",
     "loading": "Loading..."
+  },
+  "register": {
+    "title": "Create an Account",
+    "subtitle": "Join Midzoe to access all our services",
+    "have_account": "Already have an account?",
+    "sign_in": "Sign in",
+    "no_account": "Don't have an account?",
+    "success": "Account created successfully! Welcome to Midzoe.",
+    "error_email_exists": "An account with this email already exists.",
+    "error_generic": "Registration failed. Please try again.",
+    "verify_title": "Verify Your Email",
+    "verify_subtitle": "We sent a 6-digit code to {{email}}",
+    "verify_code_label": "Verification Code",
+    "verify_code_placeholder": "000000",
+    "verify_button": "Verify Email",
+    "verify_error": "Invalid or expired code. Please try again.",
+    "resend_code": "Resend Code",
+    "resend_success": "A new code has been sent to your email."
   }
 }
