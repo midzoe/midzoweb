@@ -42,6 +42,10 @@
     "month": "Monat",
     "year": "Jahr"
   },
+  "news": {
+    "title": "Neueste Reisetrends",
+    "subtitle": "Bleiben Sie über die neuesten Nachrichten und Möglichkeiten informiert"
+  },
   "messages": {
     "welcome": "Willkommen",
     "goodbye": "Auf Wiedersehen",

@@ -42,6 +42,46 @@
     "studentFlights": {
       "name": "Vols Étudiants",
       "description": "Trouvez des options de vol abordables pour les étudiants"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance complète adaptée à vos besoins pour les études"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Réservez vos vols avec des tarifs étudiants spéciaux et des options flexibles"
+    }
+  },
+  "professional": {
+    "title": "Services Professionnels",
+    "description": "Avancez votre carrière avec opportunités internationales",
+    "trainingFinder": {
+      "name": "Recherche de Formation",
+      "description": "Accédez à des cours de développement professionnel mondiaux"
+    },
+    "jobsFinder": {
+      "name": "Recherche d'Emploi",
+      "description": "Découvrez des opportunités de carrière dans votre domaine"
+    },
+    "workVisa": {
+      "name": "Visa de Travail",
+      "description": "Orientation complète pour les demandes de visa de travail"
+    },
+    "skillsCertification": {
+      "name": "Certification des Compétences",
+      "description": "Faites certifier et reconnaître vos compétences professionnelles à l'international"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance complète pour vos besoins professionnels"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Cours de langue pour améliorer vos compétences en communication professionnelle"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Réservation de vols pratique avec des arrangements de voyage flexibles"
     }
   },
   "tourism": {
@@ -66,22 +106,58 @@
     "travelInsurance": {
       "name": "Assurance Voyage",
       "description": "Couverture complète pour un voyage sans souci"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Accédez à des tarifs aériens compétitifs et des options de vol pratiques"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance complète adaptée à vos besoins de voyage"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Cours de langue de qualité pour les voyageurs"
     }
   },
-  "professional": {
-    "title": "Services Professionnels",
-    "description": "Avancez votre carrière avec opportunités internationales",
-    "trainingFinder": {
-      "name": "Recherche de Formation",
-      "description": "Accédez à des cours de développement professionnel mondiaux"
+  "business": {
+    "title": "Services aux Entreprises",
+    "description": "Solutions de voyage d'affaires et de réseautage",
+    "networkingEvents": {
+      "name": "Événements de Réseautage",
+      "description": "Participez à des événements d'affaires pour développer votre réseau professionnel"
     },
-    "jobsFinder": {
-      "name": "Recherche d'Emploi",
-      "description": "Découvrez des opportunités de carrière dans votre domaine"
+    "corporateAccommodation": {
+      "name": "Hébergement d'Entreprise",
+      "description": "Solutions d'hébergement premium pour les voyageurs d'affaires"
     },
-    "workVisa": {
-      "name": "Visa de Travail",
-      "description": "Orientation complète pour les demandes de visa de travail"
+    "businessVisa": {
+      "name": "Visa d'Affaires",
+      "description": "Assistance experte pour les demandes de visa d'affaires"
+    },
+    "transportation": {
+      "name": "Services de Transport",
+      "description": "Solutions de transport fiables pour les voyageurs d'affaires"
+    },
+    "meetingVenues": {
+      "name": "Salles de Réunion",
+      "description": "Accès à des espaces de réunion professionnels et salles de conférence"
+    },
+    "restaurants": {
+      "name": "Réservations de Restaurants",
+      "description": "Réservez des tables dans des restaurants adaptés aux affaires"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance complète pour vos voyages d'affaires"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Cours de langue et programmes de développement en communication des affaires"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Réservation de vols premium avec options classe affaires"
     }
   },
   "services": {

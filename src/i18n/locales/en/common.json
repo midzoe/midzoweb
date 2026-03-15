@@ -42,6 +42,10 @@
     "month": "Month",
     "year": "Year"
   },
+  "news": {
+    "title": "Latest Travel Trends",
+    "subtitle": "Stay updated with the latest news and opportunities"
+  },
   "messages": {
     "welcome": "Welcome",
     "goodbye": "Goodbye",

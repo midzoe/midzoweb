@@ -1,6 +1,7 @@
 {
   "fields": {
     "email": "Email",
+    "identifier": "Email ou nom d'utilisateur",
     "password": "Mot de passe",
     "firstName": "Prénom",
     "lastName": "Nom de famille",
@@ -57,5 +58,23 @@
     "success": "Formulaire soumis avec succès",
     "error": "Une erreur s'est produite lors de la soumission du formulaire",
     "loading": "Chargement..."
+  },
+  "register": {
+    "title": "Créer un Compte",
+    "subtitle": "Rejoignez Midzoe pour accéder à tous nos services",
+    "have_account": "Vous avez déjà un compte ?",
+    "sign_in": "Se connecter",
+    "no_account": "Vous n'avez pas de compte ?",
+    "success": "Compte créé avec succès ! Bienvenue sur Midzoe.",
+    "error_email_exists": "Un compte avec cet email existe déjà.",
+    "error_generic": "Inscription échouée. Veuillez réessayer.",
+    "verify_title": "Vérifiez Votre Email",
+    "verify_subtitle": "Nous avons envoyé un code à 6 chiffres à {{email}}",
+    "verify_code_label": "Code de Vérification",
+    "verify_code_placeholder": "000000",
+    "verify_button": "Vérifier l'Email",
+    "verify_error": "Code invalide ou expiré. Veuillez réessayer.",
+    "resend_code": "Renvoyer le Code",
+    "resend_success": "Un nouveau code a été envoyé à votre email."
   }
 }

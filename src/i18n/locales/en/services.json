@@ -42,6 +42,14 @@
     "studentFlights": {
       "name": "Student Flights",
       "description": "Find affordable flight options for students"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage tailored to your needs for study purposes"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Book your flights with special student rates and flexible options for international travel"
     }
   },
   "tourism": {
@@ -66,6 +74,18 @@
     "travelInsurance": {
       "name": "Travel Insurance",
       "description": "Comprehensive coverage for worry-free travel"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Access competitive airfare rates and convenient flight options to destinations worldwide"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage tailored to your travel needs"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Access to quality language courses and basic communication skills for travelers"
     }
   },
   "professional": {
@@ -82,6 +102,62 @@
     "workVisa": {
       "name": "Work Visa",
       "description": "Complete guidance on work visa applications"
+    },
+    "skillsCertification": {
+      "name": "Skills Certification",
+      "description": "Get your professional skills certified and recognized internationally"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage for your professional needs"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Language courses to enhance your professional communication skills"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Convenient flight booking with professional travel arrangements and flexible scheduling"
+    }
+  },
+  "business": {
+    "title": "Business Services",
+    "description": "Business travel and networking solutions",
+    "networkingEvents": {
+      "name": "Business Networking Events",
+      "description": "Participate in curated business events to expand your professional network internationally"
+    },
+    "corporateAccommodation": {
+      "name": "Corporate Accommodation",
+      "description": "Premium accommodation solutions for business travelers"
+    },
+    "businessVisa": {
+      "name": "Business Visa Assistance",
+      "description": "Expert support for business visa applications"
+    },
+    "transportation": {
+      "name": "Transportation Services",
+      "description": "Reliable transportation solutions for business travelers"
+    },
+    "meetingVenues": {
+      "name": "Meeting Venues",
+      "description": "Access to professional meeting spaces and conference facilities worldwide"
+    },
+    "restaurants": {
+      "name": "Restaurant Reservations",
+      "description": "Book tables at business-appropriate restaurants for client meetings and corporate events"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage for your business travel needs"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Language courses and business communication skills development programs"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Premium flight booking with business class options and corporate travel arrangements"
     }
   },
   "services": {

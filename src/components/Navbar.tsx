@@ -90,12 +90,20 @@ const Navbar = () => {
                 {t('logout')}
               </button>
             ) : (
-              <Link
-                to="/login"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-secondary hover:bg-primary transition-colors duration-200"
-              >
-                {t('login')}
-              </Link>
+              <>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary border border-primary rounded-md hover:bg-primary hover:text-white transition-colors duration-200"
+                >
+                  {t('login')}
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-secondary hover:bg-primary transition-colors duration-200"
+                >
+                  {t('register')}
+                </Link>
+              </>
             )}
           </div>
 
@@ -167,13 +175,22 @@ const Navbar = () => {
                 {t('logout')}
               </button>
             ) : (
-              <Link
-                to="/login"
-                className="block pl-3 pr-4 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
-                onClick={() => setIsOpen(false)}
-              >
-                {t('login')}
-              </Link>
+              <>
+                <Link
+                  to="/login"
+                  className="block pl-3 pr-4 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {t('login')}
+                </Link>
+                <Link
+                  to="/register"
+                  className="block pl-3 pr-4 py-2 text-base font-medium text-secondary hover:text-primary hover:bg-gray-50"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {t('register')}
+                </Link>
+              </>
             )}
           </div>
         </div>

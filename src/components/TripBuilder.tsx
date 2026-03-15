@@ -61,14 +61,6 @@ interface TripData {
   completedSteps: string[];
 }
 
-interface StepCardProps {
-  step: Step;
-  isActive: boolean;
-  isCompleted: boolean;
-  onClick: () => void;
-  progress: number;
-}
-
 interface Step {
   id: string;
   title: string;
@@ -78,74 +70,6 @@ interface Step {
   required: boolean;
 }
 
-const StepCard: React.FC<StepCardProps> = ({ step, isActive, isCompleted, onClick, progress }) => {
-  return (
-    <div
-      onClick={onClick}
-      className={`cursor-pointer p-3 sm:p-4 rounded-xl border-2 transition-all duration-300 ${
-        isActive
-          ? 'border-primary bg-primary/5 shadow-lg'
-          : isCompleted
-          ? 'border-green-500 bg-green-50 hover:bg-green-100'
-          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-      }`}
-    >
-      <div className="flex items-start gap-2 sm:gap-3">
-        <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
-          isCompleted
-            ? 'bg-green-500 text-white'
-            : isActive
-            ? 'bg-primary text-white'
-            : 'bg-gray-100 text-gray-600'
-        }`}>
-          {isCompleted ? <CheckCircleIcon className="w-4 h-4 sm:w-6 sm:h-6" /> : React.cloneElement(step.icon as React.ReactElement, { className: "w-4 h-4 sm:w-6 sm:h-6" })}
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-1 gap-2">
-            <h3 className={`font-semibold text-sm sm:text-base leading-tight ${
-              isActive ? 'text-primary' : isCompleted ? 'text-green-700' : 'text-gray-900'
-            }`}>
-              {step.title}
-            </h3>
-            {step.required && (
-              <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                Requis
-              </span>
-            )}
-          </div>
-          
-          <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">{step.description}</p>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              <ClockIcon className="w-3 h-3" />
-              {step.estimatedTime}
-            </span>
-            
-            {progress > 0 && !isCompleted && (
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="w-12 sm:w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <span className="text-xs text-primary font-medium">{Math.round(progress)}%</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        <div className="flex-shrink-0">
-          <ArrowRightIcon className={`w-3 h-3 sm:w-4 sm:h-4 transition-colors ${
-            isActive ? 'text-primary' : 'text-gray-400'
-          }`} />
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const TripBuilder: React.FC = () => {
   const [currentStep, setCurrentStep] = useState('project');
@@ -380,15 +304,51 @@ const TripBuilder: React.FC = () => {
     }
   };
 
-  // Liste des pays
+  // Liste complète des pays du monde
   const countries = [
-    'France', 'Germany', 'United Kingdom', 'Spain', 'Italy', 'Netherlands',
-    'Belgium', 'Portugal', 'Austria', 'Switzerland', 'Sweden', 'Denmark',
-    'Norway', 'Finland', 'Canada', 'United States', 'Australia', 'New Zealand',
-    'Japan', 'South Korea', 'Singapore', 'China', 'Brazil', 'Argentina',
-    'Mexico', 'South Africa', 'Morocco', 'Tunisia', 'Egypt', 'Kenya',
-    'Ghana', 'Nigeria', 'Senegal', 'Ivory Coast', 'Cameroon', 'Mali',
-    'Burkina Faso', 'Niger', 'Chad', 'Madagascar', 'Mauritius'
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
+    'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+    'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize',
+    'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil',
+    'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
+    'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad',
+    'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Congo (DRC)', 'Costa Rica',
+    'Croatia', 'Cuba', 'Cyprus', 'Czech Republic',
+    'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
+    'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia',
+    'Eswatini', 'Ethiopia',
+    'Fiji', 'Finland', 'France',
+    'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala',
+    'Guinea', 'Guinea-Bissau', 'Guyana',
+    'Haiti', 'Honduras', 'Hungary',
+    'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy',
+    'Ivory Coast',
+    'Jamaica', 'Japan', 'Jordan',
+    'Kazakhstan', 'Kenya', 'Kiribati', 'Kosovo', 'Kuwait', 'Kyrgyzstan',
+    'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein',
+    'Lithuania', 'Luxembourg',
+    'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands',
+    'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia',
+    'Montenegro', 'Morocco', 'Mozambique', 'Myanmar',
+    'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger',
+    'Nigeria', 'North Korea', 'North Macedonia', 'Norway',
+    'Oman',
+    'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru',
+    'Philippines', 'Poland', 'Portugal',
+    'Qatar',
+    'Romania', 'Russia', 'Rwanda',
+    'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa',
+    'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia',
+    'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands',
+    'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka',
+    'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria',
+    'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga',
+    'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
+    'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States',
+    'Uruguay', 'Uzbekistan',
+    'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
+    'Yemen',
+    'Zambia', 'Zimbabwe'
   ].sort();
 
   const renderProjectStep = () => (
@@ -427,17 +387,13 @@ const TripBuilder: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 >
                   <option value="">Choisir un pays</option>
-                  <option value="France">France 🇫🇷</option>
-                  <option value="Germany">Allemagne 🇩🇪</option>
-                  <option value="Italy">Italie 🇮🇹</option>
-                  <option value="Belgium">Belgique 🇧🇪</option>
-                  <option value="Netherlands">Pays-Bas 🇳🇱</option>
-                  <option value="Luxembourg">Luxembourg 🇱🇺</option>
-                  <option value="Estonia">Estonie 🇪🇪</option>
+                  {countries.map((country) => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     <UserIcon className="w-4 h-4 inline mr-1" />
@@ -1709,210 +1665,152 @@ const TripBuilder: React.FC = () => {
     (steps.reduce((sum, step) => sum + getStepProgress(step.id), 0) / steps.length)
   );
 
+  const currentStepIndex = steps.findIndex(s => s.id === currentStep);
+  const currentStepObj   = steps[currentStepIndex];
+
+  const goTo = (dir: 'prev' | 'next') => {
+    const idx = currentStepIndex + (dir === 'next' ? 1 : -1);
+    if (idx >= 0 && idx < steps.length) setCurrentStep(steps[idx].id);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Planificateur d'Études à l'Étranger
-              </h1>
-              <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                Organise ton projet d'études étape par étape
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-4 sm:gap-6">
-              <div className="text-center sm:text-right">
-                <div className="text-xl sm:text-2xl font-bold text-primary">{globalProgress}%</div>
-                <div className="text-xs sm:text-sm text-gray-600">Complété</div>
-              </div>
-              
-              <div className="w-16 h-16 sm:w-20 sm:h-20 relative">
-                <svg className="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90" viewBox="0 0 36 36">
-                  <path
-                    d="m18,2.0845
-                      a 15.9155,15.9155 0 0,1 0,31.831
-                      a 15.9155,15.9155 0 0,1 0,-31.831"
-                    fill="none"
-                    stroke="#e5e7eb"
-                    strokeWidth="2"
-                  />
-                  <path
-                    d="m18,2.0845
-                      a 15.9155,15.9155 0 0,1 0,31.831
-                      a 15.9155,15.9155 0 0,1 0,-31.831"
-                    fill="none"
-                    stroke="url(#gradient)"
-                    strokeWidth="2"
-                    strokeDasharray={`${globalProgress}, 100`}
-                  />
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#3B82F6" />
-                      <stop offset="100%" stopColor="#8B5CF6" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
+    <div className="h-full bg-gray-50 flex flex-col">
+
+      {/* ── TOP PROGRESS BAR ── */}
+      <div className="h-1.5 bg-gray-100 flex-shrink-0">
+        <div
+          className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-700 ease-out"
+          style={{ width: `${globalProgress}%` }}
+        />
+      </div>
+
+      {/* ── HORIZONTAL STEP TRACKER ── */}
+      <div className="bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-5">
+          <div className="flex items-center">
+            {steps.map((step, index) => (
+              <React.Fragment key={step.id}>
+                {/* Step bubble */}
+                <button
+                  onClick={() => setCurrentStep(step.id)}
+                  className="flex flex-col items-center gap-1.5 flex-shrink-0 group"
+                >
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    isStepCompleted(step.id)
+                      ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                      : step.id === currentStep
+                      ? 'bg-primary text-white ring-4 ring-primary/20 shadow-md shadow-primary/20 scale-110'
+                      : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                  }`}>
+                    {isStepCompleted(step.id)
+                      ? <CheckCircleIcon className="w-5 h-5" />
+                      : index + 1}
+                  </div>
+                  <span className={`text-xs font-medium hidden sm:block transition-colors whitespace-nowrap ${
+                    step.id === currentStep
+                      ? 'text-primary'
+                      : isStepCompleted(step.id)
+                      ? 'text-emerald-600'
+                      : 'text-gray-400'
+                  }`}>
+                    {/* Strip emoji, keep text */}
+                    {step.title.replace(/[\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u231A-\u23FF]|[\u25AA-\u27FF]|\uD83E[\uDD00-\uDDFF]/gu, '').trim()}
+                  </span>
+                </button>
+
+                {/* Connector line */}
+                {index < steps.length - 1 && (
+                  <div className="flex-1 mx-1 sm:mx-2 mb-5">
+                    <div className={`h-0.5 rounded-full transition-all duration-500 ${
+                      isStepCompleted(step.id) ? 'bg-emerald-400' : 'bg-gray-200'
+                    }`} />
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-10rem)]">
-          {/* Sidebar Navigation */}
-          <div className="w-full lg:w-80 lg:flex-shrink-0">
-            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:sticky lg:top-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
-                Mes Étapes
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                {steps.map((step) => (
-                  <StepCard
-                    key={step.id}
-                    step={step}
-                    isActive={currentStep === step.id}
-                    isCompleted={isStepCompleted(step.id)}
-                    onClick={() => setCurrentStep(step.id)}
-                    progress={getStepProgress(step.id)}
-                  />
-                ))}
-              </div>
-              
-              <div className="mt-8 p-4 bg-green-50 rounded-xl border border-green-200">
-                <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
-                  <CheckCircleIcon className="w-4 h-4" />
-                  Auto-sauvegarde activée
-                </div>
-                <p className="text-green-600 text-xs mt-1">
-                  Tes données sont sauvegardées automatiquement
-                </p>
-              </div>
-            </div>
+      {/* ── STEP META BAR ── */}
+      <div className="bg-white border-b border-gray-50 flex-shrink-0">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+              Étape {currentStepIndex + 1} / {steps.length}
+            </span>
+            {currentStepObj?.required && (
+              <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">Requis</span>
+            )}
           </div>
+          <span className="text-xs font-bold text-primary">{globalProgress}% complété</span>
+        </div>
+      </div>
 
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col flex-1">
-              {/* Scrollable Content Area */}
-              <div 
-                className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar max-h-[65vh] relative"
-                id="content-scroll-area"
-              >
-                <div className="p-4 sm:p-6 lg:p-8">
-                  {renderCurrentStep()}
-                </div>
-                
-                {/* Scroll to bottom button - floating */}
-                <div className="text-center py-4 bg-gradient-to-t from-white via-white to-transparent">
-                  <button
-                    onClick={() => {
-                      const scrollArea = document.getElementById('content-scroll-area');
-                      if (scrollArea) {
-                        scrollArea.scrollTop = scrollArea.scrollHeight;
-                      }
-                    }}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-4 py-3 rounded-full text-sm font-semibold shadow-xl hover:shadow-2xl transition-all hover:scale-105 animate-pulse"
-                  >
-                    <span>📋 Voir les boutons de navigation</span>
-                    <span className="animate-bounce text-lg">⬇</span>
-                  </button>
-                </div>
-                
-                {/* Scroll indicator - appears when content overflows */}
-                <div className="text-center py-2 text-xs text-gray-400 bg-gradient-to-t from-gray-50 to-transparent border-t border-gray-100">
-                  <div className="flex items-center justify-center gap-1">
-                    <span>⬇ Continuez à défiler pour voir les boutons de navigation</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Fixed Navigation Buttons */}
-              <div className="border-t-2 border-primary/20 bg-white px-4 sm:px-6 lg:px-8 py-4 sticky bottom-0 z-20 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      const currentIndex = steps.findIndex(s => s.id === currentStep);
-                      if (currentIndex > 0) {
-                        setCurrentStep(steps[currentIndex - 1].id);
-                      }
-                    }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                      steps.findIndex(s => s.id === currentStep) === 0
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-primary hover:text-primary shadow-sm'
-                    }`}
-                    disabled={steps.findIndex(s => s.id === currentStep) === 0}
-                  >
-                    <ArrowRightIcon className="w-4 h-4 rotate-180" />
-                    Précédent
-                  </button>
+      {/* ── STEP CONTENT (scrollable) ── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="py-6 sm:py-10">
+          {renderCurrentStep()}
+        </div>
+      </div>
 
-                  <div className="flex items-center gap-2">
-                    {steps.map((step) => (
-                      <div
-                        key={step.id}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          step.id === currentStep
-                            ? 'bg-primary w-6'
-                            : isStepCompleted(step.id)
-                            ? 'bg-green-500'
-                            : 'bg-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
+      {/* ── FOOTER NAVIGATION ── */}
+      <div className="bg-white border-t border-gray-100 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] flex-shrink-0">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
 
-                  <div className="flex flex-col items-end gap-2">
-                    {!canProceedToNextStep() && (
-                      <div className="text-xs text-orange-600 font-medium flex items-center gap-1">
-                        <ExclamationCircleIcon className="w-3 h-3" />
-                        {getNextStepMessage()}
-                      </div>
-                    )}
+            {/* Previous */}
+            <button
+              onClick={() => goTo('prev')}
+              disabled={currentStepIndex === 0}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all
+                disabled:opacity-30 disabled:cursor-not-allowed
+                border-2 border-gray-200 text-gray-600 hover:border-primary hover:text-primary enabled:active:scale-95"
+            >
+              <ArrowRightIcon className="w-4 h-4 rotate-180" />
+              Précédent
+            </button>
+
+            {/* Center: validation message or progress dots */}
+            <div className="flex-1 text-center min-w-0">
+              {!canProceedToNextStep() ? (
+                <p className="text-xs text-orange-500 font-medium flex items-center justify-center gap-1">
+                  <ExclamationCircleIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{getNextStepMessage()}</span>
+                </p>
+              ) : (
+                <div className="flex items-center justify-center gap-1.5">
+                  {steps.map(s => (
                     <button
-                      onClick={() => {
-                        if (!canProceedToNextStep()) {
-                          alert(getNextStepMessage());
-                          return;
-                        }
-                        
-                        const currentIndex = steps.findIndex(s => s.id === currentStep);
-                        if (currentIndex < steps.length - 1) {
-                          setCurrentStep(steps[currentIndex + 1].id);
-                        } else {
-                          // Dernière étape - sauvegarder
-                          console.log('Projet sauvegardé !', tripData);
-                          alert('🎉 Ton projet d\'études a été sauvegardé avec succès !');
-                        }
-                      }}
-                      className={`flex items-center gap-2 px-6 py-2 rounded-xl font-medium transition-all transform ${
-                        canProceedToNextStep()
-                          ? 'bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:scale-105'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      key={s.id}
+                      onClick={() => setCurrentStep(s.id)}
+                      className={`rounded-full transition-all duration-300 ${
+                        s.id === currentStep
+                          ? 'w-5 h-2 bg-primary'
+                          : isStepCompleted(s.id)
+                          ? 'w-2 h-2 bg-emerald-400'
+                          : 'w-2 h-2 bg-gray-200'
                       }`}
-                    >
-                      {steps.findIndex(s => s.id === currentStep) === steps.length - 1 ? (
-                        <>
-                          <CheckCircleIcon className="w-4 h-4" />
-                          Terminer
-                        </>
-                      ) : (
-                        <>
-                          Continuer
-                          <ArrowRightIcon className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </div>
+                    />
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
+
+            {/* Next / Finish */}
+            <button
+              onClick={() => goTo('next')}
+              disabled={!canProceedToNextStep()}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95
+                disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed
+                enabled:bg-gradient-to-r enabled:from-primary enabled:to-secondary enabled:text-white enabled:hover:shadow-lg enabled:hover:-translate-y-0.5"
+            >
+              {currentStepIndex === steps.length - 1 ? (
+                <><CheckCircleIcon className="w-4 h-4" /> Terminer</>
+              ) : (
+                <>Continuer <ArrowRightIcon className="w-4 h-4" /></>
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -1,0 +1,22 @@
+{
+  "edit_profile": "Edit Profile",
+  "cancel_editing": "Cancel Editing",
+  "save_changes": "Save Changes",
+  "personal_info": "Personal Information",
+  "education_work": "Education & Work",
+  "languages_interests": "Languages & Interests",
+  "fields": {
+    "full_name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "nationality": "Nationality",
+    "education": "Education",
+    "occupation": "Occupation",
+    "languages": "Languages",
+    "interests": "Interests"
+  },
+  "add_language": "Add Language",
+  "add_interest": "Add Interest",
+  "enter_language": "Enter new language",
+  "enter_interest": "Enter new interest"
+}

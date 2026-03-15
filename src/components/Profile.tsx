@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { apiService } from '../services/api';
 import {
   UserIcon,
   EnvelopeIcon,
@@ -16,26 +18,42 @@ import {
 
 const Profile: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation('profile');
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 890',
-    nationality: 'United States',
-    languages: ['English', 'Spanish', 'French'],
-    education: 'Bachelor in Computer Science',
-    occupation: 'Software Developer',
-    interests: ['Technology', 'Travel', 'Languages']
-  });
+  const [isSaving, setIsSaving] = useState(false);
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    fullName: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    nationality: '',
+    languages: [] as string[],
+    education: '',
+    occupation: '',
+    interests: [] as string[],
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically update the user profile
-    setIsEditing(false);
+    setIsSaving(true);
+    const [first_name, ...rest] = formData.fullName.trim().split(' ');
+    try {
+      await apiService.updateProfile({
+        first_name,
+        last_name: rest.join(' ') || undefined,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+      });
+    } catch {
+      // fail silently — will be addressed when backend is ready
+    } finally {
+      setIsSaving(false);
+      setIsEditing(false);
+    }
   };
 
   return (
@@ -64,12 +82,12 @@ const Profile: React.FC = () => {
                 {isEditing ? (
                   <>
                     <XMarkIcon className="h-5 w-5 mr-2" />
-                    Cancel Editing
+                    {t('cancel_editing')}
                   </>
                 ) : (
                   <>
                     <PencilIcon className="h-5 w-5 mr-2" />
-                    Edit Profile
+                    {t('edit_profile')}
                   </>
                 )}
               </button>
@@ -84,10 +102,10 @@ const Profile: React.FC = () => {
               <div className="space-y-6">
                 {/* Personal Information */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Personal Information</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('personal_info')}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.full_name')}</label>
                       <div className="mt-1 flex items-center">
                         <UserIcon className="h-5 w-5 text-gray-400 mr-2" />
                         {isEditing ? (
@@ -104,7 +122,7 @@ const Profile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.email')}</label>
                       <div className="mt-1 flex items-center">
                         <EnvelopeIcon className="h-5 w-5 text-gray-400 mr-2" />
                         {isEditing ? (
@@ -121,7 +139,7 @@ const Profile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Phone</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.phone')}</label>
                       <div className="mt-1 flex items-center">
                         <PhoneIcon className="h-5 w-5 text-gray-400 mr-2" />
                         {isEditing ? (
@@ -138,7 +156,7 @@ const Profile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Nationality</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.nationality')}</label>
                       <div className="mt-1 flex items-center">
                         <GlobeAltIcon className="h-5 w-5 text-gray-400 mr-2" />
                         {isEditing ? (
@@ -158,10 +176,10 @@ const Profile: React.FC = () => {
 
                 {/* Education & Work */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Education & Work</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('education_work')}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Education</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.education')}</label>
                       <div className="mt-1 flex items-center">
                         <AcademicCapIcon className="h-5 w-5 text-gray-400 mr-2" />
                         {isEditing ? (
@@ -178,7 +196,7 @@ const Profile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Occupation</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.occupation')}</label>
                       <div className="mt-1 flex items-center">
                         <BriefcaseIcon className="h-5 w-5 text-gray-400 mr-2" />
                         {isEditing ? (
@@ -198,10 +216,10 @@ const Profile: React.FC = () => {
 
                 {/* Languages & Interests */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Languages & Interests</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('languages_interests')}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Languages</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.languages')}</label>
                       <div className="mt-1">
                         <div className="flex items-center">
                           <LanguageIcon className="h-5 w-5 text-gray-400 mr-2" />
@@ -230,7 +248,7 @@ const Profile: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const newLanguage = prompt('Enter new language');
+                                  const newLanguage = prompt(t('enter_language'));
                                   if (newLanguage) {
                                     setFormData({
                                       ...formData,
@@ -240,7 +258,7 @@ const Profile: React.FC = () => {
                                 }}
                                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
                               >
-                                Add Language
+                                {t('add_language')}
                               </button>
                             )}
                           </div>
@@ -249,7 +267,7 @@ const Profile: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Interests</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.interests')}</label>
                       <div className="mt-1">
                         <div className="flex flex-wrap gap-2">
                           {formData.interests.map((interest, index) => (
@@ -276,7 +294,7 @@ const Profile: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                const newInterest = prompt('Enter new interest');
+                                const newInterest = prompt(t('enter_interest'));
                                 if (newInterest) {
                                   setFormData({
                                     ...formData,
@@ -286,7 +304,7 @@ const Profile: React.FC = () => {
                               }}
                               className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
                             >
-                              Add Interest
+                              {t('add_interest')}
                             </button>
                           )}
                         </div>
@@ -300,10 +318,11 @@ const Profile: React.FC = () => {
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                      disabled={isSaving}
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
                     >
                       <CheckIcon className="h-5 w-5 mr-2" />
-                      Save Changes
+                      {isSaving ? '...' : t('save_changes')}
                     </button>
                   </div>
                 )}

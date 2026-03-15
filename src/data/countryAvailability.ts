@@ -3,7 +3,6 @@ export const studyCountries = [
   'United Kingdom',
   'United States',
   'Canada',
-  'Australia',
   'Germany',
   'France',
   'Netherlands',
@@ -11,10 +10,8 @@ export const studyCountries = [
   'Sweden',
   'Switzerland',
   'Italy',
-  'Japan',
-  'South Korea',
-  'Ireland',
-  'New Zealand'
+  'Portugal',
+  'China'
 ];
 
 export const tourismCountries = [

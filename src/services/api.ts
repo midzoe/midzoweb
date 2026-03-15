@@ -43,10 +43,10 @@ class ApiService {
   }
 
   // Auth methods
-  async login(username: string, password: string) {
+  async login(identifier: string, password: string) {
     const response = await this.request<any>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username: identifier, password }),
     });
     
     if (response.success && response.token) {
@@ -65,17 +65,32 @@ class ApiService {
     last_name?: string;
     phone?: string;
   }) {
-    const response = await this.request<any>('/auth/register', {
+    // Does NOT store token — user must verify email first
+    return this.request<any>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
-    
+  }
+
+  async verifyEmail(email: string, code: string) {
+    const response = await this.request<any>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+
     if (response.success && response.token) {
       localStorage.setItem('midzo_token', response.token);
       localStorage.setItem('midzo_user', JSON.stringify(response.user));
     }
-    
+
     return response;
+  }
+
+  async resendVerificationCode(email: string) {
+    return this.request<any>('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
   }
 
   async getProfile() {

@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 
+// Incrementing this clears all stale localStorage auth data on next page load
+const AUTH_VERSION = '2';
+
 interface UserActivity {
   category: string;
   service: string;
@@ -21,108 +24,121 @@ interface User {
   recentServices: string[];
 }
 
+interface RegisterData {
+  username: string;
+  email: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+}
+
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (identifier: string, password: string) => Promise<boolean>;
+  register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  verifyEmail: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   addActivity: (activity: Omit<UserActivity, 'timestamp'>) => void;
   addRecentService: (service: string) => void;
   isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+/** Returns a clean empty activity state — no mock data */
+const emptyActivity = () => ({
+  recentActivities: [] as UserActivity[],
+  favoriteCategories: {} as { [key: string]: number },
+  favoriteCountries: {} as { [key: string]: number },
+  recentServices: [] as string[],
+});
 
-const initialUserData: User = {
-  username: 'midzo',
-  recentActivities: [
-    {
-      category: 'study',
-      service: 'University Finder',
-      country: 'United Kingdom',
-      timestamp: new Date('2024-01-15').toISOString()
-    },
-    {
-      category: 'tourism',
-      service: 'Hotel Booking',
-      country: 'France',
-      timestamp: new Date('2024-02-01').toISOString()
-    },
-    {
-      category: 'business',
-      service: 'Business Networking',
-      country: 'Germany',
-      timestamp: new Date('2024-02-15').toISOString()
-    }
-  ],
-  favoriteCategories: {
-    study: 5,
-    tourism: 3,
-    business: 2,
-    professional: 1
-  },
-  favoriteCountries: {
-    'United Kingdom': 4,
-    'France': 3,
-    'Germany': 2,
-    'Spain': 1
-  },
-  recentServices: [
-    'University finder',
-    'Student accommodation',
-    'Flight booking',
-    'Insurance',
-    'Language center',
-    'Bank account'
-  ]
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('midzo_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    // Version check — clears stale/mock data from previous versions
+    if (localStorage.getItem('midzo_version') !== AUTH_VERSION) {
+      localStorage.removeItem('midzo_user');
+      localStorage.removeItem('midzo_token');
+      localStorage.removeItem('tripBuilderData');
+      localStorage.setItem('midzo_version', AUTH_VERSION);
+      return null;
+    }
+    const saved = localStorage.getItem('midzo_user');
+    return saved ? JSON.parse(saved) : null;
   });
+
   const [isLoading, setIsLoading] = useState(false);
 
+  // Refresh real user data from API on app load
   useEffect(() => {
-    // Check if user is authenticated on app start
-    const initializeAuth = async () => {
-      if (apiService.isAuthenticated()) {
-        setIsLoading(true);
-        try {
-          const response = await apiService.getProfile();
-          if (response.success) {
-            setUser({
-              ...response.user,
-              ...initialUserData // Merge with activity data
-            });
-          }
-        } catch (error) {
-          console.error('Failed to load user profile:', error);
+    if (!apiService.isAuthenticated()) return;
+
+    const refresh = async () => {
+      setIsLoading(true);
+      try {
+        const response = await apiService.getProfile();
+        if (response.success) {
+          setUser(prev => ({
+            ...emptyActivity(),
+            ...(prev ?? {}),       // preserve accumulated local activity
+            ...response.user,      // real API data always wins
+          }));
+        } else {
           apiService.logout();
-        } finally {
-          setIsLoading(false);
+          setUser(null);
         }
+      } catch {
+        apiService.logout();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    initializeAuth();
+    refresh();
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (identifier: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const response = await apiService.login(username, password);
+      const response = await apiService.login(identifier, password);
       if (response.success) {
-        setUser({
-          ...response.user,
-          ...initialUserData // Merge with activity data
-        });
+        setUser({ ...emptyActivity(), ...response.user });
         return true;
       }
       return false;
-    } catch (error) {
-      console.error('Login failed:', error);
+    } catch {
       return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (data: RegisterData): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    try {
+      const response = await apiService.register(data);
+      if (response.success) return { success: true };
+      return { success: false, error: response.error || 'registration_failed' };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'registration_failed' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyEmail = async (email: string, code: string): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    try {
+      const response = await apiService.verifyEmail(email, code);
+      if (response.success) {
+        setUser({ ...emptyActivity(), ...response.user });
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'verification_failed' };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'verification_failed' };
     } finally {
       setIsLoading(false);
     }
@@ -130,49 +146,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     apiService.logout();
+    localStorage.removeItem('tripBuilderData');
     setUser(null);
   };
 
   const addActivity = (activity: Omit<UserActivity, 'timestamp'>) => {
-    if (user) {
-      const newActivity = {
-        ...activity,
-        timestamp: new Date().toISOString()
-      };
-
-      const updatedUser = {
-        ...user,
-        recentActivities: [newActivity, ...user.recentActivities].slice(0, 10),
-        favoriteCategories: {
-          ...user.favoriteCategories,
-          [activity.category]: (user.favoriteCategories[activity.category] || 0) + 1
-        },
-        favoriteCountries: {
-          ...user.favoriteCountries,
-          [activity.country]: (user.favoriteCountries[activity.country] || 0) + 1
-        }
-      };
-
-      setUser(updatedUser);
-    }
+    if (!user) return;
+    const newActivity = { ...activity, timestamp: new Date().toISOString() };
+    setUser({
+      ...user,
+      recentActivities: [newActivity, ...user.recentActivities].slice(0, 10),
+      favoriteCategories: {
+        ...user.favoriteCategories,
+        [activity.category]: (user.favoriteCategories[activity.category] || 0) + 1,
+      },
+      favoriteCountries: {
+        ...user.favoriteCountries,
+        [activity.country]: (user.favoriteCountries[activity.country] || 0) + 1,
+      },
+    });
   };
 
   const addRecentService = (service: string) => {
-    if (user) {
-      const updatedServices = [
-        service,
-        ...user.recentServices.filter(s => s !== service)
-      ].slice(0, 6);
-
-      setUser({
-        ...user,
-        recentServices: updatedServices
-      });
-    }
+    if (!user) return;
+    setUser({
+      ...user,
+      recentServices: [service, ...user.recentServices.filter(s => s !== service)].slice(0, 6),
+    });
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, addActivity, addRecentService, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, verifyEmail, logout, addActivity, addRecentService, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
