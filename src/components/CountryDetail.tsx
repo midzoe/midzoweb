@@ -1,16 +1,18 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { countryDetails } from '../data/countryDetails';
 
 const CountryDetail: React.FC = () => {
   const { country } = useParams();
+  const { t } = useTranslation('countries');
   const details = countryDetails[country || ''];
 
   if (!details) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-primary mb-8">Country not found</h1>
+          <h1 className="text-4xl font-bold text-primary mb-8">{t('country_not_found')}</h1>
         </div>
       </div>
     );
@@ -29,14 +31,14 @@ const CountryDetail: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
           <div className="absolute bottom-0 left-0 right-0 p-8 flex justify-between items-end">
             <div>
-              <h1 className="text-5xl font-bold text-white mb-4">{country}</h1>
+              <h1 className="text-5xl font-bold text-white mb-4">{t(`names.${country}`, { defaultValue: country })}</h1>
               <p className="text-xl text-white/90">{details.motto}</p>
             </div>
             <Link
               to="/login"
               className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-lg"
             >
-              Plan Your Journey →
+              {t('plan_journey')} →
             </Link>
           </div>
         </div>
@@ -53,10 +55,10 @@ const CountryDetail: React.FC = () => {
 
         {/* History & Culture */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
-          <h2 className="text-3xl font-bold text-primary mb-6">History & Culture</h2>
+          <h2 className="text-3xl font-bold text-primary mb-6">{t('history_culture')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-semibold mb-4">Historical Background</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('historical_background')}</h3>
               <p className="text-gray-600 mb-4">{details.history}</p>
             </div>
             <div>
@@ -71,7 +73,7 @@ const CountryDetail: React.FC = () => {
 
         {/* Traditions */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
-          <h2 className="text-3xl font-bold text-primary mb-6">Traditions & Customs</h2>
+          <h2 className="text-3xl font-bold text-primary mb-6">{t('traditions_customs')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {details.traditions.map((tradition, index) => (
               <div key={index} className="bg-gray-50 rounded-lg p-6">
@@ -89,7 +91,7 @@ const CountryDetail: React.FC = () => {
 
         {/* Food & Cuisine */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
-          <h2 className="text-3xl font-bold text-primary mb-6">Food & Cuisine</h2>
+          <h2 className="text-3xl font-bold text-primary mb-6">{t('food_cuisine')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {details.cuisine.map((dish, index) => (
               <div key={index} className="bg-gray-50 rounded-lg p-6">
@@ -107,10 +109,10 @@ const CountryDetail: React.FC = () => {
 
         {/* Modern Life & Trends */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
-          <h2 className="text-3xl font-bold text-primary mb-6">Modern Life & Trends</h2>
+          <h2 className="text-3xl font-bold text-primary mb-6">{t('modern_life')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-semibold mb-4">Contemporary Culture</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('contemporary_culture')}</h3>
               <p className="text-gray-600 mb-4">{details.modernLife}</p>
               <ul className="list-disc list-inside text-gray-600 space-y-2">
                 {details.trends.map((trend, index) => (
@@ -130,7 +132,7 @@ const CountryDetail: React.FC = () => {
 
         {/* Must-Visit Places */}
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-primary mb-6">Must-Visit Places</h2>
+          <h2 className="text-3xl font-bold text-primary mb-6">{t('must_visit_places')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {details.places.map((place, index) => (
               <div key={index} className="bg-gray-50 rounded-lg p-6">

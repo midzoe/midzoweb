@@ -38,6 +38,10 @@ import contactEN from './locales/en/contact.json';
 import contactFR from './locales/fr/contact.json';
 import contactDE from './locales/de/contact.json';
 
+import profileEN from './locales/en/profile.json';
+import profileFR from './locales/fr/profile.json';
+import profileDE from './locales/de/profile.json';
+
 const resources = {
   en: {
     common: commonEN,
@@ -50,6 +54,7 @@ const resources = {
     countries: countriesEN,
     about: aboutEN,
     contact: contactEN,
+    profile: profileEN,
   },
   fr: {
     common: commonFR,
@@ -62,6 +67,7 @@ const resources = {
     countries: countriesFR,
     about: aboutFR,
     contact: contactFR,
+    profile: profileFR,
   },
   de: {
     common: commonDE,
@@ -74,6 +80,7 @@ const resources = {
     countries: countriesDE,
     about: aboutDE,
     contact: contactDE,
+    profile: profileDE,
   },
 };
 
@@ -85,7 +92,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'navbar', 'hero', 'footer', 'services', 'dashboard', 'forms', 'countries', 'about', 'contact'],
+    ns: ['common', 'navbar', 'hero', 'footer', 'services', 'dashboard', 'forms', 'countries', 'about', 'contact', 'profile'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

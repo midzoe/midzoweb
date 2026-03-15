@@ -30,7 +30,13 @@
   "no_favorites": "Noch keine Favoriten",
   "all_categories": "Alle Kategorien",
   "check_trip": "Fahrt Prüfen",
-  "plan_studies": "Planifier mes Études",
+  "plan_studies": "Mein Studium Planen",
   "view_profile": "Profil Anzeigen",
-  "select_category_message": "Bitte wählen Sie eine Kategorie aus, um die relevanten schnellen Links anzuzeigen"
+  "select_category_message": "Bitte wählen Sie eine Kategorie aus, um die relevanten schnellen Links anzuzeigen",
+  "quick_access": "Schnellzugriff",
+  "new_trip": "Neue Reise",
+  "no_trips_subtitle": "Beginnen Sie mit der Planung Ihrer ersten internationalen Reise mit Midzoe",
+  "plan_trip_cta": "Reise Planen",
+  "recent_services_title": "Zuletzt Verwendet",
+  "explore_now": "Services Erkunden"
 }

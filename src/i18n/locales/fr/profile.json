@@ -1,0 +1,22 @@
+{
+  "edit_profile": "Modifier le Profil",
+  "cancel_editing": "Annuler la Modification",
+  "save_changes": "Enregistrer les Modifications",
+  "personal_info": "Informations Personnelles",
+  "education_work": "Formation & Travail",
+  "languages_interests": "Langues & Intérêts",
+  "fields": {
+    "full_name": "Nom Complet",
+    "email": "Email",
+    "phone": "Téléphone",
+    "nationality": "Nationalité",
+    "education": "Formation",
+    "occupation": "Profession",
+    "languages": "Langues",
+    "interests": "Intérêts"
+  },
+  "add_language": "Ajouter une Langue",
+  "add_interest": "Ajouter un Intérêt",
+  "enter_language": "Entrez une nouvelle langue",
+  "enter_interest": "Entrez un nouvel intérêt"
+}

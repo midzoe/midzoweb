@@ -5,21 +5,17 @@ import { useAuth } from '../context/AuthContext';
 
 const Login: React.FC = () => {
   const { t } = useTranslation('forms');
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
-    const success = await login(username, password);
+    const success = await login(identifier, password);
     if (success) {
       navigate('/dashboard');
-    } else {
-      setError(t('errors.invalid_password'));
     }
   };
 
@@ -34,24 +30,19 @@ const Login: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
-            
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                {t('fields.username')}
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700">
+                {t('fields.identifier')}
               </label>
               <div className="mt-1">
                 <input
-                  id="username"
-                  name="username"
+                  id="identifier"
+                  name="identifier"
                   type="text"
+                  autoComplete="username"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                 />
               </div>

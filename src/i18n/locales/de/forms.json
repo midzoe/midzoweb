@@ -1,6 +1,7 @@
 {
   "fields": {
     "email": "E-Mail",
+    "identifier": "E-Mail oder Benutzername",
     "password": "Passwort",
     "firstName": "Vorname",
     "lastName": "Nachname",
