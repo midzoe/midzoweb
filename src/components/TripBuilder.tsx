@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
 import { 
   CheckCircleIcon,
-  ClockIcon,
   ExclamationCircleIcon,
   AcademicCapIcon,
   HomeIcon,
