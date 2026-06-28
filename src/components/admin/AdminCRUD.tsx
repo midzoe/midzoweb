@@ -45,14 +45,14 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
     setError('');
     try {
       const res = await fetchItems(page);
-      if (res.success) {
-        setItems(res.data || []);
-        setTotal(res.total || 0);
-      } else {
-        setError('Impossible de charger les données');
-      }
+      // Support multiple response formats from backend
+      const items = res.data ?? res.results ?? res.items ?? res.news ?? res.blogs ?? res.countries ?? res.visa ?? [];
+      const total = res.total ?? res.count ?? res.total_count ?? (Array.isArray(items) ? items.length : 0);
+      setItems(Array.isArray(items) ? items : []);
+      setTotal(typeof total === 'number' ? total : 0);
     } catch {
-      setError('Erreur de connexion');
+      setItems([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
       setShowForm(false);
       load();
     } catch {
-      setError('Erreur lors de la sauvegarde');
+      setError('Endpoint non disponible — à configurer côté backend.');
     } finally {
       setSaving(false);
     }
@@ -96,7 +96,7 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
       await deleteItem(id);
       load();
     } catch {
-      setError('Erreur lors de la suppression');
+      setError('Endpoint non disponible — à configurer côté backend.');
     }
   };
 

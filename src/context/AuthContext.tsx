@@ -84,7 +84,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const [adminVerified, setAdminVerified] = useState<boolean>(() => {
+    return localStorage.getItem('midzo_is_admin') === 'true';
+  });
+
+  // isAdmin: backend role field OR verified via admin endpoint probe
+  const isAdmin = !!(
+    user?.role === 'admin' ||
+    user?.role === 'superadmin' ||
+    (user as any)?.is_admin === true ||
+    (user as any)?.is_staff === true ||
+    adminVerified
+  );
 
   // Refresh real user data from API on app load
   useEffect(() => {
@@ -95,18 +106,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const response = await apiService.getProfile();
         if (response.success) {
-          setUser(prev => ({
-            ...emptyActivity(),
-            ...(prev ?? {}),       // preserve accumulated local activity
-            ...response.user,      // real API data always wins
-          }));
+          setUser(prev => {
+            const updated: User = {
+              ...emptyActivity(),
+              ...(prev ?? {}),
+              ...response.user,
+              // Preserve role from prev if API doesn't return it yet
+              role: response.user?.role ?? prev?.role,
+            };
+            localStorage.setItem('midzo_user', JSON.stringify(updated));
+            return updated;
+          });
+
+          // If backend doesn't return role yet, probe the admin endpoint
+          const hasRoleInResponse =
+            response.user?.role === 'admin' ||
+            response.user?.role === 'superadmin' ||
+            response.user?.is_admin === true;
+
+          if (!hasRoleInResponse) {
+            try {
+              const statsRes = await apiService.adminGetStats();
+              const isAdminViaProbe = statsRes.success === true;
+              setAdminVerified(isAdminViaProbe);
+              localStorage.setItem('midzo_is_admin', String(isAdminViaProbe));
+            } catch {
+              // Not admin or endpoint doesn't exist yet
+            }
+          }
         } else {
           apiService.logout();
+          localStorage.removeItem('midzo_is_admin');
+          setAdminVerified(false);
           setUser(null);
         }
       } catch {
-        apiService.logout();
-        setUser(null);
+        // Network error — keep existing session
       } finally {
         setIsLoading(false);
       }
@@ -120,7 +155,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await apiService.login(identifier, password);
       if (response.success) {
-        setUser({ ...emptyActivity(), ...response.user });
+        const userData: User = { ...emptyActivity(), ...response.user };
+        setUser(userData);
+        // Ensure role is persisted in localStorage immediately
+        localStorage.setItem('midzo_user', JSON.stringify(userData));
         return { success: true };
       }
       return { success: false, error: response.error };
@@ -163,6 +201,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     apiService.logout();
     localStorage.removeItem('tripBuilderData');
+    localStorage.removeItem('midzo_is_admin');
+    setAdminVerified(false);
     setUser(null);
   };
 

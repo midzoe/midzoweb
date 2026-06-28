@@ -42,7 +42,18 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     apiService.adminGetStats()
-      .then(res => { if (res.success) setStats(res.data || {}); })
+      .then(res => {
+        // Support res.data ou les champs directement à la racine
+        const s = res.data ?? res.stats ?? res;
+        setStats({
+          total_users:    s.total_users    ?? s.users    ?? 0,
+          premium_users:  s.premium_users  ?? s.premium  ?? 0,
+          total_news:     s.total_news     ?? s.news     ?? 0,
+          total_blogs:    s.total_blogs    ?? s.blogs    ?? 0,
+          total_countries:s.total_countries?? s.countries?? 0,
+          total_visa_rules:s.total_visa_rules?? s.visa   ?? 0,
+        });
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -55,9 +66,18 @@ const AdminDashboard: React.FC = () => {
     { label: 'Pays', value: stats.total_countries ?? 0, icon: GlobeAltIcon, color: 'bg-orange-500', href: '/admin/countries' },
   ];
 
+  const backendReady = Object.values(stats).some(v => v !== undefined && v > 0);
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+
+      {!backendReady && !loading && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+          <strong>Backend en attente :</strong> Les endpoints admin (<code>/admin/stats</code>, <code>/admin/users</code>, <code>/admin/news</code>, etc.) ne sont pas encore implémentés.
+          L'interface est prête — les données s'afficheront automatiquement dès que le backend les expose.
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center h-40">
