@@ -39,14 +39,15 @@ const AdminUsers: React.FC = () => {
     setError('');
     try {
       const res = await apiService.adminGetUsers(page, limit, search);
-      if (res.success) {
-        setUsers(res.data || []);
-        setTotal(res.total || 0);
-      } else {
-        setError('Impossible de charger les utilisateurs');
-      }
+      console.log('[AdminUsers] response:', res); // debug — retirer après confirmation
+      // Support multiple response formats from backend
+      const users = res.data ?? res.users ?? res.results ?? res.items ?? [];
+      const total = res.total ?? res.count ?? res.total_count ?? users.length ?? 0;
+      setUsers(Array.isArray(users) ? users : []);
+      setTotal(typeof total === 'number' ? total : 0);
     } catch {
-      setError('Erreur de connexion au serveur');
+      setUsers([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -68,7 +69,7 @@ const AdminUsers: React.FC = () => {
       setEditing(null);
       load();
     } catch {
-      setError('Erreur lors de la sauvegarde');
+      setError('Endpoint non disponible — à configurer côté backend.');
     } finally {
       setSaving(false);
     }
@@ -80,7 +81,7 @@ const AdminUsers: React.FC = () => {
       await apiService.adminDeleteUser(id);
       load();
     } catch {
-      setError('Erreur lors de la suppression');
+      setError('Endpoint non disponible — à configurer côté backend.');
     }
   };
 
