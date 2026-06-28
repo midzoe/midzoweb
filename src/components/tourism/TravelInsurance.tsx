@@ -51,15 +51,15 @@ const TravelInsurance: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-slate-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Travel Insurance</h1>
+        <h1 className="text-4xl font-bold text-gold-600 mb-8">Travel Insurance</h1>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Country
               </label>
               <select
@@ -75,7 +75,7 @@ const TravelInsurance: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Coverage Type
               </label>
               <select
@@ -98,27 +98,27 @@ const TravelInsurance: React.FC = () => {
             filteredInsurances.map((insurance, index) => (
               <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-primary mb-2">{insurance.provider}</h3>
-                  <p className="text-gray-600 mb-4">{insurance.country}</p>
+                  <h3 className="text-xl font-bold text-gold-600 mb-2">{insurance.provider}</h3>
+                  <p className="text-slate-600 mb-4">{insurance.country}</p>
                   <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       <span className="font-medium">Coverage Types:</span>{" "}
                       {insurance.coverageTypes.join(", ")}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       <span className="font-medium">Benefits:</span>{" "}
                       {insurance.benefits.join(", ")}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       <span className="font-medium">Monthly Premium:</span>{" "}
                       {insurance.monthlyPremium}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       <span className="font-medium">Coverage Amount:</span>{" "}
                       {insurance.coverage}
                     </p>
                   </div>
-                  <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                  <button className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
                     Get Quote
                   </button>
                 </div>
@@ -126,7 +126,7 @@ const TravelInsurance: React.FC = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 text-lg">No insurance plans found matching your criteria. Please adjust your filters.</p>
+              <p className="text-slate-500 text-lg">No insurance plans found matching your criteria. Please adjust your filters.</p>
             </div>
           )}
         </div>

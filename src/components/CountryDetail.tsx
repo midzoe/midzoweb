@@ -5,8 +5,9 @@ import { countryDetails } from '../data/countryDetails';
 
 const CountryDetail: React.FC = () => {
   const { country } = useParams();
-  const { t } = useTranslation('countries');
+  const { t, i18n } = useTranslation('countries');
   const details = countryDetails[country || ''];
+  const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
 
   if (!details) {
     return (
@@ -17,6 +18,29 @@ const CountryDetail: React.FC = () => {
       </div>
     );
   }
+
+  const tr = lang !== 'en' ? (details as any)[lang] : null;
+
+  const getHistory = () => tr?.history || details.history;
+  const getModernLife = () => tr?.modernLife || details.modernLife;
+  const getTrends = (): string[] => tr?.trends || details.trends;
+  const getMotto = () => tr?.motto || details.motto;
+  const getTradition = (i: number) => ({
+    name: tr?.traditions?.[i]?.name || details.traditions[i].name,
+    description: tr?.traditions?.[i]?.description || details.traditions[i].description,
+  });
+  const getCuisine = (i: number) => ({
+    name: tr?.cuisine?.[i]?.name || details.cuisine[i].name,
+    description: tr?.cuisine?.[i]?.description || details.cuisine[i].description,
+  });
+  const getPlace = (i: number) => ({
+    name: tr?.places?.[i]?.name || details.places[i].name,
+    description: tr?.places?.[i]?.description || details.places[i].description,
+  });
+  const getQuickFact = (i: number) => ({
+    title: tr?.quickFacts?.[i]?.title || details.quickFacts[i].title,
+    value: tr?.quickFacts?.[i]?.value || details.quickFacts[i].value,
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -32,7 +56,7 @@ const CountryDetail: React.FC = () => {
           <div className="absolute bottom-0 left-0 right-0 p-8 flex justify-between items-end">
             <div>
               <h1 className="text-5xl font-bold text-white mb-4">{t(`names.${country}`, { defaultValue: country })}</h1>
-              <p className="text-xl text-white/90">{details.motto}</p>
+              <p className="text-xl text-white/90">{getMotto()}</p>
             </div>
             <Link
               to="/login"
@@ -45,12 +69,15 @@ const CountryDetail: React.FC = () => {
 
         {/* Quick Facts */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          {details.quickFacts.map((fact, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-2">{fact.title}</h3>
-              <p className="text-gray-600">{fact.value}</p>
-            </div>
-          ))}
+          {details.quickFacts.map((_, index) => {
+            const fact = getQuickFact(index);
+            return (
+              <div key={index} className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="font-semibold text-gray-900 mb-2">{fact.title}</h3>
+                <p className="text-gray-600">{fact.value}</p>
+              </div>
+            );
+          })}
         </div>
 
         {/* History & Culture */}
@@ -59,7 +86,7 @@ const CountryDetail: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h3 className="text-xl font-semibold mb-4">{t('historical_background')}</h3>
-              <p className="text-gray-600 mb-4">{details.history}</p>
+              <p className="text-gray-600 mb-4">{getHistory()}</p>
             </div>
             <div>
               <img
@@ -75,17 +102,20 @@ const CountryDetail: React.FC = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
           <h2 className="text-3xl font-bold text-primary mb-6">{t('traditions_customs')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {details.traditions.map((tradition, index) => (
-              <div key={index} className="bg-gray-50 rounded-lg p-6">
-                <img
-                  src={tradition.image}
-                  alt={tradition.name}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
-                <h3 className="text-xl font-semibold mb-2">{tradition.name}</h3>
-                <p className="text-gray-600">{tradition.description}</p>
-              </div>
-            ))}
+            {details.traditions.map((tradition, index) => {
+              const tr_item = getTradition(index);
+              return (
+                <div key={index} className="bg-gray-50 rounded-lg p-6">
+                  <img
+                    src={tradition.image}
+                    alt={tr_item.name}
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                  <h3 className="text-xl font-semibold mb-2">{tr_item.name}</h3>
+                  <p className="text-gray-600">{tr_item.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -93,17 +123,20 @@ const CountryDetail: React.FC = () => {
         <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
           <h2 className="text-3xl font-bold text-primary mb-6">{t('food_cuisine')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {details.cuisine.map((dish, index) => (
-              <div key={index} className="bg-gray-50 rounded-lg p-6">
-                <img
-                  src={dish.image}
-                  alt={dish.name}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
-                <h3 className="text-xl font-semibold mb-2">{dish.name}</h3>
-                <p className="text-gray-600">{dish.description}</p>
-              </div>
-            ))}
+            {details.cuisine.map((dish, index) => {
+              const dish_tr = getCuisine(index);
+              return (
+                <div key={index} className="bg-gray-50 rounded-lg p-6">
+                  <img
+                    src={dish.image}
+                    alt={dish_tr.name}
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                  <h3 className="text-xl font-semibold mb-2">{dish_tr.name}</h3>
+                  <p className="text-gray-600">{dish_tr.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -113,9 +146,9 @@ const CountryDetail: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h3 className="text-xl font-semibold mb-4">{t('contemporary_culture')}</h3>
-              <p className="text-gray-600 mb-4">{details.modernLife}</p>
+              <p className="text-gray-600 mb-4">{getModernLife()}</p>
               <ul className="list-disc list-inside text-gray-600 space-y-2">
-                {details.trends.map((trend, index) => (
+                {getTrends().map((trend, index) => (
                   <li key={index}>{trend}</li>
                 ))}
               </ul>
@@ -134,17 +167,20 @@ const CountryDetail: React.FC = () => {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h2 className="text-3xl font-bold text-primary mb-6">{t('must_visit_places')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {details.places.map((place, index) => (
-              <div key={index} className="bg-gray-50 rounded-lg p-6">
-                <img
-                  src={place.image}
-                  alt={place.name}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
-                <h3 className="text-xl font-semibold mb-2">{place.name}</h3>
-                <p className="text-gray-600">{place.description}</p>
-              </div>
-            ))}
+            {details.places.map((place, index) => {
+              const place_tr = getPlace(index);
+              return (
+                <div key={index} className="bg-gray-50 rounded-lg p-6">
+                  <img
+                    src={place.image}
+                    alt={place_tr.name}
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                  <h3 className="text-xl font-semibold mb-2">{place_tr.name}</h3>
+                  <p className="text-gray-600">{place_tr.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

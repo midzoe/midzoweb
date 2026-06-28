@@ -57,7 +57,8 @@
   "messages": {
     "success": "Formular erfolgreich eingereicht",
     "error": "Beim Absenden des Formulars ist ein Fehler aufgetreten",
-    "loading": "Wird geladen..."
+    "loading": "Wird geladen...",
+    "login_failed": "Falscher Benutzername oder falsches Passwort."
   },
   "register": {
     "title": "Konto Erstellen",

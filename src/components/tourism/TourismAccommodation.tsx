@@ -70,21 +70,22 @@ const TourismAccommodation: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-slate-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Tourism Accommodation</h1>
+        <h1 className="text-4xl font-bold text-slate-900 mb-2 tracking-tight">Tourism Accommodation</h1>
+        <p className="text-slate-600 mb-8 font-light">Find and book verified accommodations worldwide</p>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Country
               </label>
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                className="w-full border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500 bg-white text-slate-700"
               >
                 <option value="">All Countries</option>
                 {allCountries.map(country => (
@@ -94,13 +95,13 @@ const TourismAccommodation: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 City
               </label>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                className="w-full border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500 bg-white text-slate-700"
               >
                 <option value="">All Cities</option>
                 {cities.map(c => (
@@ -110,13 +111,13 @@ const TourismAccommodation: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Accommodation Type
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                className="w-full border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500 bg-white text-slate-700"
               >
                 <option value="">All Types</option>
                 {types.map(t => (
@@ -126,13 +127,13 @@ const TourismAccommodation: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Price Range
               </label>
               <select
                 value={priceRange}
                 onChange={(e) => setPriceRange(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                className="w-full border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-gold-500/50 focus:border-gold-500 bg-white text-slate-700"
               >
                 <option value="">All Ranges</option>
                 {priceRanges.map(range => (
@@ -147,29 +148,29 @@ const TourismAccommodation: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAccommodations.length > 0 ? (
             filteredAccommodations.map((accommodation, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div key={index} className="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all duration-300">
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-primary mb-2">{accommodation.name}</h3>
-                  <p className="text-gray-600 mb-4">{accommodation.city}, {accommodation.location}</p>
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">{accommodation.name}</h3>
+                  <p className="text-slate-600 mb-4 font-light">{accommodation.city}, {accommodation.location}</p>
                   <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Type:</span>{" "}
+                    <p className="text-sm text-slate-700">
+                      <span className="font-semibold">Type:</span>{" "}
                       {accommodation.type}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Price:</span>{" "}
+                    <p className="text-sm text-slate-700">
+                      <span className="font-semibold">Price:</span>{" "}
                       {accommodation.priceRange}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Amenities:</span>{" "}
+                    <p className="text-sm text-slate-700">
+                      <span className="font-semibold">Amenities:</span>{" "}
                       {accommodation.amenities.join(", ")}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Rating:</span>{" "}
-                      {accommodation.rating}/5.0 ({accommodation.reviews} reviews)
+                    <p className="text-sm text-slate-700">
+                      <span className="font-semibold">Rating:</span>{" "}
+                      <span className="text-gold-600">{accommodation.rating}/5.0</span> ({accommodation.reviews} reviews)
                     </p>
                   </div>
-                  <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                  <button className="mt-4 w-full bg-gold-500 hover:bg-gold-600 text-slate-900 py-2 px-4 rounded-lg font-semibold transition-colors duration-200">
                     Book Now
                   </button>
                 </div>
@@ -177,7 +178,7 @@ const TourismAccommodation: React.FC = () => {
             ))
           ) : (
             <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 text-lg">No accommodations found matching your criteria. Please adjust your filters.</p>
+              <p className="text-slate-500 text-lg font-light">No accommodations found matching your criteria. Please adjust your filters.</p>
             </div>
           )}
         </div>

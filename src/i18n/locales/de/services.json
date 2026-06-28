@@ -3,8 +3,9 @@
   "page_subtitle": "Umfassende Unterstützung für Ihre internationale Reise",
   "filters": {
     "all": "Alle Dienstleistungen",
-    "study": "Auslandsstudium",
+    "study": "Studium & Ausbildung",
     "tourism": "Tourismus",
+    "orientation": "Orientierung",
     "professional": "Beruflich",
     "business": "Geschäft"
   },
@@ -53,8 +54,28 @@
     }
   },
   "tourism": {
-    "title": "Tourismus Services",
-    "description": "Erkunden Sie die Welt mit Vertrauen und lokalem Fachwissen",
+    "title": "Tourismus",
+    "description": "Kuratierte Reiseerlebnisse — Events, Safari, Sport und mehr",
+    "events": {
+      "name": "Events & Spektakel",
+      "description": "WM 2026, AFCON, Olympia — Komplettpakete mit Flügen, Unterkunft und Tickets"
+    },
+    "safari": {
+      "name": "Safari & Afrika-Entdeckung",
+      "description": "Lesotho, Botswana, Namibia, Simbabwe — authentische Afrika-Erlebnisse die wir in- und auswendig kennen"
+    },
+    "sports": {
+      "name": "Sporttourismus",
+      "description": "Marathons, Grand Slams, F1, Rugby — Reisen rund um Ihre Sportleidenschaft"
+    },
+    "touristVisa": {
+      "name": "Touristenvisum",
+      "description": "Vereinfachte Touristenvisum-Unterstützung für reibungslose Auslandsreisen"
+    },
+    "flightsStays": {
+      "name": "Flüge & Aufenthalte",
+      "description": "Standard-Flug+Hotel-Pakete über unsere Partnerplattformen (Booking, Expedia, Skyscanner)"
+    },
     "accommodation": {
       "name": "Tourismusunterkunft",
       "description": "Buchen Sie verifizierte Hotels und Unterkünfte weltweit"
@@ -67,10 +88,6 @@
       "name": "Touristensehenswürdigkeiten",
       "description": "Finden Sie Sehenswürdigkeiten und versteckte Juwelen"
     },
-    "touristVisa": {
-      "name": "Touristenvisum",
-      "description": "Navigieren Sie Visumanforderungen für Touristenziele"
-    },
     "travelInsurance": {
       "name": "Reiseversicherung",
       "description": "Umfassender Schutz für sorgenfreies Reisen"
@@ -81,11 +98,27 @@
     },
     "insurance": {
       "name": "Versicherung",
-      "description": "Umfassender Versicherungsschutz für Ihre Reisebedürfnisse"
+      "description": "Versicherungsschutz für Ihre Reisebedürfnisse"
     },
     "languageCenter": {
       "name": "Sprachzentrum",
       "description": "Hochwertige Sprachkurse für Reisende"
+    }
+  },
+  "orientation": {
+    "title": "Orientierung",
+    "description": "Personalisierte Beratung für Ihre internationalen Projekte",
+    "school": {
+      "name": "Schul-Orientierung",
+      "description": "Beratung bei der Wahl der richtigen Schule, des Landes und Programms für Ihr Studium im Ausland"
+    },
+    "career": {
+      "name": "Karriere-Orientierung",
+      "description": "Internationaler Arbeitsmarkt, Kompetenzanalyse und Karriereplanung im Ausland"
+    },
+    "training": {
+      "name": "Ausbildungs-Orientierung",
+      "description": "Finden Sie das richtige Berufsausbildungsprogramm oder die richtige Zertifizierung für Ihre Karriereziele"
     }
   },
   "professional": {

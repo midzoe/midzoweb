@@ -57,7 +57,8 @@
   "messages": {
     "success": "Form submitted successfully",
     "error": "An error occurred while submitting the form",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "login_failed": "Incorrect username or password."
   },
   "register": {
     "title": "Create an Account",
