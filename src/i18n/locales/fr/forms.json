@@ -57,7 +57,8 @@
   "messages": {
     "success": "Formulaire soumis avec succès",
     "error": "Une erreur s'est produite lors de la soumission du formulaire",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "login_failed": "Identifiant ou mot de passe incorrect."
   },
   "register": {
     "title": "Créer un Compte",

@@ -3,8 +3,9 @@
   "page_subtitle": "Comprehensive support for your international journey",
   "filters": {
     "all": "All Services",
-    "study": "Study Abroad",
+    "study": "Study & Training",
     "tourism": "Tourism",
+    "orientation": "Orientation",
     "professional": "Professional",
     "business": "Business"
   },
@@ -53,8 +54,28 @@
     }
   },
   "tourism": {
-    "title": "Tourism Services",
-    "description": "Explore the world with confidence and expert local knowledge",
+    "title": "Tourism",
+    "description": "Curated travel experiences — events, safari, sports and more",
+    "events": {
+      "name": "Events & Spectacles",
+      "description": "World Cup 2026, AFCON, Olympics — complete packages with flights, accommodation and tickets"
+    },
+    "safari": {
+      "name": "Safari & Africa Discovery",
+      "description": "Lesotho, Botswana, Namibia, Zimbabwe — authentic Africa experiences we know inside out"
+    },
+    "sports": {
+      "name": "Sports Tourism",
+      "description": "Marathons, Grand Slams, F1, rugby — travel built around your passion for sport"
+    },
+    "touristVisa": {
+      "name": "Tourist Visa",
+      "description": "Streamlined tourist visa assistance for hassle-free international travel"
+    },
+    "flightsStays": {
+      "name": "Flights & Stays",
+      "description": "Standard flight + hotel packages via our trusted partner platforms (Booking, Expedia, Skyscanner)"
+    },
     "accommodation": {
       "name": "Tourism Accommodation",
       "description": "Book verified hotels and accommodations worldwide"
@@ -67,25 +88,37 @@
       "name": "Tourist Sites",
       "description": "Find must-see attractions and hidden gems"
     },
-    "touristVisa": {
-      "name": "Tourist Visa",
-      "description": "Navigate visa requirements for tourism destinations"
-    },
     "travelInsurance": {
       "name": "Travel Insurance",
       "description": "Comprehensive coverage for worry-free travel"
     },
     "flightBooking": {
       "name": "Flight Booking",
-      "description": "Access competitive airfare rates and convenient flight options to destinations worldwide"
+      "description": "Access competitive airfare rates and convenient flight options worldwide"
     },
     "insurance": {
       "name": "Insurance",
-      "description": "Comprehensive insurance coverage tailored to your travel needs"
+      "description": "Comprehensive insurance coverage for your travel needs"
     },
     "languageCenter": {
       "name": "Language Center",
-      "description": "Access to quality language courses and basic communication skills for travelers"
+      "description": "Quality language courses for travelers"
+    }
+  },
+  "orientation": {
+    "title": "Orientation",
+    "description": "Personalized guidance for your international projects",
+    "school": {
+      "name": "School Orientation",
+      "description": "Guidance on choosing the right school, country and program for your studies abroad"
+    },
+    "career": {
+      "name": "Career Orientation",
+      "description": "International job market insights, skills assessment and career planning abroad"
+    },
+    "training": {
+      "name": "Training Orientation",
+      "description": "Find the right professional training program or certification matching your career goals"
     }
   },
   "professional": {

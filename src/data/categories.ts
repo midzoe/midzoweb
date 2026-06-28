@@ -1,8 +1,8 @@
 export const categories = [
   {
     id: 'study',
-    name: 'Study',
-    description: 'Educational opportunities worldwide',
+    name: 'Study & Training',
+    description: 'Educational opportunities and professional training worldwide',
     icon: '🎓',
     services: [
       'University finder',
@@ -13,6 +13,30 @@ export const categories = [
       'Insurance',
       'Language center',
       'Flight booking'
+    ]
+  },
+  {
+    id: 'tourism',
+    name: 'Tourism',
+    description: 'Curated travel experiences and events worldwide',
+    icon: '🌍',
+    services: [
+      'Events & Spectacles',
+      'Safari & Africa',
+      'Sports Tourism',
+      'Tourist Visa',
+      'Flights & Stays'
+    ]
+  },
+  {
+    id: 'orientation',
+    name: 'Orientation',
+    description: 'Personalized guidance for your international projects',
+    icon: '🧭',
+    services: [
+      'School Orientation',
+      'Career Orientation',
+      'Training Orientation'
     ]
   },
   // {
@@ -30,21 +54,6 @@ export const categories = [
   //     'Flight booking'
   //   ]
   // },
-  {
-    id: 'tourism',
-    name: 'Tourism',
-    description: 'Travel and exploration experiences',
-    icon: '🌍',
-    services: [
-      'Accommodation finder',
-      'Flight booking',
-      'Restaurant reservations',
-      'Tourist visa assistance',
-      'Insurance',
-      'Tourist sites finder',
-      'Language center'
-    ]
-  },
   // {
   //   id: 'business',
   //   name: 'Business',

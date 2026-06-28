@@ -7,15 +7,19 @@ const Login: React.FC = () => {
   const { t } = useTranslation('forms');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    const success = await login(identifier, password);
-    if (success) {
+    const result = await login(identifier, password);
+    if (result.success) {
       navigate('/dashboard');
+    } else {
+      setError(result.error || t('messages.login_failed'));
     }
   };
 
@@ -29,6 +33,11 @@ const Login: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="identifier" className="block text-sm font-medium text-gray-700">

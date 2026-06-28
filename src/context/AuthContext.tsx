@@ -11,6 +11,11 @@ interface UserActivity {
   timestamp: string;
 }
 
+interface UserLanguage {
+  language: string;
+  level: string;
+}
+
 interface User {
   id?: number;
   username: string;
@@ -18,6 +23,14 @@ interface User {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  role?: 'user' | 'admin' | 'superadmin';
+  is_premium?: boolean;
+  premium_since?: string;
+  nationality?: string;
+  country_of_residence?: string;
+  languages?: UserLanguage[];
+  newsletter_study?: boolean;
+  newsletter_tourism?: boolean;
   recentActivities: UserActivity[];
   favoriteCategories: { [key: string]: number };
   favoriteCountries: { [key: string]: number };
@@ -35,13 +48,15 @@ interface RegisterData {
 
 interface AuthContextType {
   user: User | null;
-  login: (identifier: string, password: string) => Promise<boolean>;
+  login: (identifier: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
   verifyEmail: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   addActivity: (activity: Omit<UserActivity, 'timestamp'>) => void;
   addRecentService: (service: string) => void;
+  updateUserLocally: (fields: Partial<User>) => void;
   isLoading: boolean;
+  isAdmin: boolean;
 }
 
 /** Returns a clean empty activity state — no mock data */
@@ -69,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   // Refresh real user data from API on app load
   useEffect(() => {
@@ -99,17 +115,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refresh();
   }, []);
 
-  const login = async (identifier: string, password: string): Promise<boolean> => {
+  const login = async (identifier: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
       const response = await apiService.login(identifier, password);
       if (response.success) {
         setUser({ ...emptyActivity(), ...response.user });
-        return true;
+        return { success: true };
       }
-      return false;
-    } catch {
-      return false;
+      return { success: false, error: response.error };
+    } catch (error: any) {
+      return { success: false, error: error.message };
     } finally {
       setIsLoading(false);
     }
@@ -175,8 +191,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
+  const updateUserLocally = (fields: Partial<User>) => {
+    if (!user) return;
+    const updated = { ...user, ...fields };
+    setUser(updated);
+    localStorage.setItem('midzo_user', JSON.stringify(updated));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, verifyEmail, logout, addActivity, addRecentService, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, verifyEmail, logout, addActivity, addRecentService, updateUserLocally, isLoading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

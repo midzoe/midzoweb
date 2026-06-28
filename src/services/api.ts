@@ -196,6 +196,170 @@ class ApiService {
     return this.request<any>('/universities/programs');
   }
 
+  // Extended profile update (premium fields)
+  async updateExtendedProfile(data: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    nationality?: string;
+    country_of_residence?: string;
+    languages?: { language: string; level: string }[];
+    newsletter_study?: boolean;
+    newsletter_tourism?: boolean;
+  }) {
+    return this.request<any>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Newsletter
+  async subscribeNewsletter(type: 'study' | 'tourism', email: string) {
+    return this.request<any>('/newsletter/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ type, email }),
+    });
+  }
+
+  // Travel check (premium)
+  async checkTravelRequirements(nationality: string, destination: string) {
+    const params = new URLSearchParams({ nationality, destination });
+    return this.request<any>(`/travel/check?${params.toString()}`);
+  }
+
+  // Notifications
+  async getNotifications() {
+    return this.request<any>('/notifications');
+  }
+
+  async markNotificationRead(id: number) {
+    return this.request<any>(`/notifications/${id}/read`, { method: 'PATCH' });
+  }
+
+  // ─── Admin endpoints ───────────────────────────────────────────────────────
+
+  // Admin: Users
+  async adminGetUsers(page = 1, limit = 20, search = '') {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.append('search', search);
+    return this.request<any>(`/admin/users?${params.toString()}`);
+  }
+
+  async adminUpdateUser(id: number, data: { role?: string; is_premium?: boolean; email?: string; password?: string }) {
+    return this.request<any>(`/admin/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminDeleteUser(id: number) {
+    return this.request<any>(`/admin/users/${id}`, { method: 'DELETE' });
+  }
+
+  // Admin: News
+  async adminGetNews(page = 1, limit = 20) {
+    return this.request<any>(`/admin/news?page=${page}&limit=${limit}`);
+  }
+
+  async adminCreateNews(data: object) {
+    return this.request<any>('/admin/news', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminUpdateNews(id: number, data: object) {
+    return this.request<any>(`/admin/news/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminDeleteNews(id: number) {
+    return this.request<any>(`/admin/news/${id}`, { method: 'DELETE' });
+  }
+
+  // Admin: Blog
+  async adminGetBlogs(page = 1, limit = 20) {
+    return this.request<any>(`/admin/blogs?page=${page}&limit=${limit}`);
+  }
+
+  async adminCreateBlog(data: object) {
+    return this.request<any>('/admin/blogs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminUpdateBlog(id: number, data: object) {
+    return this.request<any>(`/admin/blogs/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminDeleteBlog(id: number) {
+    return this.request<any>(`/admin/blogs/${id}`, { method: 'DELETE' });
+  }
+
+  // Admin: Visa
+  async adminGetVisaRules(page = 1, limit = 50) {
+    return this.request<any>(`/admin/visa?page=${page}&limit=${limit}`);
+  }
+
+  async adminCreateVisaRule(data: object) {
+    return this.request<any>('/admin/visa', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminUpdateVisaRule(id: number, data: object) {
+    return this.request<any>(`/admin/visa/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminDeleteVisaRule(id: number) {
+    return this.request<any>(`/admin/visa/${id}`, { method: 'DELETE' });
+  }
+
+  // Public: Visa lookup
+  async getVisaInfo(fromCountry: string, toCountry: string) {
+    const params = new URLSearchParams({ from: fromCountry, to: toCountry });
+    return this.request<any>(`/visa?${params.toString()}`);
+  }
+
+  // Admin: Countries
+  async adminGetCountries(page = 1, limit = 50) {
+    return this.request<any>(`/admin/countries?page=${page}&limit=${limit}`);
+  }
+
+  async adminCreateCountry(data: object) {
+    return this.request<any>('/admin/countries', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminUpdateCountry(id: number, data: object) {
+    return this.request<any>(`/admin/countries/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async adminDeleteCountry(id: number) {
+    return this.request<any>(`/admin/countries/${id}`, { method: 'DELETE' });
+  }
+
+  // Admin: Stats dashboard
+  async adminGetStats() {
+    return this.request<any>('/admin/stats');
+  }
+
   // Utility methods
   isAuthenticated(): boolean {
     return !!localStorage.getItem('midzo_token');
@@ -204,6 +368,11 @@ class ApiService {
   getCurrentUser() {
     const userStr = localStorage.getItem('midzo_user');
     return userStr ? JSON.parse(userStr) : null;
+  }
+
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === 'admin' || user?.role === 'superadmin';
   }
 }
 

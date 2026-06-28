@@ -3,8 +3,9 @@
   "page_subtitle": "Support complet pour votre voyage international",
   "filters": {
     "all": "Tous les Services",
-    "study": "Études à l'Étranger",
+    "study": "Études & Formations",
     "tourism": "Tourisme",
+    "orientation": "Orientation",
     "professional": "Professionnel",
     "business": "Affaires"
   },
@@ -85,8 +86,28 @@
     }
   },
   "tourism": {
-    "title": "Services de Tourisme",
-    "description": "Explorez le monde avec confiance et expertise locale",
+    "title": "Tourisme",
+    "description": "Expériences de voyage sur mesure — événements, safari, sports et plus",
+    "events": {
+      "name": "Événements & Spectacles",
+      "description": "Coupe du Monde 2026, CAN, JO — packages complets vols, hébergement et billets"
+    },
+    "safari": {
+      "name": "Safari & Découverte Afrique",
+      "description": "Lesotho, Botswana, Namibie, Zimbabwe — expériences authentiques que nous connaissons sur le bout des doigts"
+    },
+    "sports": {
+      "name": "Tourisme Sportif",
+      "description": "Marathons, Grands Chelems, F1, rugby — voyages construits autour de votre passion sportive"
+    },
+    "touristVisa": {
+      "name": "Visa Touristique",
+      "description": "Assistance visa touristique simplifiée pour voyager sans tracas"
+    },
+    "flightsStays": {
+      "name": "Vols & Séjours",
+      "description": "Packages vols + hôtel standard via nos plateformes partenaires (Booking, Expedia, Skyscanner)"
+    },
     "accommodation": {
       "name": "Hébergement Touristique",
       "description": "Réservez des hôtels et hébergements vérifiés mondialement"
@@ -99,10 +120,6 @@
       "name": "Sites Touristiques",
       "description": "Trouvez les attractions incontournables et les joyaux cachés"
     },
-    "touristVisa": {
-      "name": "Visa Touristique",
-      "description": "Naviguez les exigences de visa pour destinations touristiques"
-    },
     "travelInsurance": {
       "name": "Assurance Voyage",
       "description": "Couverture complète pour un voyage sans souci"
@@ -113,11 +130,27 @@
     },
     "insurance": {
       "name": "Assurance",
-      "description": "Couverture d'assurance complète adaptée à vos besoins de voyage"
+      "description": "Couverture d'assurance adaptée à vos besoins de voyage"
     },
     "languageCenter": {
       "name": "Centre Linguistique",
       "description": "Cours de langue de qualité pour les voyageurs"
+    }
+  },
+  "orientation": {
+    "title": "Orientation",
+    "description": "Accompagnement personnalisé pour vos projets internationaux",
+    "school": {
+      "name": "Orientation École",
+      "description": "Conseils pour choisir la bonne école, pays et programme pour vos études à l'étranger"
+    },
+    "career": {
+      "name": "Orientation Carrière",
+      "description": "Analyse des marchés du travail internationaux, bilan de compétences et planification carrière"
+    },
+    "training": {
+      "name": "Orientation Formation",
+      "description": "Trouvez le bon programme de formation professionnelle, certification ou formation technique à l'étranger"
     }
   },
   "business": {
