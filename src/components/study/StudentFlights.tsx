@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface Flight {
   airline: string;
@@ -50,7 +50,7 @@ const StudentFlights: React.FC = () => {
   const [toCountry, setToCountry] = useState<string>("");
   const [flightType, setFlightType] = useState<string>("");
   
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const flightTypes = ["Student Basic", "Student Flex", "Student Special"];
 
   const filteredFlights = mockFlights.filter(flight => {

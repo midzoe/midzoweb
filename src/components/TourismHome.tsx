@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
-import { newsItems } from '../data/news';
+import { useNews, NewsItem } from '../hooks/useNews';
 import {
   CalendarIcon,
   GlobeAltIcon,
@@ -16,6 +16,8 @@ const TourismHome = () => {
   const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
   const [liveCount, setLiveCount] = useState(487);
   const [showQuiz, setShowQuiz] = useState(false);
+  // Pas de filtre `scope` : la section affiche l'ensemble des actualités, comme avant.
+  const { news: newsItems, loading: newsLoading } = useNews();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -24,7 +26,7 @@ const TourismHome = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getTitle = (item: typeof newsItems[0]) =>
+  const getTitle = (item: NewsItem) =>
     lang === 'fr' ? item.titleFr : lang === 'de' ? item.titleDe : item.title;
 
 
@@ -378,6 +380,12 @@ const TourismHome = () => {
           <h2 className="text-4xl font-bold text-slate-900 mb-12 text-center tracking-tight">
             Inspiration & Actualités
           </h2>
+
+          {newsLoading && (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gold-600"></div>
+            </div>
+          )}
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
             {newsItems.map((item) => (

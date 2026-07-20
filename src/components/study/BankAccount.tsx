@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface Bank {
   name: string;
@@ -225,7 +225,7 @@ const BankAccount: React.FC = () => {
   const [monthlyFee, setMonthlyFee] = useState<string>("");
   const [cardType, setCardType] = useState<string>("");
   
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const accountTypes = ["Basic Student", "Basic", "Plus", "Premium", "International"];
   const monthlyFees = ["Free", "Up to €5", "Up to €10", "Above €10"];
   const cardTypes = ["Visa Debit", "Visa Gold", "Visa Platinum", "Mastercard", "Girocard", "Carte Bancaire"];

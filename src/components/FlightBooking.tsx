@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../data/regions';
+import { useCountries } from '../hooks/useCountries';
 
 interface Flight {
   airline: string;
@@ -73,7 +73,7 @@ const FlightBooking: React.FC = () => {
   const [priceRange, setPriceRange] = useState<string>("");
   const [stops, setStops] = useState<string>("");
 
-  const allCities = regions.flatMap(region => region.countries).sort();
+  const { countries: allCities } = useCountries();
   const cabinClasses = ["Economy", "Premium Economy", "Business", "First"];
   const purposes = ["Tourism", "Business", "Study", "Professional"];
   const priceRanges = ["Under $200", "$200-$500", "$500-$1000", "Above $1000"];

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface RecognitionService {
   provider: string;
@@ -44,7 +44,7 @@ const DiplomaRecognition: React.FC = () => {
   const [educationLevel, setEducationLevel] = useState<string>("");
   const [fieldOfStudy, setFieldOfStudy] = useState<string>("");
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const educationLevels = [
     "High School",
     "Bachelor's Degree",

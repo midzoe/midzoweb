@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { apiService } from '../../services/api';
-import { newsItems } from '../../data/news';
 import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 const CATEGORIES = ['Études', 'Tourisme', 'Visa', 'Professionnelle', 'Général', 'Events', 'Safari', 'Sports', 'Study'];
@@ -32,40 +31,18 @@ const AdminNews: React.FC = () => {
   const [form, setForm] = useState<Omit<NewsRow, 'id'>>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [usingLocal, setUsingLocal] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await apiService.adminGetNews();
       const data = res.data ?? res.news ?? res.results ?? res.items ?? [];
-      if (Array.isArray(data) && data.length > 0) {
-        setItems(data);
-        setUsingLocal(false);
-      } else {
-        // Fallback: use static data mapped to NewsRow format
-        setItems(newsItems.map(n => ({
-          id: n.id,
-          title: n.title,
-          title_fr: n.titleFr,
-          title_de: n.titleDe,
-          description: n.description,
-          description_fr: n.descriptionFr,
-          category: n.category,
-          image: n.image,
-          link: n.link,
-          date: n.date,
-          is_published: true,
-        })));
-        setUsingLocal(true);
-      }
-    } catch {
-      setItems(newsItems.map(n => ({
-        id: n.id, title: n.title, title_fr: n.titleFr, title_de: n.titleDe,
-        description: n.description, description_fr: n.descriptionFr,
-        category: n.category, image: n.image, link: n.link, date: n.date, is_published: true,
-      })));
-      setUsingLocal(true);
+      setItems(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      // Le catalogue vit désormais en base : une panne doit se voir, pas être masquée par des données locales.
+      setItems([]);
+      setError(e?.message ?? 'Impossible de charger les actualités');
     } finally {
       setLoading(false);
     }
@@ -115,11 +92,6 @@ const AdminNews: React.FC = () => {
         </button>
       </div>
 
-      {usingLocal && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-          Affichage des données locales — les endpoints <code>/admin/news</code> seront connectés dès que le backend les expose.
-        </div>
-      )}
       {error && <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">{error}</div>}
 
       {/* Modal */}

@@ -1,6 +1,28 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CheckIcon } from '@heroicons/react/24/outline';
+import { apiService } from '../../services/api';
+
+// Story 6.2/6.6 : événements tourisme réels + mini-blog (news scope=tourism).
+interface BackendEvent {
+  id: number;
+  title: string;
+  description?: string;
+  country?: string;
+  city?: string;
+  location?: string;
+  startDate?: string;
+  status: string;
+  link?: string;
+}
+interface TourismNews {
+  id: number;
+  title: string;
+  description?: string;
+  link?: string;
+  subcategory?: string;
+}
 
 const eventImages: Record<string, string> = {
   worldcup2026: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
@@ -246,6 +268,14 @@ const allLabels: Record<string, Labels> = {
 };
 
 const TourismEvents = () => {
+  // Données réelles : événements (6.2) + mini-blog tourisme (6.4 : news scope=tourism).
+  const [backendEvents, setBackendEvents] = useState<BackendEvent[]>([]);
+  const [tourismNews, setTourismNews] = useState<TourismNews[]>([]);
+  useEffect(() => {
+    apiService.getTourismEvents().then(res => setBackendEvents(res.data ?? [])).catch(() => {});
+    apiService.getNews({ scope: 'tourism' }).then(res => setTourismNews(res.data ?? res.results ?? [])).catch(() => {});
+  }, []);
+
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
   const t: Labels = allLabels[lang];
@@ -269,6 +299,53 @@ const TourismEvents = () => {
           <p className="text-xl text-slate-100 max-w-2xl mx-auto font-light">{t.subtitle}</p>
         </div>
       </div>
+
+      {/* Événements réels (backend, story 6.2) */}
+      {backendEvents.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">{lang === 'fr' ? 'Événements à venir' : lang === 'de' ? 'Kommende Veranstaltungen' : 'Upcoming events'}</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {backendEvents.map(ev => (
+              <div key={ev.id} className="bg-white rounded-lg shadow-sm border border-slate-100 p-6 flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-slate-900">{ev.title}</h3>
+                  <span className={`text-xs px-2 py-1 rounded-full ${ev.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {ev.status}
+                  </span>
+                </div>
+                {(ev.city || ev.country || ev.location) && (
+                  <p className="text-sm text-slate-500 mb-2">{[ev.location, ev.city, ev.country].filter(Boolean).join(', ')}</p>
+                )}
+                {ev.startDate && <p className="text-sm text-slate-500 mb-2">{new Date(ev.startDate).toLocaleDateString()}</p>}
+                {ev.description && <p className="text-slate-700 text-sm flex-grow font-light">{ev.description}</p>}
+                {ev.link && (
+                  <a href={ev.link.startsWith('http') ? ev.link : `https://${ev.link}`} target="_blank" rel="noopener noreferrer" className="mt-4 text-gold-600 text-sm font-semibold hover:underline">
+                    {lang === 'fr' ? 'En savoir plus' : lang === 'de' ? 'Mehr erfahren' : 'Learn more'} →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Mini-blog tourisme (news scope=tourism, story 6.4) */}
+      {tourismNews.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">{lang === 'fr' ? 'Actualités tourisme' : lang === 'de' ? 'Tourismus-News' : 'Tourism news'}</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {tourismNews.map(n => (
+              <div key={n.id} className="bg-white rounded-lg shadow-sm border border-slate-100 p-6">
+                <h3 className="text-base font-semibold text-slate-900 mb-2">{n.title}</h3>
+                {n.description && <p className="text-slate-700 text-sm font-light">{n.description}</p>}
+                {n.link && (
+                  <a href={n.link.startsWith('http') ? n.link : `https://${n.link}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-gold-600 text-sm font-semibold hover:underline">→</a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Events Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">

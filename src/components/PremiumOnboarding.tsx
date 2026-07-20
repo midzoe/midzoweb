@@ -177,12 +177,17 @@ const PremiumOnboarding: React.FC<PremiumOnboardingProps> = ({ isOpen, onClose, 
                 </div>
               )}
 
+              {languages.length === 0 && (
+                <p className="text-xs text-gray-400">Ajoutez au moins une langue pour continuer.</p>
+              )}
+
               <div className="flex gap-3 mt-2">
                 <button onClick={() => setStep(1)}
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50">
                   ← Retour
                 </button>
-                <button onClick={handleSave} disabled={saving}
+                {/* ≥1 langue exigée (règle FR9) : sans cette garde, le gate 3.9 bouclerait. */}
+                <button onClick={handleSave} disabled={saving || languages.length === 0}
                   className="flex-1 py-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2">
                   <CheckIcon className="h-5 w-5" />
                   {saving ? 'Enregistrement...' : 'Terminer'}

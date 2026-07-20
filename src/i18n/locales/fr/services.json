@@ -194,6 +194,7 @@
     }
   },
   "services": {
-    "learn_more": "En Savoir Plus"
+    "learn_more": "En Savoir Plus",
+    "load_error": "Impossible de charger nos services pour le moment. Veuillez réessayer plus tard."
   }
 }

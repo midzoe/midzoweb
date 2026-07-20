@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import TourismProgramsSection from './TourismProgramsSection';
 
 interface SportCategory {
   id: string;
@@ -113,6 +114,8 @@ const SportsTourism = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Programmes sport réels (backend, story 6.1/6.5) */}
+      <TourismProgramsSection subcategory="sport" heading="Sports programs" />
       {/* Hero */}
       <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 py-24 overflow-hidden border-b border-slate-700">
         <div className="absolute inset-0 opacity-15">

@@ -1,26 +1,69 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import apiService from '../services/api';
+
+interface SubjectCategory {
+  id: string;
+  name: string;
+  subcategories: { id: number | string; name: string; isOther?: boolean }[];
+}
 
 const Contact: React.FC = () => {
   const { t } = useTranslation('contact');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
+    category: '',
+    subcategory: '',
     message: ''
   });
+  // Story 8.2/8.6 : arbre des sujets servi par le backend (catégories → sous-catégories + « Autre »).
+  const [subjects, setSubjects] = useState<SubjectCategory[]>([]);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    apiService
+      .getContactSubjects()
+      .then((res) => setSubjects(res?.subjects || []))
+      .catch(() => setSubjects([]));
+  }, []);
+
+  const currentSubcategories = useMemo(
+    () => subjects.find((s) => s.id === formData.category)?.subcategories || [],
+    [subjects, formData.category]
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission logic would go here
-    console.log('Form submitted:', formData);
+    setStatus('sending');
+    setErrorMsg('');
+    try {
+      const selected = subjects.find((s) => s.id === formData.category);
+      await apiService.sendContact({
+        name: formData.name,
+        email: formData.email,
+        subject: selected?.name,
+        category: formData.category || undefined,
+        subcategory: formData.subcategory || undefined,
+        message: formData.message,
+      });
+      setStatus('sent');
+      setFormData({ name: '', email: '', category: '', subcategory: '', message: '' });
+    } catch (err: any) {
+      setStatus('error');
+      setErrorMsg(err?.message || 'Une erreur est survenue.');
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    // Changer de catégorie réinitialise la sous-catégorie (le filtre se pré-sélectionne, AC 8.6).
+    if (name === 'category') {
+      setFormData((prev) => ({ ...prev, category: value, subcategory: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const offices = [
@@ -96,25 +139,43 @@ const Contact: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
                   {t('fields.subject')}
                 </label>
                 <select
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
+                  id="category"
+                  name="category"
+                  value={formData.category}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
                 >
                   <option value="">Select a subject</option>
-                  <option value="Study">Study Abroad</option>
-                  <option value="Professional">Professional Training</option>
-                  <option value="Tourism">Tourism</option>
-                  <option value="Business">Business Travel</option>
-                  <option value="Other">Other</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
                 </select>
               </div>
+
+              {currentSubcategories.length > 0 && (
+                <div>
+                  <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('fields.subcategory', { defaultValue: 'Sous-catégorie' })}
+                  </label>
+                  <select
+                    id="subcategory"
+                    name="subcategory"
+                    value={formData.subcategory}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">—</option>
+                    {currentSubcategories.map((sub) => (
+                      <option key={String(sub.id)} value={sub.name}>{sub.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
@@ -133,10 +194,20 @@ const Contact: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors"
+                disabled={status === 'sending'}
+                className="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60"
               >
-                {t('buttons.send')}
+                {status === 'sending' ? '…' : t('buttons.send')}
               </button>
+
+              {status === 'sent' && (
+                <p className="text-green-600 text-sm text-center">
+                  {t('feedback.sent', { defaultValue: 'Message envoyé, merci ! Nous revenons vers vous rapidement.' })}
+                </p>
+              )}
+              {status === 'error' && (
+                <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+              )}
             </form>
           </div>
 

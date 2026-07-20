@@ -18,5 +18,7 @@
   "add_language": "Ajouter une Langue",
   "add_interest": "Ajouter un Intérêt",
   "enter_language": "Entrez une nouvelle langue",
-  "enter_interest": "Entrez un nouvel intérêt"
+  "enter_interest": "Entrez un nouvel intérêt",
+  "saved": "Profil mis à jour avec succès.",
+  "save_error": "Impossible d'enregistrer votre profil. Veuillez réessayer."
 }

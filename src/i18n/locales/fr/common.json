@@ -44,7 +44,8 @@
   },
   "news": {
     "title": "Dernières Tendances de Voyage",
-    "subtitle": "Restez informé des dernières nouvelles et opportunités"
+    "subtitle": "Restez informé des dernières nouvelles et opportunités",
+    "load_error": "Impossible de charger les actualités"
   },
   "messages": {
     "welcome": "Bienvenue",

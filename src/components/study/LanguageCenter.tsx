@@ -1,85 +1,106 @@
-import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useCountries } from '../../hooks/useCountries';
+import { apiService } from '../../services/api';
 
-interface LanguageCourse {
-  provider: string;
+// Story 5.8 : centres de langue servis par le backend (modèle LanguageCenter, story 5.4).
+// Cible de redirection depuis la vérification d'exigence de langue université (story 5.3) :
+// quand le niveau de l'étudiant est insuffisant, on l'envoie ici avec ?language=&country=&level=&university=.
+interface LanguageCenter {
+  id: number;
+  name: string;
   country: string;
-  languages: string[];
-  levels: string[];
-  duration: string;
-  price: string;
-  features: string[];
-  image: string;
-  description: string;
+  city?: string;
+  language: string;
+  levels?: string;
+  link?: string;
+  isPartner: boolean;
 }
 
-const mockCourses: LanguageCourse[] = [
-  {
-    provider: "British Language Institute",
-    country: "United Kingdom",
-    languages: ["English"],
-    levels: ["Beginner", "Intermediate", "Advanced"],
-    duration: "4-12 weeks",
-    price: "£200/week",
-    features: ["Native Teachers", "Small Groups", "Certification"],
-    image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "Premier English language institute with experienced native speakers and modern teaching methods."
-  },
-  {
-    provider: "Goethe Institut",
-    country: "Germany",
-    languages: ["German"],
-    levels: ["A1", "A2", "B1", "B2", "C1"],
-    duration: "8-16 weeks",
-    price: "€180/week",
-    features: ["Cultural Activities", "Online Platform", "Exam Preparation"],
-    image: "https://images.unsplash.com/photo-1577985051167-0d49eec21977?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "Official German language and cultural institute offering comprehensive language programs."
-  },
-  {
-    provider: "Alliance Française",
-    country: "France",
-    languages: ["French"],
-    levels: ["Beginner", "Intermediate", "Advanced"],
-    duration: "6-24 weeks",
-    price: "€190/week",
-    features: ["Conversation Classes", "Cultural Workshops", "Official Certification"],
-    image: "https://images.unsplash.com/photo-1505902987837-9e40ec37e607?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "Leading French language institution combining language learning with cultural immersion."
-  }
-];
+const LANGUAGES = ['Anglais', 'Allemand', 'Français', 'Espagnol', 'Italien', 'Chinois'];
 
-const LanguageCenter: React.FC = () => {
-  const [country, setCountry] = useState<string>("");
-  const [language, setLanguage] = useState<string>("");
-  const [level, setLevel] = useState<string>("");
-  
-  const allCountries = regions.flatMap(region => region.countries).sort();
-  const languages = ["English", "German", "French", "Spanish", "Italian", "Chinese"];
-  const levels = ["Beginner", "Intermediate", "Advanced", "A1", "A2", "B1", "B2", "C1", "C2"];
+const LanguageCenterPage: React.FC = () => {
+  const { countries: allCountries } = useCountries();
+  const [searchParams] = useSearchParams();
 
-  const filteredCourses = mockCourses.filter(course => {
-    if (country && course.country !== country) return false;
-    if (language && !course.languages.includes(language)) return false;
-    if (level && !course.levels.includes(level)) return false;
-    return true;
-  });
+  // Contexte de redirection (niveau insuffisant) — optionnel.
+  const redirectLanguage = searchParams.get('language') ?? '';
+  const redirectLevel = searchParams.get('level') ?? '';
+  const redirectUniversity = searchParams.get('university') ?? '';
+  const redirectCountry = searchParams.get('country') ?? '';
+  const cameFromCheck = !!(redirectLanguage || redirectUniversity);
+
+  const [country, setCountry] = useState<string>(redirectCountry);
+  const [language, setLanguage] = useState<string>(redirectLanguage);
+
+  const [centers, setCenters] = useState<LanguageCenter[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await apiService.getLanguageCenters({
+        ...(language && { language }),
+        ...(country && { country }),
+      });
+      setCenters(res.data ?? []);
+    } catch (err) {
+      console.error('Error loading language centers:', err);
+      setError('Failed to load language centers. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country, language]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Language Center</h1>
+        <h1 className="text-4xl font-bold text-primary mb-8">Language Centers</h1>
+
+        {/* Bannière de redirection : niveau de langue insuffisant (story 5.3 → 5.8) */}
+        {cameFromCheck && (
+          <div className="bg-amber-50 border border-amber-300 rounded-lg p-5 mb-6">
+            <p className="text-amber-800 font-medium">
+              {redirectUniversity
+                ? `Votre niveau de langue n'atteint pas encore l'exigence de « ${redirectUniversity} ».`
+                : 'Votre niveau de langue est insuffisant pour cette université.'}
+            </p>
+            <p className="text-amber-700 text-sm mt-1">
+              {redirectLanguage && `Langue requise : ${redirectLanguage}${redirectLevel ? ` (niveau ${redirectLevel})` : ''}. `}
+              Voici des centres de langue pour vous mettre à niveau.
+            </p>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+              <select
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+              >
+                <option value="">All Languages</option>
+                {LANGUAGES.map(l => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
               <select
                 value={country}
-                onChange={(e) => setCountry(e.target.value)}
+                onChange={e => setCountry(e.target.value)}
                 className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
               >
                 <option value="">All Countries</option>
@@ -88,93 +109,75 @@ const LanguageCenter: React.FC = () => {
                 ))}
               </select>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Language
-              </label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Languages</option>
-                {languages.map(lang => (
-                  <option key={lang} value={lang}>{lang}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Level
-              </label>
-              <select
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Levels</option>
-                {levels.map(l => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
-            </div>
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading language centers...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.length > 0 ? (
-            filteredCourses.map((course, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={course.image}
-                    alt={course.provider}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                  />
-                  <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-primary">
-                    {course.price}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {centers.length > 0 ? (
+              centers.map(center => (
+                <div key={center.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-xl font-bold text-primary">{center.name}</h3>
+                      {center.isPartner && (
+                        <span className="inline-block bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                          Partner
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mb-4">
+                      {center.city ? `${center.city}, ` : ''}{center.country}
+                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Language:</span> {center.language}
+                      </p>
+                      {center.levels && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Levels:</span> {center.levels}
+                        </p>
+                      )}
+                    </div>
+                    {center.link && (
+                      <a
+                        href={center.link.startsWith('http') ? center.link : `https://${center.link}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 block w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors text-center"
+                      >
+                        Learn More
+                      </a>
+                    )}
                   </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-primary mb-2">{course.provider}</h3>
-                  <p className="text-gray-600 mb-4">{course.country}</p>
-                  <p className="text-gray-600 mb-4">{course.description}</p>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Languages:</span>{" "}
-                      {course.languages.join(", ")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Levels:</span>{" "}
-                      {course.levels.join(", ")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Duration:</span>{" "}
-                      {course.duration}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Features:</span>{" "}
-                      {course.features.join(", ")}
-                    </p>
-                  </div>
-                  <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
-                    Enroll Now
-                  </button>
-                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-500 text-lg">
+                  No language centers found matching your criteria. Please adjust your filters or check back later.
+                </p>
               </div>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 text-lg">No language courses found matching your criteria. Please adjust your filters.</p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default LanguageCenter;
+export default LanguageCenterPage;

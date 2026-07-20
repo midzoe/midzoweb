@@ -18,5 +18,7 @@
   "add_language": "Sprache Hinzufügen",
   "add_interest": "Interesse Hinzufügen",
   "enter_language": "Neue Sprache eingeben",
-  "enter_interest": "Neues Interesse eingeben"
+  "enter_interest": "Neues Interesse eingeben",
+  "saved": "Profil erfolgreich aktualisiert.",
+  "save_error": "Ihr Profil konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
 }

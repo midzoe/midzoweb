@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { studyCountries, getContinentForCountry } from '../data/countryAvailability';
+import { useCountries } from '../hooks/useCountries';
 
 const Hero = () => {
   const { t } = useTranslation('hero');
   const { t: tCountries } = useTranslation('countries');
   const [expandedStudy, setExpandedStudy] = useState(false);
+  const { studyCountries, getContinentForCountry, loading: countriesLoading } = useCountries();
 
   const getCountryName = (country: string) => {
     return tCountries(`names.${country}`, country);
@@ -131,12 +132,14 @@ const Hero = () => {
                         {getContinentForCountry(country)} {getCountryName(country)}
                       </Link>
                     ))}
-                    <button
-                      onClick={() => setExpandedStudy(!expandedStudy)}
-                      className="px-4 py-2 bg-blue-400/60 rounded-full text-sm font-medium hover:bg-blue-400 transition"
-                    >
-                      +{studyCountries.length - 4} {t('study_more')}
-                    </button>
+                    {studyCountries.length > 4 && (
+                      <button
+                        onClick={() => setExpandedStudy(!expandedStudy)}
+                        className="px-4 py-2 bg-blue-400/60 rounded-full text-sm font-medium hover:bg-blue-400 transition"
+                      >
+                        +{studyCountries.length - 4} {t('study_more')}
+                      </button>
+                    )}
                   </div>
 
                   {/* Expanded countries list */}
@@ -165,7 +168,9 @@ const Hero = () => {
                 {/* Statistics box */}
                 <div className="bg-blue-500/20 backdrop-blur-sm rounded-xl p-6 md:p-8 text-center border border-blue-400/30 md:min-w-max">
                   <p className="text-sm text-blue-100 mb-2 font-medium">{t('study_available')}</p>
-                  <p className="text-5xl md:text-6xl font-black text-white">{studyCountries.length}</p>
+                  <p className="text-5xl md:text-6xl font-black text-white">
+                    {countriesLoading ? '—' : studyCountries.length}
+                  </p>
                   <p className="text-sm text-blue-100 mt-2 font-medium">{t('study_countries')}</p>
                   <div className="mt-6 pt-6 border-t border-blue-400/30">
                     <p className="text-xs text-blue-100 mb-3">{t('study_click_explore')}</p>

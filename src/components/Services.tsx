@@ -1,15 +1,16 @@
 import  { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { categories } from '../data/categories';
-import { serviceDetails } from '../data/services';
+import { useCategories } from '../hooks/useCategories';
 import { Link, useLocation } from 'react-router-dom';
 
 const Services = () => {
   const { t } = useTranslation('services');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const location = useLocation();
+  const { categories, serviceDetails, loading, error } = useCategories();
 
-  // Synchronize category with URL hash on mount and when location changes
+  // Synchronize category with URL hash on mount and when location changes.
+  // Dépend aussi de `categories` : le hash peut arriver avant le chargement backend.
   useEffect(() => {
     const hash = location.hash.slice(1); // Remove '#' from hash
     if (hash && categories.some(cat => cat.id === hash)) {
@@ -20,11 +21,27 @@ const Services = () => {
         element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 0);
     }
-  }, [location.hash]);
+  }, [location.hash, categories]);
 
   const displayedCategories = selectedCategory
     ? categories.filter(category => category.id === selectedCategory)
     : categories;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-16 flex items-center justify-center">
+        <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-16 flex items-center justify-center px-4">
+        <p className="text-center text-gray-600">{t('services.load_error')}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-16">

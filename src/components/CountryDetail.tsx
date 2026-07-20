@@ -1,13 +1,33 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { countryDetails } from '../data/countryDetails';
+import { useCountryDetail } from '../hooks/useCountryDetail';
 
 const CountryDetail: React.FC = () => {
   const { country } = useParams();
   const { t, i18n } = useTranslation('countries');
-  const details = countryDetails[country || ''];
+  const { details, loading, error } = useCountryDetail(country);
   const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-bold text-primary mb-8">{t('load_error')}</h1>
+        </div>
+      </div>
+    );
+  }
 
   if (!details) {
     return (

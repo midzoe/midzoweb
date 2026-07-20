@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface LegalizationService {
   provider: string;
@@ -106,7 +106,7 @@ const DocumentLegalization: React.FC = () => {
   const [service, setService] = useState<string>("");
   const [processingTime, setProcessingTime] = useState<string>("");
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const documentTypes = [
     "Academic Degrees",
     "Professional Certificates",

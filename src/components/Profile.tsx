@@ -75,6 +75,7 @@ const Profile: React.FC = () => {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [interestDropdownOpen, setInterestDropdownOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -116,35 +117,31 @@ const Profile: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setSaveError('');
     const [first_name, ...rest] = formData.fullName.trim().split(' ');
+    const changes = {
+      first_name,
+      last_name: rest.join(' ') || undefined,
+      email: formData.email || undefined,
+      phone: formData.phone || undefined,
+      nationality: formData.nationality || undefined,
+      country_of_residence: formData.country_of_residence || undefined,
+      languages: formData.languages.length ? formData.languages : undefined,
+    };
+
     try {
-      await apiService.updateExtendedProfile({
-        first_name,
-        last_name: rest.join(' ') || undefined,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
-        nationality: formData.nationality || undefined,
-        country_of_residence: formData.country_of_residence || undefined,
-        languages: formData.languages.length ? formData.languages : undefined,
-      });
-      updateUserLocally({
-        first_name,
-        last_name: rest.join(' ') || undefined,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
-        nationality: formData.nationality || undefined,
-        country_of_residence: formData.country_of_residence || undefined,
-        languages: formData.languages.length ? formData.languages : undefined,
-      });
+      await apiService.updateExtendedProfile(changes);
+      updateUserLocally(changes);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch {
-      // silent — backend may not have these fields yet
-    } finally {
-      setIsSaving(false);
       setIsEditing(false);
       setLangDropdownOpen(false);
       setInterestDropdownOpen(false);
+    } catch {
+      // Une sauvegarde échouée doit se voir : on reste en édition pour préserver la saisie.
+      setSaveError(t('save_error'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -193,7 +190,13 @@ const Profile: React.FC = () => {
 
         {saveSuccess && (
           <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm flex items-center gap-2">
-            <CheckIcon className="h-4 w-4" /> Profil mis à jour avec succès.
+            <CheckIcon className="h-4 w-4" /> {t('saved')}
+          </div>
+        )}
+
+        {saveError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
+            <XMarkIcon className="h-4 w-4 flex-shrink-0" /> {saveError}
           </div>
         )}
 

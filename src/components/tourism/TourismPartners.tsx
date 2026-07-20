@@ -1,5 +1,17 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { apiService } from '../../services/api';
+
+// Story 6.3/6.7 : partenaires gérés par l'admin, clic tracké (redirection comptée).
+interface BackendPartner {
+  id: number;
+  name: string;
+  url: string;
+  category?: string;
+  logoUrl?: string;
+  description?: string;
+}
 
 interface Partner {
   name: string;
@@ -64,6 +76,24 @@ const partners: Partner[] = [
 const TourismPartners = () => {
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
+
+  // Partenaires réels servis par le backend (story 6.3).
+  const [backendPartners, setBackendPartners] = useState<BackendPartner[]>([]);
+  useEffect(() => {
+    apiService.getTourismPartners()
+      .then(res => setBackendPartners(res.data ?? []))
+      .catch(() => {});
+  }, []);
+
+  // Clic tracké : incrémente le compteur puis ouvre l'URL renvoyée.
+  const handlePartnerClick = async (p: BackendPartner) => {
+    try {
+      const res = await apiService.trackPartnerClick(p.id);
+      window.open(res?.url ?? p.url, '_blank', 'noopener,noreferrer');
+    } catch {
+      window.open(p.url, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   const labels = {
     en: {
@@ -144,6 +174,36 @@ const TourismPartners = () => {
           <p className="text-slate-700 leading-relaxed font-light">{t.why_desc}</p>
         </div>
       </div>
+
+      {/* Partenaires backend (gérés par l'admin, clics trackés) — story 6.3/6.7 */}
+      {backendPartners.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {backendPartners.map((p) => (
+              <div key={p.id} className="bg-white rounded-lg shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col">
+                <div className="bg-gold-600 p-6 flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center font-bold text-lg text-white overflow-hidden">
+                    {p.logoUrl ? <img src={p.logoUrl} alt={p.name} className="w-full h-full object-cover" /> : p.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">{p.name}</h2>
+                    {p.category && <span className="text-white/80 text-xs font-light">{p.category}</span>}
+                  </div>
+                </div>
+                <div className="p-6 flex flex-col flex-grow">
+                  {p.description && <p className="text-slate-700 text-sm flex-grow mb-6 font-light">{p.description}</p>}
+                  <button
+                    onClick={() => handlePartnerClick(p)}
+                    className="block w-full text-center py-2.5 border-2 border-gold-300 hover:border-gold-600 text-gold-600 hover:bg-gold-50 rounded-lg text-sm font-semibold transition-colors duration-200"
+                  >
+                    {lang === 'fr' ? 'Visiter' : lang === 'de' ? 'Besuchen' : 'Visit'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Partners Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">

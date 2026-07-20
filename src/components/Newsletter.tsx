@@ -58,16 +58,47 @@ const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, classNam
     }
   };
 
+  // Story 8.7 (FR32) : désabonnement par type depuis l'UI.
+  const handleUnsubscribe = async () => {
+    if (!email) return;
+    setLoading(true);
+    setError('');
+    try {
+      await apiService.unsubscribeNewsletter(type, email);
+      setSuccess(false);
+      if (user) {
+        updateUserLocally(
+          type === 'study' ? { newsletter_study: false } : { newsletter_tourism: false }
+        );
+      }
+    } catch {
+      setError('Une erreur est survenue. Réessayez plus tard.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (isAlreadySubscribed || success) {
     return (
       <div className={`rounded-2xl ${config.color} p-6 text-white ${className}`}>
-        <div className="flex items-center gap-3">
-          <CheckCircleIcon className="h-8 w-8 shrink-0" />
-          <div>
-            <p className="font-semibold text-lg">Vous êtes abonné·e !</p>
-            <p className="text-white/80 text-sm">Newsletter {config.badge} — vous recevrez nos prochains envois.</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <CheckCircleIcon className="h-8 w-8 shrink-0" />
+            <div>
+              <p className="font-semibold text-lg">Vous êtes abonné·e !</p>
+              <p className="text-white/80 text-sm">Newsletter {config.badge} — vous recevrez nos prochains envois.</p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={handleUnsubscribe}
+            disabled={loading}
+            className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+          >
+            {loading ? '...' : 'Se désabonner'}
+          </button>
         </div>
+        {error && <p className="mt-2 text-sm text-white/80">{error}</p>}
       </div>
     );
   }
