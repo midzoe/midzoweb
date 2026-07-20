@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface VisaService {
   provider: string;
@@ -81,7 +81,7 @@ const WorkVisa: React.FC = () => {
   const [destinationCountry, setDestinationCountry] = useState<string>("");
   const [visaType, setVisaType] = useState<string>("");
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const visaTypes = [
     "Work Permit",
     "Blue Card",

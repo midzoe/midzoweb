@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface TouristSite {
   name: string;
@@ -50,7 +50,7 @@ const TouristSites: React.FC = () => {
   const [category, setCategory] = useState<string>("");
   const [priceRange, setPriceRange] = useState<string>("");
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const categories = ["Landmarks", "Historical", "Religious Sites", "Museums", "Parks", "Entertainment"];
   const priceRanges = ["Free", "Under €10", "€10-€25", "Above €25"];
 

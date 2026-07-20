@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface DocumentService {
   provider: string;
@@ -82,7 +82,7 @@ const DocumentServices: React.FC = () => {
   const [documentType, setDocumentType] = useState<string>("");
   const [serviceType, setServiceType] = useState<'legalization' | 'recognition' | 'all'>('all');
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
  
 
   const filteredServices = mockServices.filter(service => {

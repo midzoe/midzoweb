@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface Insurance {
   provider: string;
@@ -49,7 +49,7 @@ const StudentInsurance: React.FC = () => {
   const [country, setCountry] = useState<string>("");
   const [coverageType, setCoverageType] = useState<string>("");
   
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const coverageTypes = ["Health", "Accident", "Liability", "Travel", "Personal Property"];
 
   const filteredInsurances = mockInsurances.filter(insurance => {

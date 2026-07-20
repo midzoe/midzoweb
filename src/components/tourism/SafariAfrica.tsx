@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { MapPinIcon, DocumentCheckIcon, SparklesIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import TourismProgramsSection from './TourismProgramsSection';
 
 interface Destination {
   id: string;
@@ -171,6 +172,8 @@ const SafariAfrica = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Programmes safari réels (backend, story 6.1/6.5) */}
+      <TourismProgramsSection subcategory="safari" heading="Safari programs" />
       {/* Hero */}
       <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 py-24 overflow-hidden border-b border-slate-700">
         <div className="absolute inset-0 opacity-15">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 import { apiService } from '../../services/api';
 
 interface University {
@@ -109,6 +109,7 @@ const UniversityFinder: React.FC = () => {
   const [loadingCities, setLoadingCities] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const { countries: fallbackCountries } = useCountries();
 
   const levels = ["Bachelor", "Master", "PhD", "Certificate"];
 
@@ -175,8 +176,8 @@ const UniversityFinder: React.FC = () => {
       }
     } catch (err) {
       console.error("Error loading countries:", err);
-      // Fallback to regions data
-      setAvailableCountries(regions.flatMap(region => region.countries).sort());
+      // Fallback to backend countries (via useCountries)
+      setAvailableCountries(fallbackCountries);
     }
   };
 

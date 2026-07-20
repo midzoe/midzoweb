@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { apiService } from '../../services/api';
-import { MagnifyingGlassIcon, StarIcon, TrashIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, StarIcon, TrashIcon, PencilIcon, CheckIcon, XMarkIcon, FolderOpenIcon } from '@heroicons/react/24/outline';
+import PremiumCasePanel from './PremiumCasePanel';
 
 interface AdminUser {
   id: number;
@@ -32,14 +33,15 @@ const AdminUsers: React.FC = () => {
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [segment, setSegment] = useState<'' | 'premium'>('');
+  const [caseUserId, setCaseUserId] = useState<number | null>(null);
   const limit = 20;
 
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await apiService.adminGetUsers(page, limit, search);
-      console.log('[AdminUsers] response:', res); // debug — retirer après confirmation
+      const res = await apiService.adminGetUsers(page, limit, search, segment);
       // Support multiple response formats from backend
       const users = res.data ?? res.users ?? res.results ?? res.items ?? [];
       const total = res.total ?? res.count ?? res.total_count ?? users.length ?? 0;
@@ -51,7 +53,7 @@ const AdminUsers: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, segment]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -94,16 +96,29 @@ const AdminUsers: React.FC = () => {
         <span className="text-sm text-gray-500">{total} au total</span>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Rechercher par nom ou email..."
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+      {/* Search + segment */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher par nom ou email..."
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+        {/* Story 9.8 : segment premium */}
+        <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
+          <button onClick={() => { setSegment(''); setPage(1); }}
+            className={`px-4 py-2 ${segment === '' ? 'bg-primary text-white' : 'bg-white text-gray-600'}`}>
+            Tous
+          </button>
+          <button onClick={() => { setSegment('premium'); setPage(1); }}
+            className={`px-4 py-2 ${segment === 'premium' ? 'bg-primary text-white' : 'bg-white text-gray-600'}`}>
+            Premium
+          </button>
+        </div>
       </div>
 
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
@@ -201,6 +216,12 @@ const AdminUsers: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {u.is_premium && (
+                            <button onClick={() => setCaseUserId(u.id)} title="Dossier premium"
+                              className="p-1.5 bg-yellow-50 text-yellow-700 rounded hover:bg-yellow-100">
+                              <FolderOpenIcon className="h-4 w-4" />
+                            </button>
+                          )}
                           <button onClick={() => startEdit(u)}
                             className="p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
                             <PencilIcon className="h-4 w-4" />
@@ -234,6 +255,10 @@ const AdminUsers: React.FC = () => {
           </div>
         )}
       </div>
+
+      {caseUserId !== null && (
+        <PremiumCasePanel userId={caseUserId} onClose={() => setCaseUserId(null)} />
+      )}
     </div>
   );
 };

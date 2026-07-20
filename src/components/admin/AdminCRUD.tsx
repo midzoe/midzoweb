@@ -9,6 +9,8 @@ export interface FieldDef {
   label: string;
   type?: 'text' | 'textarea' | 'select' | 'checkbox' | 'date';
   options?: string[];
+  // Pour un select dont la valeur diffère du libellé (ex. embassy_id numérique).
+  optionItems?: { value: string; label: string }[];
   required?: boolean;
   hideInTable?: boolean;
 }
@@ -146,7 +148,9 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">— Choisir —</option>
-                      {f.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                      {f.optionItems
+                        ? f.optionItems.map(o => <option key={o.value} value={o.value}>{o.label}</option>)
+                        : f.options?.map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                   ) : f.type === 'checkbox' ? (
                     <input

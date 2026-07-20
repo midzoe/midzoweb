@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { newsItems } from '../data/news';
+import { useNews, NewsItem } from '../hooks/useNews';
 
 const categoryColors: Record<string, string> = {
   Events: 'bg-secondary text-white',
@@ -17,14 +17,18 @@ const NewsSlider = () => {
   const { t, i18n } = useTranslation('common');
   const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
   const [active, setActive] = useState(0);
+  const { news: newsItems, loading, error } = useNews();
 
-  const getTitle = (item: typeof newsItems[0]) =>
+  const getTitle = (item: NewsItem) =>
     lang === 'fr' ? item.titleFr : lang === 'de' ? item.titleDe : item.title;
 
-  const getDesc = (item: typeof newsItems[0]) =>
+  const getDesc = (item: NewsItem) =>
     lang === 'fr' ? item.descriptionFr : lang === 'de' ? item.descriptionDe : item.description;
 
   const readMore = { en: 'Read More', fr: 'Lire la Suite', de: 'Mehr Lesen' };
+
+  // L'article mis en avant est indexé : sans garde, une liste vide ferait planter le rendu.
+  const featured = newsItems[active] ?? newsItems[0];
 
   return (
     <div className="bg-white py-16">
@@ -39,28 +43,41 @@ const NewsSlider = () => {
           </p>
         </div>
 
+        {loading && (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        )}
+
+        {!loading && error && (
+          <p className="text-center text-gray-500 py-12">{t('news.load_error')}</p>
+        )}
+
+        {!loading && !error && featured && (
+          <>
+
         {/* Featured Article */}
         <div className="mb-10">
           <div className="relative rounded-2xl overflow-hidden shadow-xl h-72 md:h-96">
             <img
-              src={newsItems[active].image}
-              alt={getTitle(newsItems[active])}
+              src={featured.image}
+              alt={getTitle(featured)}
               className="w-full h-full object-cover transition-all duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${categoryColors[newsItems[active].category] || 'bg-gray-600 text-white'}`}>
-                {newsItems[active].category}
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${categoryColors[featured.category] || 'bg-gray-600 text-white'}`}>
+                {featured.category}
               </span>
               <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                {getTitle(newsItems[active])}
+                {getTitle(featured)}
               </h3>
               <p className="text-white/80 text-sm hidden md:block line-clamp-2 mb-3">
-                {getDesc(newsItems[active])}
+                {getDesc(featured)}
               </p>
-              {newsItems[active].link && (
+              {featured.link && (
                 <Link
-                  to={newsItems[active].link!}
+                  to={featured.link}
                   className="inline-block text-secondary font-semibold text-sm hover:text-white transition-colors"
                 >
                   {readMore[lang]} →
@@ -106,6 +123,8 @@ const NewsSlider = () => {
             </div>
           ))}
         </div>
+          </>
+        )}
       </div>
     </div>
   );

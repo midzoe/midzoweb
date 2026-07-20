@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AdminCRUD, { FieldDef } from './AdminCRUD';
 import { apiService } from '../../services/api';
 
@@ -22,28 +22,51 @@ const ALL_COUNTRIES = [
   'United Kingdom', 'United States', 'Uzbekistan', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe',
 ].sort();
 
-const fields: FieldDef[] = [
-  { key: 'origin_country', label: 'Pays d\'origine', type: 'select', options: ALL_COUNTRIES, required: true },
-  { key: 'destination_country', label: 'Pays de destination', type: 'select', options: ALL_COUNTRIES, required: true },
-  { key: 'visa_required', label: 'Visa requis', type: 'checkbox' },
-  { key: 'visa_type', label: 'Type de visa', type: 'select', options: VISA_TYPES, hideInTable: true },
-  { key: 'processing_time', label: 'Délai de traitement', hideInTable: true },
-  { key: 'cost', label: 'Coût estimé (€)', hideInTable: true },
-  { key: 'documents_required', label: 'Documents requis (séparés par virgule)', type: 'textarea', hideInTable: true },
-  { key: 'notes', label: 'Notes', type: 'textarea', hideInTable: true },
-  { key: 'is_validated', label: 'Validé', type: 'checkbox' },
-];
+interface EmbassyOption { id: number; name: string; country: string; }
 
-const AdminVisa: React.FC = () => (
-  <AdminCRUD
-    title="Règles Visa"
-    fields={fields}
-    fetchItems={page => apiService.adminGetVisaRules(page)}
-    createItem={data => apiService.adminCreateVisaRule(data)}
-    updateItem={(id, data) => apiService.adminUpdateVisaRule(id, data)}
-    deleteItem={id => apiService.adminDeleteVisaRule(id)}
-    itemLabelKey="origin_country"
-  />
-);
+const AdminVisa: React.FC = () => {
+  // Story 4.2 : l'admin rattache une règle à une ambassade compétente. On charge la liste
+  // des ambassades pour alimenter le select (value = id, label = "nom — pays"). Le backend
+  // valide que l'ambassade correspond bien à la destination.
+  const [embassies, setEmbassies] = useState<EmbassyOption[]>([]);
+
+  useEffect(() => {
+    apiService
+      .getEmbassies()
+      .then(res => setEmbassies((res?.data ?? []) as EmbassyOption[]))
+      .catch(() => setEmbassies([]));
+  }, []);
+
+  const fields: FieldDef[] = useMemo(() => [
+    { key: 'origin_country', label: 'Pays d\'origine', type: 'select', options: ALL_COUNTRIES, required: true },
+    { key: 'destination_country', label: 'Pays de destination', type: 'select', options: ALL_COUNTRIES, required: true },
+    { key: 'visa_required', label: 'Visa requis', type: 'checkbox' },
+    {
+      key: 'embassy_id',
+      label: 'Ambassade compétente',
+      type: 'select',
+      optionItems: embassies.map(e => ({ value: String(e.id), label: `${e.name} — ${e.country}` })),
+      hideInTable: true,
+    },
+    { key: 'visa_type', label: 'Type de visa', type: 'select', options: VISA_TYPES, hideInTable: true },
+    { key: 'processing_time', label: 'Délai de traitement', hideInTable: true },
+    { key: 'cost', label: 'Coût estimé (€)', hideInTable: true },
+    { key: 'documents_required', label: 'Documents requis (séparés par virgule)', type: 'textarea', hideInTable: true },
+    { key: 'notes', label: 'Notes', type: 'textarea', hideInTable: true },
+    { key: 'is_validated', label: 'Validé', type: 'checkbox' },
+  ], [embassies]);
+
+  return (
+    <AdminCRUD
+      title="Règles Visa"
+      fields={fields}
+      fetchItems={page => apiService.adminGetVisaRules(page)}
+      createItem={data => apiService.adminCreateVisaRule(data)}
+      updateItem={(id, data) => apiService.adminUpdateVisaRule(id, data)}
+      deleteItem={id => apiService.adminDeleteVisaRule(id)}
+      itemLabelKey="origin_country"
+    />
+  );
+};
 
 export default AdminVisa;

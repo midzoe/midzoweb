@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface Training {
   provider: string;
@@ -163,7 +163,7 @@ const TrainingFinder: React.FC = () => {
   const [priceRange, setPriceRange] = useState<string>("");
   const [category, setCategory] = useState<string>("");
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const courses = [
     // Healthcare Courses
     "Nursing Assistant Program",

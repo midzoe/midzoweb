@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface Accommodation {
   name: string;
@@ -51,7 +51,7 @@ const TourismAccommodation: React.FC = () => {
   const [type, setType] = useState<string>("");
   const [priceRange, setPriceRange] = useState<string>("");
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const cities = Array.from(new Set(mockAccommodations.map(acc => acc.city))).sort();
   const types = ["Hotel", "Resort", "Apartment", "Villa", "Guesthouse"];
   const priceRanges = [

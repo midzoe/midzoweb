@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
-import { categories } from '../data/categories';
+import { useCategories } from '../hooks/useCategories';
 import { format } from 'date-fns';
 import {
   PlusCircleIcon, StarIcon, XMarkIcon,
@@ -13,6 +13,7 @@ import {
 import TripForm from './TripForm';
 import TripWizard from './TripWizard';
 import TripBuilder from './TripBuilder';
+import NotificationsPanel from './notifications/NotificationsPanel';
 
 interface Trip {
   id: string;
@@ -36,6 +37,9 @@ const quickServices = [
 const Dashboard: React.FC = () => {
   const { t } = useTranslation('dashboard');
   const { user } = useAuth();
+  // Sert uniquement l'icône de catégorie des activités récentes : pendant le
+  // chargement, `categories` est vide et l'icône de repli s'affiche.
+  const { categories } = useCategories();
   const [showTripForm, setShowTripForm]       = useState(false);
   const [showTripWizard, setShowTripWizard]   = useState(false);
   const [selectedTrip, setSelectedTrip]       = useState<Trip | null>(null);
@@ -332,6 +336,9 @@ const Dashboard: React.FC = () => {
 
           {/* RIGHT — Sidebar */}
           <div className="space-y-5">
+
+            {/* Notifications (alertes visa premium — story 4.6) */}
+            <NotificationsPanel />
 
             {/* Next Departure */}
             {nextDeparture && (

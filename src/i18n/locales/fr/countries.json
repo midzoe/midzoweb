@@ -90,5 +90,6 @@
     "Senegal": "Sénégal",
     "Ethiopia": "Éthiopie",
     "Ivory Coast": "Côte d'Ivoire"
-  }
+  },
+  "load_error": "Impossible de charger ce pays"
 }

@@ -44,7 +44,8 @@
   },
   "news": {
     "title": "Neueste Reisetrends",
-    "subtitle": "Bleiben Sie über die neuesten Nachrichten und Möglichkeiten informiert"
+    "subtitle": "Bleiben Sie über die neuesten Nachrichten und Möglichkeiten informiert",
+    "load_error": "Nachrichten können nicht geladen werden"
   },
   "messages": {
     "welcome": "Willkommen",

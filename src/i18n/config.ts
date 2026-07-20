@@ -42,6 +42,10 @@ import profileEN from './locales/en/profile.json';
 import profileFR from './locales/fr/profile.json';
 import profileDE from './locales/de/profile.json';
 
+import premiumEN from './locales/en/premium.json';
+import premiumFR from './locales/fr/premium.json';
+import premiumDE from './locales/de/premium.json';
+
 const resources = {
   en: {
     common: commonEN,
@@ -55,6 +59,7 @@ const resources = {
     about: aboutEN,
     contact: contactEN,
     profile: profileEN,
+    premium: premiumEN,
   },
   fr: {
     common: commonFR,
@@ -68,6 +73,7 @@ const resources = {
     about: aboutFR,
     contact: contactFR,
     profile: profileFR,
+    premium: premiumFR,
   },
   de: {
     common: commonDE,
@@ -81,6 +87,7 @@ const resources = {
     about: aboutDE,
     contact: contactDE,
     profile: profileDE,
+    premium: premiumDE,
   },
 };
 
@@ -92,7 +99,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'navbar', 'hero', 'footer', 'services', 'dashboard', 'forms', 'countries', 'about', 'contact', 'profile'],
+    ns: ['common', 'navbar', 'hero', 'footer', 'services', 'dashboard', 'forms', 'countries', 'about', 'contact', 'profile', 'premium'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

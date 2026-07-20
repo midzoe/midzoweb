@@ -44,7 +44,8 @@
   },
   "news": {
     "title": "Latest Travel Trends",
-    "subtitle": "Stay updated with the latest news and opportunities"
+    "subtitle": "Stay updated with the latest news and opportunities",
+    "load_error": "Unable to load the news"
   },
   "messages": {
     "welcome": "Welcome",

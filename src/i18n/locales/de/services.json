@@ -194,6 +194,7 @@
     }
   },
   "services": {
-    "learn_more": "Mehr Erfahren"
+    "learn_more": "Mehr Erfahren",
+    "load_error": "Unsere Dienstleistungen können derzeit nicht geladen werden. Bitte versuchen Sie es später erneut."
   }
 }

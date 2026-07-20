@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { regions } from '../../data/regions';
+import { useCountries } from '../../hooks/useCountries';
 
 interface Job {
   title: string;
@@ -93,7 +93,7 @@ const JobsFinder: React.FC = () => {
   const [experience, setExperience] = useState<string>("");
   const [industry, setIndustry] = useState<string>("");
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const jobTypes = ["Full-time", "Part-time", "Contract", "Remote"];
   const experienceLevels = ["Entry Level", "1-3 years", "3-5 years", "5+ years"];
   const industries = ["Technology", "Marketing", "Finance", "Healthcare", "Education"];

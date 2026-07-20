@@ -7,6 +7,8 @@ import {
   BookOpenIcon,
   GlobeAltIcon,
   StarIcon,
+  EnvelopeIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 
 interface Stats {
@@ -16,6 +18,12 @@ interface Stats {
   total_blogs?: number;
   total_countries?: number;
   total_visa_rules?: number;
+  // Story 9.4 — insights supplémentaires
+  total_contacts?: number;
+  new_contacts?: number;
+  newsletter_study?: number;
+  newsletter_tourism?: number;
+  pending_validation?: number;
 }
 
 const StatCard: React.FC<{
@@ -52,6 +60,11 @@ const AdminDashboard: React.FC = () => {
           total_blogs:    s.total_blogs    ?? s.blogs    ?? 0,
           total_countries:s.total_countries?? s.countries?? 0,
           total_visa_rules:s.total_visa_rules?? s.visa   ?? 0,
+          total_contacts: s.total_contacts ?? 0,
+          new_contacts:   s.new_contacts   ?? 0,
+          newsletter_study: s.newsletter_study ?? 0,
+          newsletter_tourism: s.newsletter_tourism ?? 0,
+          pending_validation: s.pending_validation ?? 0,
         });
       })
       .catch(() => {})
@@ -64,6 +77,8 @@ const AdminDashboard: React.FC = () => {
     { label: 'Actualités', value: stats.total_news ?? 0, icon: NewspaperIcon, color: 'bg-green-500', href: '/admin/news' },
     { label: 'Blogs', value: stats.total_blogs ?? 0, icon: BookOpenIcon, color: 'bg-purple-500', href: '/admin/blogs' },
     { label: 'Pays', value: stats.total_countries ?? 0, icon: GlobeAltIcon, color: 'bg-orange-500', href: '/admin/countries' },
+    { label: 'Messages contact', value: stats.total_contacts ?? 0, icon: EnvelopeIcon, color: 'bg-rose-500', href: '/admin/contact-messages' },
+    { label: 'À valider', value: stats.pending_validation ?? 0, icon: ShieldCheckIcon, color: 'bg-teal-500', href: '/admin/validation' },
   ];
 
   const backendReady = Object.values(stats).some(v => v !== undefined && v > 0);
