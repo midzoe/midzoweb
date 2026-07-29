@@ -1,65 +1,26 @@
 import React, { useState } from 'react';
 import { useCountries } from '../hooks/useCountries';
+import { useApiList } from '../hooks/useApiList';
+import { apiService } from '../services/api';
 
+// Vols servis par le backend (Flight, audience = "general").
 interface Flight {
+  id: number;
   airline: string;
-  from: string;
-  to: string;
+  fromCountry: string;
+  fromCity: string;
+  toCountry: string;
+  toCity: string;
   departure: string;
   arrival: string;
   price: string;
   type: string;
-  duration: string;
+  duration?: string;
   stops: number;
-  baggage: string;
-  features: string[];
-  image: string;
+  baggage?: string;
+  features?: string[];
+  image?: string;
 }
-
-const mockFlights: Flight[] = [
-  {
-    airline: "British Airways",
-    from: "London",
-    to: "New York",
-    departure: "10:00 AM",
-    arrival: "1:30 PM",
-    price: "$450",
-    type: "Economy",
-    duration: "7h 30m",
-    stops: 0,
-    baggage: "2x23kg",
-    features: ["Meals", "Entertainment", "WiFi"],
-    image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    airline: "Lufthansa",
-    from: "Berlin",
-    to: "Paris",
-    departure: "2:00 PM",
-    arrival: "3:30 PM",
-    price: "$150",
-    type: "Business",
-    duration: "1h 30m",
-    stops: 0,
-    baggage: "2x32kg",
-    features: ["Lounge Access", "Priority Boarding", "Gourmet Meals"],
-    image: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    airline: "Air France",
-    from: "Paris",
-    to: "Rome",
-    departure: "9:00 AM",
-    arrival: "11:00 AM",
-    price: "$180",
-    type: "Economy Premium",
-    duration: "2h",
-    stops: 0,
-    baggage: "2x23kg",
-    features: ["Extra Legroom", "Priority Check-in", "Meals"],
-    image: "https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-  }
-];
 
 const FlightBooking: React.FC = () => {
   const [tripType, setTripType] = useState<'roundtrip' | 'oneway'>('roundtrip');
@@ -79,12 +40,17 @@ const FlightBooking: React.FC = () => {
   const priceRanges = ["Under $200", "$200-$500", "$500-$1000", "Above $1000"];
   const stopOptions = ["Non-stop", "1 Stop", "2+ Stops"];
 
-  const filteredFlights = mockFlights.filter(flight => {
-    if (from && flight.from !== from) return false;
-    if (to && flight.to !== to) return false;
-    if (cabinClass && flight.type !== cabinClass) return false;
-    return true;
-  });
+  // Départ, destination et classe sont filtrés côté serveur (mêmes critères qu'avant).
+  const { items: filteredFlights, loading, error } = useApiList<Flight>(
+    () => apiService.getFlights({
+      audience: 'general',
+      from,
+      to,
+      type: cabinClass,
+    }),
+    [from, to, cabinClass],
+    { errorMessage: 'Unable to load flights. Please try again later.' }
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -265,18 +231,36 @@ const FlightBooking: React.FC = () => {
           </button>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading flights...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="space-y-6">
           {filteredFlights.length > 0 ? (
-            filteredFlights.map((flight, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredFlights.map(flight => (
+              <div key={flight.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-4">
                   <div className="relative h-48 md:h-full">
-                    <img
-                      src={flight.image}
-                      alt={flight.airline}
-                      className="w-full h-full object-cover"
-                    />
+                    {flight.image ? (
+                      <img
+                        src={flight.image}
+                        alt={flight.airline}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center text-4xl">✈️</div>
+                    )}
                     <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-primary">
                       {flight.price}
                     </div>
@@ -300,7 +284,7 @@ const FlightBooking: React.FC = () => {
                       <div>
                         <p className="text-sm text-gray-500">Departure</p>
                         <p className="font-semibold">{flight.departure}</p>
-                        <p className="text-gray-600">{flight.from}</p>
+                        <p className="text-gray-600">{flight.fromCity}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-sm text-gray-500">Duration</p>
@@ -313,12 +297,12 @@ const FlightBooking: React.FC = () => {
                       <div className="text-right">
                         <p className="text-sm text-gray-500">Arrival</p>
                         <p className="font-semibold">{flight.arrival}</p>
-                        <p className="text-gray-600">{flight.to}</p>
+                        <p className="text-gray-600">{flight.toCity}</p>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {flight.features.map((feature, idx) => (
+                      {(flight.features ?? []).map((feature, idx) => (
                         <span key={idx} className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600">
                           {feature}
                         </span>
@@ -343,6 +327,7 @@ const FlightBooking: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

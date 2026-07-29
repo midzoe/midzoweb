@@ -29,6 +29,15 @@ import AdminValidation from './components/admin/AdminValidation';
 import AdminSettings from './components/admin/AdminSettings';
 import AdminOrientation from './components/admin/AdminOrientation';
 import AdminScraping from './components/admin/AdminScraping';
+import AdminFlights from './components/admin/AdminFlights';
+import AdminInsurancePlans from './components/admin/AdminInsurancePlans';
+import AdminBanks from './components/admin/AdminBanks';
+import AdminTouristSites from './components/admin/AdminTouristSites';
+import AdminRestaurants from './components/admin/AdminRestaurants';
+import AdminTourismAccommodations from './components/admin/AdminTourismAccommodations';
+import AdminJobs from './components/admin/AdminJobs';
+import AdminTrainings from './components/admin/AdminTrainings';
+import AdminServiceProviders from './components/admin/AdminServiceProviders';
 import OrientationResources from './components/Orientation';
 
 import Navbar from './components/Navbar';
@@ -76,6 +85,9 @@ import Orientation from './components/orientation/Orientation';
 import TourismHome from './components/TourismHome';
 import Community from './components/Community';
 import DestinationGuide from './components/DestinationGuide';
+import NewsArticle from './components/news/NewsArticle';
+import BlogList from './components/blog/BlogList';
+import BlogArticle from './components/blog/BlogArticle';
 
 // Professional Components
 import TrainingFinder from './components/professional/TrainingFinder';
@@ -134,12 +146,24 @@ function AppContent() {
             <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
             <Route path="/admin/orientation" element={<AdminLayout><AdminOrientation /></AdminLayout>} />
             <Route path="/admin/scraping" element={<AdminLayout><AdminScraping /></AdminLayout>} />
+            <Route path="/admin/flights" element={<AdminLayout><AdminFlights /></AdminLayout>} />
+            <Route path="/admin/insurance-plans" element={<AdminLayout><AdminInsurancePlans /></AdminLayout>} />
+            <Route path="/admin/banks" element={<AdminLayout><AdminBanks /></AdminLayout>} />
+            <Route path="/admin/tourist-sites" element={<AdminLayout><AdminTouristSites /></AdminLayout>} />
+            <Route path="/admin/restaurants" element={<AdminLayout><AdminRestaurants /></AdminLayout>} />
+            <Route path="/admin/tourism-accommodations" element={<AdminLayout><AdminTourismAccommodations /></AdminLayout>} />
+            <Route path="/admin/jobs" element={<AdminLayout><AdminJobs /></AdminLayout>} />
+            <Route path="/admin/trainings" element={<AdminLayout><AdminTrainings /></AdminLayout>} />
+            <Route path="/admin/service-providers" element={<AdminLayout><AdminServiceProviders /></AdminLayout>} />
 
             {/* ─── Public Routes ─────────────────────────────── */}
             <Route path="/" element={<><Hero /><NewsSlider /></>} />
             <Route path="/tourism" element={<TourismHome />} />
             <Route path="/community" element={<Community />} />
             <Route path="/destination/:destination" element={<DestinationGuide />} />
+            <Route path="/actualites/:id" element={<NewsArticle />} />
+            <Route path="/blog" element={<BlogList />} />
+            <Route path="/blog/:slug" element={<BlogArticle />} />
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/orientation" element={<OrientationResources />} />

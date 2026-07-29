@@ -1,49 +1,22 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Sites touristiques servis par le backend (TouristSite).
 interface TouristSite {
+  id: number;
   name: string;
+  country: string;
+  city?: string;
   location: string;
   category: string;
-  description: string;
-  rating: number;
-  reviews: number;
-  price: string;
-  features: string[];
+  description?: string;
+  rating?: number;
+  reviews?: number;
+  price?: string;
+  features?: string[];
 }
-
-const mockSites: TouristSite[] = [
-  {
-    name: "Eiffel Tower",
-    location: "Paris, France",
-    category: "Landmarks",
-    description: "Iconic iron lattice tower on the Champ de Mars",
-    rating: 4.7,
-    reviews: 12500,
-    price: "€26",
-    features: ["Guided Tours", "Restaurant", "Observation Deck"]
-  },
-  {
-    name: "Colosseum",
-    location: "Rome, Italy",
-    category: "Historical",
-    description: "Ancient amphitheater in the center of Rome",
-    rating: 4.8,
-    reviews: 9800,
-    price: "€16",
-    features: ["Audio Guide", "Skip the Line", "Guided Tours"]
-  },
-  {
-    name: "Sagrada Familia",
-    location: "Barcelona, Spain",
-    category: "Religious Sites",
-    description: "Unfinished basilica designed by Antoni Gaudí",
-    rating: 4.9,
-    reviews: 8900,
-    price: "€20",
-    features: ["Audio Guide", "Guided Tours", "Museum"]
-  }
-];
 
 const TouristSites: React.FC = () => {
   const [location, setLocation] = useState<string>("");
@@ -54,11 +27,11 @@ const TouristSites: React.FC = () => {
   const categories = ["Landmarks", "Historical", "Religious Sites", "Museums", "Parks", "Entertainment"];
   const priceRanges = ["Free", "Under €10", "€10-€25", "Above €25"];
 
-  const filteredSites = mockSites.filter(site => {
-    if (location && !site.location.includes(location)) return false;
-    if (category && site.category !== category) return false;
-    return true;
-  });
+  const { items: filteredSites, loading, error } = useApiList<TouristSite>(
+    () => apiService.getTouristSites({ country: location, category }),
+    [location, category],
+    { errorMessage: 'Unable to load tourist sites. Please try again later.' }
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -118,11 +91,25 @@ const TouristSites: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+            <p className="mt-2 text-slate-600">Loading tourist sites...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSites.length > 0 ? (
-            filteredSites.map((site, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredSites.map(site => (
+              <div key={site.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gold-600 mb-2">{site.name}</h3>
                   <p className="text-slate-600 mb-4">{site.location}</p>
@@ -141,12 +128,14 @@ const TouristSites: React.FC = () => {
                     </p>
                     <p className="text-sm text-slate-600">
                       <span className="font-medium">Features:</span>{" "}
-                      {site.features.join(", ")}
+                      {(site.features ?? []).join(", ")}
                     </p>
-                    <p className="text-sm text-slate-600">
-                      <span className="font-medium">Rating:</span>{" "}
-                      {site.rating}/5.0 ({site.reviews} reviews)
-                    </p>
+                    {site.rating != null && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-medium">Rating:</span>{" "}
+                        {site.rating}/5.0 ({site.reviews} reviews)
+                      </p>
+                    )}
                   </div>
                   <button className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
                     Book Tickets
@@ -160,6 +149,7 @@ const TouristSites: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

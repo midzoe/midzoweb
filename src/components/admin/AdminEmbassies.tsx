@@ -6,7 +6,7 @@ import { apiService } from '../../services/api';
 // du pays (cohérent avec le catalogue Country / les règles Visa).
 const fields: FieldDef[] = [
   { key: 'country', label: 'Pays', required: true },
-  { key: 'name', label: 'Nom de l\'ambassade', required: true },
+  { key: 'name', label: "Nom de l'ambassade", required: true },
   { key: 'location', label: 'Localisation', hideInTable: false },
   { key: 'link', label: 'Lien (site officiel)', hideInTable: true },
   { key: 'email', label: 'Email', hideInTable: true },

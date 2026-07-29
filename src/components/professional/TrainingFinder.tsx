@@ -1,160 +1,26 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Formations servies par le backend (Training).
 interface Training {
+  id: number;
   provider: string;
   country: string;
+  city?: string;
   course: string;
-  duration: string;
-  price: string;
-  certification: string;
-  rating: number;
-  reviews: number;
-  features: string[];
-  image: string;
-  description: string;
+  duration?: string;
+  price?: string;
+  certification?: string;
   category?: string;
+  rating?: number;
+  reviews?: number;
+  features?: string[];
+  image?: string;
+  description?: string;
+  link?: string;
 }
-
-const mockTrainings: Training[] = [
-  {
-    provider: "Global Tech Academy",
-    country: "Germany",
-    course: "Full Stack Development",
-    duration: "6 months",
-    price: "€5,000",
-    certification: "Professional Developer Certificate",
-    rating: 4.8,
-    reviews: 450,
-    features: [
-      "Industry Expert Instructors",
-      "Project-Based Learning",
-      "Career Support",
-      "Internship Placement"
-    ],
-    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Comprehensive full stack development program with focus on modern technologies.",
-    category: "Technology"
-  },
-  {
-    provider: "Medical Training Institute",
-    country: "United Kingdom",
-    course: "Nursing Assistant Program",
-    duration: "12 months",
-    price: "£8,000",
-    certification: "Certified Nursing Assistant",
-    rating: 4.9,
-    reviews: 320,
-    features: [
-      "Hands-on Clinical Training",
-      "Patient Care Techniques",
-      "Medical Ethics",
-      "Hospital Placement",
-      "Emergency Response Training"
-    ],
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Comprehensive nursing assistant program with extensive practical training and hospital placement.",
-    category: "Healthcare"
-  },
-  {
-    provider: "European Medical Academy",
-    country: "Germany",
-    course: "Emergency Medical Technician",
-    duration: "9 months",
-    price: "€7,500",
-    certification: "EMT Professional Certificate",
-    rating: 4.8,
-    reviews: 275,
-    features: [
-      "Advanced Life Support Training",
-      "Emergency Response Protocols",
-      "Medical Equipment Operation",
-      "Clinical Rotations",
-      "Ambulance Service Training"
-    ],
-    image: "https://images.unsplash.com/photo-1527613426441-4da17471b66d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Professional EMT training program with focus on emergency medical care and response.",
-    category: "Healthcare"
-  },
-  {
-    provider: "Healthcare Training Center",
-    country: "France",
-    course: "Medical Laboratory Technician",
-    duration: "15 months",
-    price: "€9,000",
-    certification: "Medical Lab Tech Certificate",
-    rating: 4.7,
-    reviews: 190,
-    features: [
-      "Laboratory Techniques",
-      "Sample Analysis",
-      "Quality Control Procedures",
-      "Medical Testing Equipment",
-      "Clinical Laboratory Practice"
-    ],
-    image: "https://images.unsplash.com/photo-1579165466741-7f35e4755660?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Comprehensive training in medical laboratory procedures and techniques.",
-    category: "Healthcare"
-  },
-  {
-    provider: "Business Excellence Institute",
-    country: "France",
-    course: "Digital Marketing",
-    duration: "3 months",
-    price: "€3,500",
-    certification: "Digital Marketing Professional",
-    rating: 4.7,
-    reviews: 320,
-    features: [
-      "Real Campaign Experience",
-      "Industry Tools Training",
-      "Portfolio Development",
-      "Networking Events"
-    ],
-    image: "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Advanced digital marketing program covering latest trends and strategies.",
-    category: "Business"
-  },
-  {
-    provider: "Innovation Hub",
-    country: "United Kingdom",
-    course: "Data Science",
-    duration: "8 months",
-    price: "£6,000",
-    certification: "Data Science Professional",
-    rating: 4.9,
-    reviews: 580,
-    features: [
-      "Machine Learning",
-      "Big Data Analytics",
-      "Python Programming",
-      "Industry Projects"
-    ],
-    image: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Comprehensive data science program with focus on practical applications.",
-    category: "Technology"
-  },
-  {
-    provider: "Medical Skills Institute",
-    country: "Spain",
-    course: "Pharmacy Technician",
-    duration: "12 months",
-    price: "€8,500",
-    certification: "Certified Pharmacy Technician",
-    rating: 4.8,
-    reviews: 230,
-    features: [
-      "Pharmaceutical Calculations",
-      "Medication Dispensing",
-      "Pharmacy Law and Ethics",
-      "Inventory Management",
-      "Clinical Pharmacy Practice"
-    ],
-    image: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    description: "Complete pharmacy technician training with hands-on experience in clinical settings.",
-    category: "Healthcare"
-  }
-];
 
 const TrainingFinder: React.FC = () => {
   const [country, setCountry] = useState<string>("");
@@ -202,12 +68,17 @@ const TrainingFinder: React.FC = () => {
     "Above €10,000"
   ];
 
-  const filteredTrainings = mockTrainings.filter(training => {
-    if (country && training.country !== country) return false;
-    if (course && training.course !== course) return false;
-    if (category && training.category !== category) return false;
-    return true;
-  });
+  // Pays et catégorie sont filtrés côté serveur ; l'intitulé exact du cours est
+  // affiné ici (l'API cherche « contient », le select attend une correspondance stricte).
+  const { items: trainings, loading, error } = useApiList<Training>(
+    () => apiService.getTrainings({ country, category }),
+    [country, category],
+    { errorMessage: 'Unable to load training programs. Please try again later.' }
+  );
+
+  const filteredTrainings = course
+    ? trainings.filter(t => t.course === course)
+    : trainings;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -299,21 +170,37 @@ const TrainingFinder: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading training programs...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTrainings.length > 0 ? (
-            filteredTrainings.map((training, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="relative h-48">
-                  <img
-                    src={training.image}
-                    alt={training.course}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-primary">
-                    {training.price}
+            filteredTrainings.map(training => (
+              <div key={training.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                {training.image && (
+                  <div className="relative h-48">
+                    <img
+                      src={training.image}
+                      alt={training.course}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-primary">
+                      {training.price}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -336,13 +223,15 @@ const TrainingFinder: React.FC = () => {
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Certification:</span> {training.certification}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Rating:</span> {training.rating}/5.0 ({training.reviews} reviews)
-                    </p>
+                    {training.rating != null && (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Rating:</span> {training.rating}/5.0 ({training.reviews} reviews)
+                      </p>
+                    )}
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">Features:</span>
                       <ul className="list-disc list-inside mt-1">
-                        {training.features.map((feature, idx) => (
+                        {(training.features ?? []).map((feature, idx) => (
                           <li key={idx}>{feature}</li>
                         ))}
                       </ul>
@@ -360,6 +249,7 @@ const TrainingFinder: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

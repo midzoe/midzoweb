@@ -1,64 +1,42 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Vols étudiants servis par le backend (Flight, audience = "student").
+// Les filtres pays/type sont appliqués côté serveur.
 interface Flight {
+  id: number;
   airline: string;
-  from: string;
-  to: string;
+  fromCountry: string;
+  fromCity: string;
+  toCountry: string;
+  toCity: string;
   departure: string;
   arrival: string;
   price: string;
   type: string;
-  baggage: string;
+  baggage?: string;
 }
-
-const mockFlights: Flight[] = [
-  {
-    airline: "Student Airways",
-    from: "New York",
-    to: "London",
-    departure: "10:00 AM",
-    arrival: "10:00 PM",
-    price: "$450",
-    type: "Student Special",
-    baggage: "2x23kg"
-  },
-  {
-    airline: "EuroStudent",
-    from: "London",
-    to: "Berlin",
-    departure: "2:00 PM",
-    arrival: "5:00 PM",
-    price: "$150",
-    type: "Student Flex",
-    baggage: "1x23kg"
-  },
-  {
-    airline: "Academic Air",
-    from: "Paris",
-    to: "Rome",
-    departure: "9:00 AM",
-    arrival: "11:00 AM",
-    price: "$180",
-    type: "Student Basic",
-    baggage: "1x23kg"
-  }
-];
 
 const StudentFlights: React.FC = () => {
   const [fromCountry, setFromCountry] = useState<string>("");
   const [toCountry, setToCountry] = useState<string>("");
   const [flightType, setFlightType] = useState<string>("");
-  
+
   const { countries: allCountries } = useCountries();
   const flightTypes = ["Student Basic", "Student Flex", "Student Special"];
 
-  const filteredFlights = mockFlights.filter(flight => {
-    if (fromCountry && !flight.from.includes(fromCountry)) return false;
-    if (toCountry && !flight.to.includes(toCountry)) return false;
-    if (flightType && flight.type !== flightType) return false;
-    return true;
-  });
+  const { items: filteredFlights, loading, error } = useApiList<Flight>(
+    () => apiService.getFlights({
+      audience: 'student',
+      from: fromCountry,
+      to: toCountry,
+      type: flightType,
+    }),
+    [fromCountry, toCountry, flightType],
+    { errorMessage: 'Unable to load student flights. Please try again later.' }
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -118,21 +96,35 @@ const StudentFlights: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading flights...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFlights.length > 0 ? (
-            filteredFlights.map((flight, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredFlights.map(flight => (
+              <div key={flight.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-primary mb-2">{flight.airline}</h3>
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">From:</span>{" "}
-                      {flight.from}
+                      {flight.fromCity}, {flight.fromCountry}
                     </p>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">To:</span>{" "}
-                      {flight.to}
+                      {flight.toCity}, {flight.toCountry}
                     </p>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Departure:</span>{" "}
@@ -167,6 +159,7 @@ const StudentFlights: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

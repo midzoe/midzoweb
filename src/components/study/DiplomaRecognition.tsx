@@ -1,41 +1,19 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Organismes de reconnaissance de diplôme servis par le backend
+// (ServiceProvider, serviceType = "recognition").
 interface RecognitionService {
+  id: number;
   provider: string;
   country: string;
-  acceptedDegrees: string[];
-  processingTime: string;
-  price: string;
-  successRate: string;
+  acceptedDegrees?: string[];
+  processingTime?: string;
+  price?: string;
+  successRate?: string;
 }
-
-const mockServices: RecognitionService[] = [
-  {
-    provider: "European Qualification Framework",
-    country: "Germany",
-    acceptedDegrees: ["Bachelor's Degree", "Master's Degree", "PhD"],
-    processingTime: "4-6 weeks",
-    price: "$300-$500",
-    successRate: "95%"
-  },
-  {
-    provider: "UK NARIC",
-    country: "United Kingdom",
-    acceptedDegrees: ["High School", "Bachelor's Degree", "Master's Degree"],
-    processingTime: "3-4 weeks",
-    price: "$250-$400",
-    successRate: "92%"
-  },
-  {
-    provider: "French Ministry of Education",
-    country: "France",
-    acceptedDegrees: ["Bachelor's Degree", "Master's Degree", "Professional Certification"],
-    processingTime: "6-8 weeks",
-    price: "$200-$350",
-    successRate: "90%"
-  }
-];
 
 const DiplomaRecognition: React.FC = () => {
   const [residenceCountry, setResidenceCountry] = useState<string>("");
@@ -63,11 +41,17 @@ const DiplomaRecognition: React.FC = () => {
     "Other"
   ];
 
-  const filteredServices = mockServices.filter(service => {
-    if (destinationCountry && service.country !== destinationCountry) return false;
-    if (educationLevel && !service.acceptedDegrees.includes(educationLevel)) return false;
-    return true;
-  });
+  // Le pays de destination filtre côté serveur ; le niveau d'études est une liste JSON,
+  // affinée ici.
+  const { items: services, loading, error } = useApiList<RecognitionService>(
+    () => apiService.getServiceProviders({ type: 'recognition', country: destinationCountry }),
+    [destinationCountry],
+    { errorMessage: 'Unable to load recognition services. Please try again later.' }
+  );
+
+  const filteredServices = educationLevel
+    ? services.filter(s => (s.acceptedDegrees ?? []).includes(educationLevel))
+    : services;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -159,18 +143,32 @@ const DiplomaRecognition: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading recognition services...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredServices.length > 0 ? (
-            filteredServices.map((service, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredServices.map(service => (
+              <div key={service.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-primary mb-2">{service.provider}</h3>
                   <p className="text-gray-600 mb-4">{service.country}</p>
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Accepted Degrees:</span>{" "}
-                      {service.acceptedDegrees.join(", ")}
+                      {(service.acceptedDegrees ?? []).join(", ")}
                     </p>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Processing Time:</span>{" "}
@@ -197,6 +195,7 @@ const DiplomaRecognition: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
         {/* Information Sections */}
         <div className="space-y-6">

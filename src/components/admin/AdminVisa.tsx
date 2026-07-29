@@ -38,7 +38,7 @@ const AdminVisa: React.FC = () => {
   }, []);
 
   const fields: FieldDef[] = useMemo(() => [
-    { key: 'origin_country', label: 'Pays d\'origine', type: 'select', options: ALL_COUNTRIES, required: true },
+    { key: 'origin_country', label: "Pays d'origine", type: 'select', options: ALL_COUNTRIES, required: true },
     { key: 'destination_country', label: 'Pays de destination', type: 'select', options: ALL_COUNTRIES, required: true },
     { key: 'visa_required', label: 'Visa requis', type: 'checkbox' },
     {

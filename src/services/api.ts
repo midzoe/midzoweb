@@ -1,5 +1,19 @@
 const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'https://midzobackend.vercel.app/api';
 
+/**
+ * Query string à partir d'un objet de filtres. Les valeurs vides sont omises :
+ * un filtre « Tous » du formulaire ne doit pas devenir `?country=` côté API.
+ */
+function buildQuery(params?: Record<string, string | number | undefined>): string {
+  if (!params) return '';
+  const qs = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') qs.set(key, String(value));
+  });
+  const s = qs.toString();
+  return s ? `?${s}` : '';
+}
+
 // interface ApiResponse<T> {
 //   success: boolean;
 //   data?: T;
@@ -193,6 +207,25 @@ class ApiService {
     return this.request<any>(`/news${qs ? `?${qs}` : ''}`);
   }
 
+  /** Article seul (story 1.7). Répond 404 sur un brouillon : la garde est côté backend. */
+  async getNewsById(id: number) {
+    return this.request<any>(`/news/${id}`);
+  }
+
+  // Blog public (story 1.8) — la liste ne renvoie que les articles publiés.
+  async getBlogs(params?: { scope?: string; subcategory?: string }) {
+    const query = new URLSearchParams();
+    if (params?.scope) query.set('scope', params.scope);
+    if (params?.subcategory) query.set('subcategory', params.subcategory);
+    const qs = query.toString();
+    return this.request<any>(`/blogs${qs ? `?${qs}` : ''}`);
+  }
+
+  /** Le backend accepte un slug ou un id numérique en repli. 404 sur brouillon. */
+  async getBlogBySlug(slug: string) {
+    return this.request<any>(`/blogs/${encodeURIComponent(slug)}`);
+  }
+
   // Universities methods
   async getUniversities(filters?: {
     country?: string;
@@ -320,14 +353,36 @@ class ApiService {
   // ─── Admin endpoints ───────────────────────────────────────────────────────
 
   // Admin: Users
-  async adminGetUsers(page = 1, limit = 20, search = '', segment = '') {
+  async adminGetUsers(
+    page = 1,
+    limit = 20,
+    search = '',
+    segment = '',
+    filters: { role?: string; verified?: string; sort?: string } = {}
+  ) {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (search) params.append('search', search);
     if (segment) params.append('segment', segment);
+    if (filters.role) params.append('role', filters.role);
+    if (filters.verified) params.append('verified', filters.verified);
+    if (filters.sort) params.append('sort', filters.sort);
     return this.request<any>(`/admin/users?${params.toString()}`);
   }
 
-  async adminUpdateUser(id: number, data: { role?: string; is_premium?: boolean; email?: string; password?: string }) {
+  async adminUpdateUser(id: number, data: {
+    role?: string;
+    is_premium?: boolean;
+    email?: string;
+    password?: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    nationality?: string;
+    country_of_residence?: string;
+    newsletter_study?: boolean;
+    newsletter_tourism?: boolean;
+    email_verified?: boolean;
+  }) {
     return this.request<any>(`/admin/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -464,13 +519,31 @@ class ApiService {
     return this.request<any>(`/universities/${id}/language-check`);
   }
 
-  // Story 5.4 : centres de langue (public + admin).
-  async getLanguageCenters(params?: { language?: string; country?: string }) {
+  // Story 5.4 (5.14 pour la fiche détaillée) : centres de langue (public + admin).
+  async getLanguageCenters(params?: {
+    language?: string; country?: string; city?: string; level?: string;
+    course_type?: string; exam?: string; partners?: boolean; q?: string;
+  }) {
     const qs = new URLSearchParams();
     if (params?.language) qs.set('language', params.language);
     if (params?.country) qs.set('country', params.country);
+    if (params?.city) qs.set('city', params.city);
+    if (params?.level) qs.set('level', params.level);
+    if (params?.course_type) qs.set('course_type', params.course_type);
+    if (params?.exam) qs.set('exam', params.exam);
+    if (params?.partners) qs.set('partners', 'true');
+    if (params?.q) qs.set('q', params.q);
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return this.request<any>(`/language-centers${suffix}`);
+  }
+
+  async getLanguageCenter(id: number) {
+    return this.request<any>(`/language-centers/${id}`);
+  }
+
+  /** Valeurs disponibles pour les filtres (pays, villes, langues, niveaux, formats, examens). */
+  async getLanguageCenterFacets() {
+    return this.request<any>('/language-centers/facets');
   }
 
   async adminGetLanguageCenters(page = 1, limit = 50) {
@@ -545,8 +618,23 @@ class ApiService {
     return this.request<any>(`/admin/tourism-programs/${id}`, { method: 'DELETE' });
   }
 
-  async adminGetTourismEvents(page = 1, limit = 50) {
-    return this.request<any>(`/admin/tourism-events?page=${page}&limit=${limit}`);
+  async adminGetTourismEvents(page = 1, limit = 50, params?: { year?: number; country?: string; subcategory?: string }) {
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (params?.year) qs.set('year', String(params.year));
+    if (params?.country) qs.set('country', params.country);
+    if (params?.subcategory) qs.set('subcategory', params.subcategory);
+    return this.request<any>(`/admin/tourism-events?${qs.toString()}`);
+  }
+
+  // Story 6.8 : réglages éditoriaux (quota d'événements par pays et par an).
+  async adminGetSettings() {
+    return this.request<any>('/admin/settings');
+  }
+  async adminUpdateSetting(key: string, value: string | number) {
+    return this.request<any>('/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ key, value: String(value) }),
+    });
   }
   async adminCreateTourismEvent(data: object) {
     return this.request<any>('/admin/tourism-events', { method: 'POST', body: JSON.stringify(data) });
@@ -796,6 +884,182 @@ class ApiService {
       method: 'PUT',
       body: JSON.stringify({ is_published: isPublished }),
     });
+  }
+
+  // ─── Catalogue « annuaire » (public) ────────────────────────
+  // Ces neuf familles remplacent les listes `mock*` qui vivaient dans les composants :
+  // vols, assurances, banques, sites, restaurants, hébergements tourisme, jobs,
+  // formations et prestataires de démarches sont désormais lus en base.
+
+  /** `audience` : 'general' (page Vols) ou 'student' (espace études). */
+  async getFlights(params?: { audience?: string; from?: string; to?: string; type?: string }) {
+    return this.request<any>(`/flights${buildQuery(params)}`);
+  }
+
+  /** `audience` : 'general' | 'student' | 'travel' selon la page appelante. */
+  async getInsurancePlans(params?: { audience?: string; country?: string; coverage_type?: string }) {
+    return this.request<any>(`/insurance-plans${buildQuery(params)}`);
+  }
+
+  /** Les comptes de chaque banque sont inclus dans la réponse (`accountTypes`). */
+  async getBanks(params?: { country?: string }) {
+    return this.request<any>(`/banks${buildQuery(params)}`);
+  }
+
+  async getTouristSites(params?: { country?: string; category?: string }) {
+    return this.request<any>(`/tourist-sites${buildQuery(params)}`);
+  }
+
+  async getRestaurants(params?: { country?: string; cuisine?: string; price_range?: string }) {
+    return this.request<any>(`/restaurants${buildQuery(params)}`);
+  }
+
+  async getTourismAccommodations(params?: {
+    country?: string;
+    city?: string;
+    type?: string;
+    price_range?: string;
+  }) {
+    return this.request<any>(`/tourism-accommodations${buildQuery(params)}`);
+  }
+
+  async getJobs(params?: { country?: string; type?: string; experience?: string; search?: string }) {
+    return this.request<any>(`/jobs${buildQuery(params)}`);
+  }
+
+  async getTrainings(params?: {
+    country?: string;
+    category?: string;
+    duration?: string;
+    search?: string;
+  }) {
+    return this.request<any>(`/trainings${buildQuery(params)}`);
+  }
+
+  /** `type` : 'work_visa' | 'legalization' | 'recognition'. */
+  async getServiceProviders(params?: { type?: string; country?: string }) {
+    return this.request<any>(`/service-providers${buildQuery(params)}`);
+  }
+
+  // ─── Catalogue « annuaire » (admin CRUD) ────────────────────
+  // Toutes ces routes répondent { success, data } et acceptent les listes en texte
+  // (« a, b, c ») : le backend les convertit en tableaux.
+
+  async adminGetFlights() {
+    return this.request<any>('/admin/flights');
+  }
+  async adminCreateFlight(data: object) {
+    return this.request<any>('/admin/flights', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateFlight(id: number, data: object) {
+    return this.request<any>(`/admin/flights/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteFlight(id: number) {
+    return this.request<any>(`/admin/flights/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetInsurancePlans() {
+    return this.request<any>('/admin/insurance-plans');
+  }
+  async adminCreateInsurancePlan(data: object) {
+    return this.request<any>('/admin/insurance-plans', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateInsurancePlan(id: number, data: object) {
+    return this.request<any>(`/admin/insurance-plans/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteInsurancePlan(id: number) {
+    return this.request<any>(`/admin/insurance-plans/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetBanks() {
+    return this.request<any>('/admin/banks');
+  }
+  async adminCreateBank(data: object) {
+    return this.request<any>('/admin/banks', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateBank(id: number, data: object) {
+    return this.request<any>(`/admin/banks/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteBank(id: number) {
+    return this.request<any>(`/admin/banks/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetTouristSites() {
+    return this.request<any>('/admin/tourist-sites');
+  }
+  async adminCreateTouristSite(data: object) {
+    return this.request<any>('/admin/tourist-sites', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateTouristSite(id: number, data: object) {
+    return this.request<any>(`/admin/tourist-sites/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteTouristSite(id: number) {
+    return this.request<any>(`/admin/tourist-sites/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetRestaurants() {
+    return this.request<any>('/admin/restaurants');
+  }
+  async adminCreateRestaurant(data: object) {
+    return this.request<any>('/admin/restaurants', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateRestaurant(id: number, data: object) {
+    return this.request<any>(`/admin/restaurants/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteRestaurant(id: number) {
+    return this.request<any>(`/admin/restaurants/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetTourismAccommodations() {
+    return this.request<any>('/admin/tourism-accommodations');
+  }
+  async adminCreateTourismAccommodation(data: object) {
+    return this.request<any>('/admin/tourism-accommodations', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateTourismAccommodation(id: number, data: object) {
+    return this.request<any>(`/admin/tourism-accommodations/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteTourismAccommodation(id: number) {
+    return this.request<any>(`/admin/tourism-accommodations/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetJobs() {
+    return this.request<any>('/admin/jobs');
+  }
+  async adminCreateJob(data: object) {
+    return this.request<any>('/admin/jobs', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateJob(id: number, data: object) {
+    return this.request<any>(`/admin/jobs/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteJob(id: number) {
+    return this.request<any>(`/admin/jobs/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetTrainings() {
+    return this.request<any>('/admin/trainings');
+  }
+  async adminCreateTraining(data: object) {
+    return this.request<any>('/admin/trainings', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateTraining(id: number, data: object) {
+    return this.request<any>(`/admin/trainings/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteTraining(id: number) {
+    return this.request<any>(`/admin/trainings/${id}`, { method: 'DELETE' });
+  }
+
+  async adminGetServiceProviders() {
+    return this.request<any>('/admin/service-providers');
+  }
+  async adminCreateServiceProvider(data: object) {
+    return this.request<any>('/admin/service-providers', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateServiceProvider(id: number, data: object) {
+    return this.request<any>(`/admin/service-providers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteServiceProvider(id: number) {
+    return this.request<any>(`/admin/service-providers/${id}`, { method: 'DELETE' });
   }
 
   // Admin: Stats dashboard

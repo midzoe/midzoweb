@@ -1,8 +1,10 @@
 /**
- * Generic reusable CRUD table used by News, Blog, Visa, Countries admin pages.
+ * Generic reusable CRUD table used by most admin pages.
+ * Design « data-dense dashboard » : en-tête cohérent, table dense, badges, actions discrètes.
  */
 import React, { useEffect, useState, useCallback } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, CheckIcon, CheckCircleIcon, MinusCircleIcon } from '@heroicons/react/24/outline';
+import { PageHeader, PrimaryButton, TableShell, EmptyRow, IconButton, Badge } from './ui';
 
 export interface FieldDef {
   key: string;
@@ -17,6 +19,7 @@ export interface FieldDef {
 
 interface AdminCRUDProps {
   title: string;
+  subtitle?: string;
   fields: FieldDef[];
   fetchItems: (page: number) => Promise<any>;
   createItem: (data: any) => Promise<any>;
@@ -29,7 +32,7 @@ const emptyForm = (fields: FieldDef[]) =>
   Object.fromEntries(fields.map(f => [f.key, f.type === 'checkbox' ? false : '']));
 
 const AdminCRUD: React.FC<AdminCRUDProps> = ({
-  title, fields, fetchItems, createItem, updateItem, deleteItem,
+  title, subtitle, fields, fetchItems, createItem, updateItem, deleteItem,
 }) => {
   const [items, setItems] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
@@ -47,7 +50,6 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
     setError('');
     try {
       const res = await fetchItems(page);
-      // Support multiple response formats from backend
       const items = res.data ?? res.results ?? res.items ?? res.news ?? res.blogs ?? res.countries ?? res.visa ?? [];
       const total = res.total ?? res.count ?? res.total_count ?? (Array.isArray(items) ? items.length : 0);
       setItems(Array.isArray(items) ? items : []);
@@ -105,47 +107,67 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
   const tableFields = fields.filter(f => !f.hideInTable);
   const totalPages = Math.ceil(total / limit);
 
+  const renderCell = (item: any, f: FieldDef) => {
+    const val = item[f.key];
+    if (f.type === 'checkbox') {
+      return val ? (
+        <Badge tone="green"><CheckCircleIcon className="h-3.5 w-3.5" /> Oui</Badge>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-xs text-stone-400"><MinusCircleIcon className="h-3.5 w-3.5" /> Non</span>
+      );
+    }
+    if (f.type === 'select' && val) {
+      return <Badge tone="slate">{String(val)}</Badge>;
+    }
+    const text = String(val ?? '—');
+    return <span className={val == null || val === '' ? 'text-stone-400' : 'text-stone-700'}>{text.slice(0, 80)}</span>;
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        <button onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90">
-          <PlusIcon className="h-4 w-4" />
-          Ajouter
-        </button>
-      </div>
+      <PageHeader
+        title={title}
+        subtitle={subtitle ?? `${total} élément${total > 1 ? 's' : ''}`}
+        actions={
+          <PrimaryButton onClick={openCreate}>
+            <PlusIcon className="h-4 w-4" />
+            Ajouter
+          </PrimaryButton>
+        }
+      />
 
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+      {error && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm">{error}</div>}
 
       {/* Modal Form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {editingId !== null ? 'Modifier' : 'Ajouter'}
+        <div className="fixed inset-0 bg-stone-900/50 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 sticky top-0 bg-white">
+              <h2 className="text-lg font-semibold text-stone-900">
+                {editingId !== null ? 'Modifier' : 'Ajouter'} — {title}
               </h2>
-              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
-                <XMarkIcon className="h-5 w-5" />
-              </button>
+              <IconButton onClick={() => setShowForm(false)} title="Fermer"><XMarkIcon className="h-5 w-5" /></IconButton>
             </div>
             <div className="p-6 space-y-4">
               {fields.map(f => (
                 <div key={f.key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                  <label htmlFor={`f-${f.key}`} className="block text-sm font-medium text-stone-700 mb-1.5">
+                    {f.label}{f.required && <span className="text-rose-500"> *</span>}
+                  </label>
                   {f.type === 'textarea' ? (
                     <textarea
+                      id={`f-${f.key}`}
                       value={form[f.key]}
                       onChange={e => setForm({ ...form, [f.key]: e.target.value })}
                       rows={3}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                     />
                   ) : f.type === 'select' ? (
                     <select
+                      id={`f-${f.key}`}
                       value={form[f.key]}
                       onChange={e => setForm({ ...form, [f.key]: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm text-stone-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                     >
                       <option value="">— Choisir —</option>
                       {f.optionItems
@@ -153,98 +175,83 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
                         : f.options?.map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                   ) : f.type === 'checkbox' ? (
-                    <input
-                      type="checkbox"
-                      checked={!!form[f.key]}
-                      onChange={e => setForm({ ...form, [f.key]: e.target.checked })}
-                      className="rounded text-primary"
-                    />
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        id={`f-${f.key}`}
+                        type="checkbox"
+                        checked={!!form[f.key]}
+                        onChange={e => setForm({ ...form, [f.key]: e.target.checked })}
+                        className="h-4 w-4 rounded border-stone-300 text-primary focus:ring-primary/40"
+                      />
+                      <span className="text-sm text-stone-500">Activer</span>
+                    </label>
                   ) : (
                     <input
+                      id={`f-${f.key}`}
                       type={f.type === 'date' ? 'date' : 'text'}
                       value={form[f.key]}
                       onChange={e => setForm({ ...form, [f.key]: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                     />
                   )}
                 </div>
               ))}
             </div>
-            <div className="flex justify-end gap-3 px-6 py-4 border-t">
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-stone-200 sticky bottom-0 bg-white">
               <button onClick={() => setShowForm(false)}
-                className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                className="px-4 py-2 text-sm text-stone-600 border border-stone-300 rounded-lg hover:bg-stone-50 transition-colors duration-150 cursor-pointer">
                 Annuler
               </button>
-              <button onClick={handleSave} disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
+              <PrimaryButton onClick={handleSave} disabled={saving}>
                 <CheckIcon className="h-4 w-4" />
                 {saving ? 'Enregistrement...' : 'Enregistrer'}
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </div>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                {tableFields.map(f => (
-                  <th key={f.key} className="text-left px-4 py-3 font-medium text-gray-600">{f.label}</th>
-                ))}
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
-                <tr><td colSpan={tableFields.length + 1} className="text-center py-10 text-gray-400">Chargement...</td></tr>
-              ) : items.length === 0 ? (
-                <tr><td colSpan={tableFields.length + 1} className="text-center py-10 text-gray-400">Aucun élément</td></tr>
-              ) : items.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  {tableFields.map(f => (
-                    <td key={f.key} className="px-4 py-3 text-gray-700">
-                      {f.type === 'checkbox'
-                        ? (item[f.key] ? '✓' : '—')
-                        : String(item[f.key] ?? '—').slice(0, 80)}
-                    </td>
-                  ))}
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEdit(item)}
-                        className="p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button onClick={() => handleDelete(item.id)}
-                        className="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100">
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <TableShell
+        head={<>
+          {tableFields.map(f => <th key={f.key}>{f.label}</th>)}
+          <th className="text-right">Actions</th>
+        </>}
+      >
+        {loading ? (
+          <EmptyRow colSpan={tableFields.length + 1}>Chargement…</EmptyRow>
+        ) : items.length === 0 ? (
+          <EmptyRow colSpan={tableFields.length + 1}>Aucun élément — cliquez « Ajouter » pour commencer.</EmptyRow>
+        ) : items.map(item => (
+          <tr key={item.id} className="hover:bg-stone-50 transition-colors duration-150">
+            {tableFields.map(f => (
+              <td key={f.key} className="px-4 py-3">{renderCell(item, f)}</td>
+            ))}
+            <td className="px-4 py-3">
+              <div className="flex items-center justify-end gap-1">
+                <IconButton tone="blue" title="Modifier" onClick={() => openEdit(item)}><PencilIcon className="h-4 w-4" /></IconButton>
+                <IconButton tone="rose" title="Supprimer" onClick={() => handleDelete(item.id)}><TrashIcon className="h-4 w-4" /></IconButton>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </TableShell>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-40">
-              ← Précédent
-            </button>
-            <span className="text-sm text-gray-500">Page {page} / {totalPages}</span>
-            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-              className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-40">
-              Suivant →
-            </button>
-          </div>
-        )}
-      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+            className="px-3 py-1.5 text-sm border border-stone-300 rounded-lg hover:bg-white disabled:opacity-40 cursor-pointer">
+            ← Précédent
+          </button>
+          <span className="text-sm text-stone-500">Page {page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+            className="px-3 py-1.5 text-sm border border-stone-300 rounded-lg hover:bg-white disabled:opacity-40 cursor-pointer">
+            Suivant →
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
 export default AdminCRUD;
+

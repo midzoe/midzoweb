@@ -1,49 +1,20 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Assurances étudiantes servies par le backend (InsurancePlan, audience = "student").
 interface Insurance {
+  id: number;
   provider: string;
   country: string;
-  coverageTypes: string[];
-  benefits: string[];
-  monthlyPremium: string;
-  coverage: string;
-  image: string;
-  description: string;
+  coverageTypes?: string[];
+  benefits?: string[];
+  monthlyPremium?: string;
+  coverage?: string;
+  image?: string;
+  description?: string;
 }
-
-const mockInsurances: Insurance[] = [
-  {
-    provider: "UK Student Care",
-    country: "United Kingdom",
-    coverageTypes: ["Health", "Accident", "Liability"],
-    benefits: ["24/7 Support", "Direct Billing", "Online Claims"],
-    monthlyPremium: "£30",
-    coverage: "Up to £2,000,000",
-    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "Comprehensive student insurance coverage with excellent support services and quick claims processing."
-  },
-  {
-    provider: "Deutsche Studenten Versicherung",
-    country: "Germany",
-    coverageTypes: ["Health", "Personal Liability", "Accident"],
-    benefits: ["Multilingual Support", "Hospital Network", "Emergency Assistance"],
-    monthlyPremium: "€40",
-    coverage: "Up to €3,000,000",
-    image: "https://images.unsplash.com/photo-1631815587646-b85a1bb027e1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "German insurance provider specializing in international student coverage with extensive hospital network."
-  },
-  {
-    provider: "Assurance Étudiante",
-    country: "France",
-    coverageTypes: ["Health", "Travel", "Personal Property"],
-    benefits: ["Dental Coverage", "Prescription Drugs", "Mental Health Support"],
-    monthlyPremium: "€35",
-    coverage: "Up to €2,500,000",
-    image: "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "French student insurance with comprehensive health coverage including mental health and dental care."
-  }
-];
 
 const StudentInsurance: React.FC = () => {
   const [country, setCountry] = useState<string>("");
@@ -52,11 +23,15 @@ const StudentInsurance: React.FC = () => {
   const { countries: allCountries } = useCountries();
   const coverageTypes = ["Health", "Accident", "Liability", "Travel", "Personal Property"];
 
-  const filteredInsurances = mockInsurances.filter(insurance => {
-    if (country && insurance.country !== country) return false;
-    if (coverageType && !insurance.coverageTypes.includes(coverageType)) return false;
-    return true;
-  });
+  const { items: filteredInsurances, loading, error } = useApiList<Insurance>(
+    () => apiService.getInsurancePlans({
+      audience: 'student',
+      country,
+      coverage_type: coverageType,
+    }),
+    [country, coverageType],
+    { errorMessage: 'Unable to load student insurance plans. Please try again later.' }
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -100,21 +75,37 @@ const StudentInsurance: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading insurance plans...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredInsurances.length > 0 ? (
-            filteredInsurances.map((insurance, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={insurance.image}
-                    alt={insurance.provider}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                  />
-                  <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-primary">
-                    {insurance.monthlyPremium}/month
+            filteredInsurances.map(insurance => (
+              <div key={insurance.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                {insurance.image && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={insurance.image}
+                      alt={insurance.provider}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                    />
+                    <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium text-primary">
+                      {insurance.monthlyPremium}/month
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-primary mb-2">{insurance.provider}</h3>
                   <p className="text-gray-600 mb-4">{insurance.country}</p>
@@ -122,11 +113,11 @@ const StudentInsurance: React.FC = () => {
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Coverage Types:</span>{" "}
-                      {insurance.coverageTypes.join(", ")}
+                      {(insurance.coverageTypes ?? []).join(", ")}
                     </p>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Benefits:</span>{" "}
-                      {insurance.benefits.join(", ")}
+                      {(insurance.benefits ?? []).join(", ")}
                     </p>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Coverage Amount:</span>{" "}
@@ -145,6 +136,7 @@ const StudentInsurance: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
