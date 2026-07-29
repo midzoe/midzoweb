@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CheckIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../../services/api';
+import { PageHeader, Card, TableShell, EmptyRow, Badge, SecondaryButton } from './ui';
 
 interface QueueItem {
   entity: string;
@@ -31,8 +32,12 @@ const AdminValidation: React.FC = () => {
       const res = await apiService.adminGetValidationQueue();
       setItems(res?.items || []);
       setCounts(res?.counts || {});
-    } catch {
-      setError('Impossible de charger la file de validation.');
+    } catch (e: any) {
+      setError(
+        e?.status === 401
+          ? 'Session expirée — déconnectez-vous puis reconnectez-vous.'
+          : `Impossible de charger la file de validation${e?.message ? ` : ${e.message}` : '.'}`
+      );
     } finally {
       setLoading(false);
     }
@@ -45,6 +50,7 @@ const AdminValidation: React.FC = () => {
     try {
       await apiService.adminValidate(item.entity, item.id, true);
       setItems(prev => prev.filter(i => !(i.entity === item.entity && i.id === item.id)));
+      setCounts(prev => ({ ...prev, [item.entity]: Math.max(0, (prev[item.entity] ?? 1) - 1) }));
     } catch {
       setError('Échec de la validation.');
     } finally {
@@ -54,59 +60,57 @@ const AdminValidation: React.FC = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">File de validation</h1>
-        <button onClick={load} className="text-sm px-3 py-1.5 border rounded-lg hover:bg-gray-50">Rafraîchir</button>
-      </div>
+      <PageHeader
+        title="File de validation"
+        subtitle="Brouillons en attente de publication (contenu piloté par le backend)."
+        actions={<SecondaryButton onClick={load}>Rafraîchir</SecondaryButton>}
+      />
 
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+      {error && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm">{error}</div>}
 
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {Object.entries(counts).map(([k, v]) => (
-          <div key={k} className="bg-white rounded-lg shadow-sm px-4 py-2 text-sm">
-            <span className="text-gray-500">{ENTITY_LABELS[k] || k}</span>{' '}
-            <span className="font-semibold text-gray-900">{v}</span>
-          </div>
+          <Card key={k} className="p-4">
+            <p className="text-xs font-medium uppercase tracking-wider text-stone-500">{ENTITY_LABELS[k] || k}</p>
+            <p className="mt-1 text-2xl font-bold text-stone-900 tabular-nums">{v}</p>
+          </Card>
         ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Élément</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Source</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {loading ? (
-              <tr><td colSpan={4} className="text-center py-10 text-gray-400">Chargement...</td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={4} className="text-center py-10 text-gray-400">Aucun brouillon en attente 🎉</td></tr>
-            ) : items.map(item => (
-              <tr key={`${item.entity}:${item.id}`} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-gray-700">{ENTITY_LABELS[item.entity] || item.entity}</td>
-                <td className="px-4 py-3 text-gray-900 font-medium">{item.label}</td>
-                <td className="px-4 py-3 text-gray-500">{item.source || '—'}</td>
-                <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => validate(item)}
-                    disabled={validating === `${item.entity}:${item.id}`}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs hover:bg-green-700 disabled:opacity-50"
-                  >
-                    <CheckIcon className="h-4 w-4" />
-                    Valider
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <TableShell head={<>
+        <th>Type</th><th>Élément</th><th>Source</th><th className="text-right">Action</th>
+      </>}>
+        {loading ? (
+          <EmptyRow colSpan={4}>Chargement…</EmptyRow>
+        ) : items.length === 0 ? (
+          <EmptyRow colSpan={4}>
+            <ShieldCheckIcon className="h-8 w-8 mx-auto mb-2 text-primary/40" />
+            Aucun brouillon en attente 🎉
+          </EmptyRow>
+        ) : items.map(item => (
+          <tr key={`${item.entity}:${item.id}`} className="hover:bg-stone-50 transition-colors duration-150">
+            <td className="px-4 py-3"><Badge tone="indigo">{ENTITY_LABELS[item.entity] || item.entity}</Badge></td>
+            <td className="px-4 py-3 font-medium text-stone-900">{item.label}</td>
+            <td className="px-4 py-3">
+              {item.source ? <Badge tone="amber">{item.source}</Badge> : <span className="text-stone-400 text-xs">manuel</span>}
+            </td>
+            <td className="px-4 py-3">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => validate(item)}
+                  disabled={validating === `${item.entity}:${item.id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors duration-150 disabled:opacity-50 cursor-pointer"
+                >
+                  <CheckIcon className="h-4 w-4" /> Valider
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </TableShell>
     </div>
   );
 };
 
 export default AdminValidation;
+

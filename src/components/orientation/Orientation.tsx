@@ -68,7 +68,10 @@ const Orientation = () => {
       step2: 'Personalized Report',
       step2_desc: 'We produce a detailed orientation report with recommendations and action plan.',
       step3: 'Implementation Support',
-      step3_desc: 'We stay with you throughout the process — visa, bookings, paperwork.'
+      step3_desc: 'We stay with you throughout the process — visa, bookings, paperwork.',
+      resources_title: 'Orientation Resources',
+      resources_desc: 'Official guides, reference books, training providers and certifications — curated by our advisors and free to browse.',
+      resources_cta: 'Browse resources'
     },
     fr: {
       title: 'Orientation',
@@ -132,7 +135,10 @@ const Orientation = () => {
       step2: 'Rapport Personnalisé',
       step2_desc: 'Nous produisons un rapport d\'orientation détaillé avec recommandations et plan d\'action.',
       step3: 'Support à l\'Implémentation',
-      step3_desc: 'Nous restons avec vous tout au long du processus — visa, réservations, paperasse.'
+      step3_desc: 'Nous restons avec vous tout au long du processus — visa, réservations, paperasse.',
+      resources_title: 'Ressources d\'orientation',
+      resources_desc: 'Guides officiels, ouvrages de référence, organismes de formation et certifications — sélectionnés par nos conseillers et consultables librement.',
+      resources_cta: 'Consulter les ressources'
     },
     de: {
       title: 'Orientierung',
@@ -196,7 +202,10 @@ const Orientation = () => {
       step2: 'Personalisierter Bericht',
       step2_desc: 'Wir erstellen einen detaillierten Orientierungsbericht mit Empfehlungen und Aktionsplan.',
       step3: 'Implementierungs-Support',
-      step3_desc: 'Wir begleiten Sie durch den gesamten Prozess — Visum, Buchungen, Papierkram.'
+      step3_desc: 'Wir begleiten Sie durch den gesamten Prozess — Visum, Buchungen, Papierkram.',
+      resources_title: 'Orientierungsressourcen',
+      resources_desc: 'Offizielle Leitfäden, Standardwerke, Bildungsträger und Zertifizierungen — von unseren Beratern ausgewählt und frei zugänglich.',
+      resources_cta: 'Ressourcen ansehen'
     }
   };
 
@@ -267,6 +276,18 @@ const Orientation = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Catalogue de ressources (story 10.2, alimenté depuis l'admin) */}
+        <div className="mt-16 bg-white rounded-2xl shadow-lg p-10 text-center">
+          <h2 className="text-2xl font-bold text-primary mb-3">{t.resources_title}</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto mb-6 leading-relaxed">{t.resources_desc}</p>
+          <Link
+            to="/orientation"
+            className="inline-block px-8 py-3 bg-primary hover:bg-secondary text-white rounded-full font-semibold transition-colors duration-300"
+          >
+            {t.resources_cta}
+          </Link>
         </div>
 
         {/* Premium Corporate */}

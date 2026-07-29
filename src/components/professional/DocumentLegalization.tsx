@@ -1,104 +1,22 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Prestataires de légalisation servis par le backend
+// (ServiceProvider, serviceType = "legalization").
 interface LegalizationService {
+  id: number;
   provider: string;
   country: string;
-  services: string[];
-  processingTime: string;
-  price: string;
-  requirements: string[];
-  features: string[];
-  success_rate: string;
-  documentTypes: string[];
+  services?: string[];
+  processingTime?: string;
+  price?: string;
+  requirements?: string[];
+  features?: string[];
+  successRate?: string;
+  documentTypes?: string[];
 }
-
-const mockServices: LegalizationService[] = [
-  {
-    provider: "Global Document Services",
-    country: "Germany",
-    services: ["Document Authentication", "Apostille", "Embassy Legalization", "Document Translation"],
-    processingTime: "2-3 weeks",
-    price: "€200-€500 per document",
-    requirements: [
-      "Original Documents",
-      "Passport Copy",
-      "Application Form",
-      "Power of Attorney (if applicable)"
-    ],
-    features: [
-      "Free Document Review",
-      "Express Processing Available",
-      "Document Translation",
-      "Courier Service",
-      "Online Tracking"
-    ],
-    success_rate: "98%",
-    documentTypes: [
-      "Academic Degrees",
-      "Professional Certificates",
-      "Work Experience Letters",
-      "Birth Certificates",
-      "Marriage Certificates"
-    ]
-  },
-  {
-    provider: "UK Legalization Center",
-    country: "United Kingdom",
-    services: ["Apostille Service", "Embassy Attestation", "Document Translation", "Certification"],
-    processingTime: "1-2 weeks",
-    price: "£150-£400 per document",
-    requirements: [
-      "Original/Notarized Documents",
-      "ID Proof",
-      "Supporting Documents",
-      "Application Details"
-    ],
-    features: [
-      "Same Day Processing Option",
-      "Multi-Language Translation",
-      "Door-to-Door Service",
-      "Digital Copy Storage",
-      "24/7 Support"
-    ],
-    success_rate: "99%",
-    documentTypes: [
-      "University Degrees",
-      "Professional Qualifications",
-      "Employment Records",
-      "Legal Documents",
-      "Commercial Documents"
-    ]
-  },
-  {
-    provider: "European Document Authority",
-    country: "France",
-    services: ["Document Authentication", "Apostille", "Ministry Legalization", "Certified Translation"],
-    processingTime: "2-4 weeks",
-    price: "€180-€450 per document",
-    requirements: [
-      "Original Documents",
-      "Identity Documents",
-      "Proof of Address",
-      "Application Form"
-    ],
-    features: [
-      "Multilingual Service",
-      "Priority Processing",
-      "Secure Document Handling",
-      "International Shipping",
-      "Expert Consultation"
-    ],
-    success_rate: "97%",
-    documentTypes: [
-      "Educational Certificates",
-      "Professional Licenses",
-      "Corporate Documents",
-      "Personal Documents",
-      "Medical Certificates"
-    ]
-  }
-];
 
 const DocumentLegalization: React.FC = () => {
   const [country, setCountry] = useState<string>("");
@@ -133,11 +51,16 @@ const DocumentLegalization: React.FC = () => {
     "Urgent (2-3 days)"
   ];
 
-  const filteredServices = mockServices.filter(service => {
-    if (country && service.country !== country) return false;
-    if (documentType && !service.documentTypes.includes(documentType)) return false;
-    return true;
-  });
+  // Le pays filtre côté serveur ; le type de document est une liste JSON, affinée ici.
+  const { items: providers, loading, error } = useApiList<LegalizationService>(
+    () => apiService.getServiceProviders({ type: 'legalization', country }),
+    [country],
+    { errorMessage: 'Unable to load legalization services. Please try again later.' }
+  );
+
+  const filteredServices = documentType
+    ? providers.filter(p => (p.documentTypes ?? []).includes(documentType))
+    : providers;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -213,27 +136,43 @@ const DocumentLegalization: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading services...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.length > 0 ? (
-            filteredServices.map((service, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredServices.map(service => (
+              <div key={service.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-primary">{service.provider}</h3>
                       <p className="text-gray-600">{service.country}</p>
                     </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                      {service.success_rate} Success Rate
-                    </span>
+                    {service.successRate && (
+                      <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                        {service.successRate} Success Rate
+                      </span>
+                    )}
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Services</h4>
                       <div className="flex flex-wrap gap-2">
-                        {service.services.map((type, idx) => (
+                        {(service.services ?? []).map((type, idx) => (
                           <span
                             key={idx}
                             className="px-2 py-1 bg-primary/10 text-primary rounded-full text-sm"
@@ -247,7 +186,7 @@ const DocumentLegalization: React.FC = () => {
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Document Types</h4>
                       <ul className="list-disc list-inside space-y-1 text-gray-600">
-                        {service.documentTypes.map((doc, idx) => (
+                        {(service.documentTypes ?? []).map((doc, idx) => (
                           <li key={idx}>{doc}</li>
                         ))}
                       </ul>
@@ -256,7 +195,7 @@ const DocumentLegalization: React.FC = () => {
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Features</h4>
                       <ul className="list-disc list-inside space-y-1 text-gray-600">
-                        {service.features.map((feature, idx) => (
+                        {(service.features ?? []).map((feature, idx) => (
                           <li key={idx}>{feature}</li>
                         ))}
                       </ul>
@@ -265,7 +204,7 @@ const DocumentLegalization: React.FC = () => {
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Requirements</h4>
                       <ul className="list-disc list-inside space-y-1 text-gray-600">
-                        {service.requirements.map((req, idx) => (
+                        {(service.requirements ?? []).map((req, idx) => (
                           <li key={idx}>{req}</li>
                         ))}
                       </ul>
@@ -293,6 +232,7 @@ const DocumentLegalization: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

@@ -1,223 +1,30 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
-interface Bank {
+// Banques et comptes étudiants servis par le backend (Bank + BankAccountType).
+interface BankAccountType {
+  id: number;
   name: string;
-  country: string;
-  accountTypes: {
-    name: string;
-    features: string[];
-    monthlyFee: string;
-    requirements: string[];
-    minimumDeposit: string;
-    cardType: string;
-    withdrawalLimit: string;
-    onlineBanking: boolean;
-    studentPerks?: string[];
-  }[];
-  image: string;
-  description: string;
+  features?: string[];
+  monthlyFee?: string;
+  requirements?: string[];
+  minimumDeposit?: string;
+  cardType?: string;
+  withdrawalLimit?: string;
+  onlineBanking: boolean;
+  studentPerks?: string[];
 }
 
-const mockBanks: Bank[] = [
-  {
-    name: "UK Student Bank",
-    country: "United Kingdom",
-    accountTypes: [
-      {
-        name: "Basic Student",
-        features: [
-          "Free International Transfers",
-          "Mobile Banking",
-          "Student Discounts",
-          "Overdraft up to £500"
-        ],
-        monthlyFee: "£0",
-        requirements: ["Student ID", "Proof of Address", "Passport"],
-        minimumDeposit: "£0",
-        cardType: "Visa Debit",
-        withdrawalLimit: "£300/day",
-        onlineBanking: true,
-        studentPerks: [
-          "Free Amazon Prime Student for 6 months",
-          "10% off at selected stores",
-          "Free railcard for 4 years"
-        ]
-      },
-      {
-        name: "Student Plus",
-        features: [
-          "Free International Transfers",
-          "Mobile Banking",
-          "Premium Student Discounts",
-          "Overdraft up to £2000",
-          "Travel Insurance",
-          "Mobile Phone Insurance"
-        ],
-        monthlyFee: "£5",
-        requirements: [
-          "Student ID",
-          "Proof of Address",
-          "Passport",
-          "Minimum Course Duration 2 years"
-        ],
-        minimumDeposit: "£500",
-        cardType: "Visa Debit Gold",
-        withdrawalLimit: "£500/day",
-        onlineBanking: true,
-        studentPerks: [
-          "Free Amazon Prime Student for 1 year",
-          "20% off at selected stores",
-          "Free railcard for 4 years",
-          "Airport lounge access"
-        ]
-      },
-      {
-        name: "International Student Premium",
-        features: [
-          "Free Worldwide Transfers",
-          "Mobile Banking",
-          "Premium Student Discounts",
-          "Overdraft up to £3000",
-          "Comprehensive Travel Insurance",
-          "Mobile Phone Insurance",
-          "Priority Customer Service"
-        ],
-        monthlyFee: "£10",
-        requirements: [
-          "Student ID",
-          "Proof of Address",
-          "Passport",
-          "Minimum Course Duration 2 years",
-          "Proof of Funds"
-        ],
-        minimumDeposit: "£1000",
-        cardType: "Visa Platinum",
-        withdrawalLimit: "£1000/day",
-        onlineBanking: true,
-        studentPerks: [
-          "Free Amazon Prime Student for 1 year",
-          "30% off at selected stores",
-          "Free railcard for 4 years",
-          "Priority airport lounge access",
-          "Dedicated international student advisor"
-        ]
-      }
-    ],
-    image: "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "Leading UK bank offering comprehensive student banking solutions with excellent digital services."
-  },
-  {
-    name: "Deutsche Student Bank",
-    country: "Germany",
-    accountTypes: [
-      {
-        name: "Basis Studentenkonto",
-        features: [
-          "Free ATM Withdrawals",
-          "Online Banking",
-          "Student Card",
-          "Basic Insurance"
-        ],
-        monthlyFee: "€0",
-        requirements: ["University Enrollment", "Registration Certificate", "Passport"],
-        minimumDeposit: "€0",
-        cardType: "Girocard",
-        withdrawalLimit: "€500/day",
-        onlineBanking: true,
-        studentPerks: [
-          "Public transport discounts",
-          "Museum passes",
-          "Study materials discount"
-        ]
-      },
-      {
-        name: "Komfort Studentenkonto",
-        features: [
-          "Free ATM Withdrawals Worldwide",
-          "Online Banking",
-          "Premium Student Card",
-          "Travel Insurance",
-          "Study Abroad Support"
-        ],
-        monthlyFee: "€5",
-        requirements: [
-          "University Enrollment",
-          "Registration Certificate",
-          "Passport",
-          "Proof of Regular Income"
-        ],
-        minimumDeposit: "€250",
-        cardType: "Visa Debit",
-        withdrawalLimit: "€1000/day",
-        onlineBanking: true,
-        studentPerks: [
-          "Public transport annual pass discount",
-          "Culture pass",
-          "Study materials allowance",
-          "Language course discounts"
-        ]
-      }
-    ],
-    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "Trusted German bank providing student-friendly accounts with nationwide ATM network."
-  },
-  {
-    name: "Banque Étudiante",
-    country: "France",
-    accountTypes: [
-      {
-        name: "Compte Étudiant Basique",
-        features: [
-          "Free Bank Card",
-          "Mobile App",
-          "Insurance Package",
-          "Student Discounts"
-        ],
-        monthlyFee: "€0",
-        requirements: ["Student Card", "Residence Permit", "ID Card"],
-        minimumDeposit: "€20",
-        cardType: "Carte Bancaire",
-        withdrawalLimit: "€300/day",
-        onlineBanking: true,
-        studentPerks: [
-          "Cinema discounts",
-          "Public transport benefits",
-          "Book store discounts"
-        ]
-      },
-      {
-        name: "Compte Étudiant Premium",
-        features: [
-          "Premium Bank Card",
-          "Mobile App",
-          "Comprehensive Insurance",
-          "International Transfers",
-          "Travel Assistance"
-        ],
-        monthlyFee: "€7",
-        requirements: [
-          "Student Card",
-          "Residence Permit",
-          "ID Card",
-          "Proof of Income/Scholarship"
-        ],
-        minimumDeposit: "€100",
-        cardType: "Carte Premier",
-        withdrawalLimit: "€800/day",
-        onlineBanking: true,
-        studentPerks: [
-          "Theater and cinema passes",
-          "Annual transport card",
-          "Bookstore allowance",
-          "Sports facility access"
-        ]
-      }
-    ],
-    image: "https://images.unsplash.com/photo-1579621970588-a35d0e7ab9b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-    description: "French banking institution specializing in international student services with comprehensive coverage."
-  }
-];
+interface Bank {
+  id: number;
+  name: string;
+  country: string;
+  image?: string;
+  description?: string;
+  accountTypes: BankAccountType[];
+}
 
 const BankAccount: React.FC = () => {
   const [country, setCountry] = useState<string>("");
@@ -230,17 +37,25 @@ const BankAccount: React.FC = () => {
   const monthlyFees = ["Free", "Up to €5", "Up to €10", "Above €10"];
   const cardTypes = ["Visa Debit", "Visa Gold", "Visa Platinum", "Mastercard", "Girocard", "Carte Bancaire"];
 
-  const filteredBanks = mockBanks.filter(bank => {
-    if (country && bank.country !== country) return false;
+  // Le pays filtre côté serveur ; type de compte et carte portent sur les comptes
+  // imbriqués, donc affinés ici.
+  const { items: banks, loading, error } = useApiList<Bank>(
+    () => apiService.getBanks({ country }),
+    [country],
+    { errorMessage: 'Unable to load bank offers. Please try again later.' }
+  );
+
+  const filteredBanks = banks.filter(bank => {
+    const accounts = bank.accountTypes ?? [];
     if (accountType) {
-      const hasMatchingAccount = bank.accountTypes.some(acc => 
+      const hasMatchingAccount = accounts.some(acc =>
         acc.name.toLowerCase().includes(accountType.toLowerCase())
       );
       if (!hasMatchingAccount) return false;
     }
     if (cardType) {
-      const hasMatchingCard = bank.accountTypes.some(acc => 
-        acc.cardType.toLowerCase().includes(cardType.toLowerCase())
+      const hasMatchingCard = accounts.some(acc =>
+        (acc.cardType ?? '').toLowerCase().includes(cardType.toLowerCase())
       );
       if (!hasMatchingCard) return false;
     }
@@ -321,26 +136,42 @@ const BankAccount: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading bank offers...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="space-y-8">
           {filteredBanks.length > 0 ? (
-            filteredBanks.map((bank, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={bank.image}
-                    alt={bank.name}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                  />
-                </div>
+            filteredBanks.map(bank => (
+              <div key={bank.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                {bank.image && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={bank.image}
+                      alt={bank.name}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                    />
+                  </div>
+                )}
                 <div className="p-6">
                   <h3 className="text-2xl font-bold text-primary mb-2">{bank.name}</h3>
                   <p className="text-gray-600 mb-6">{bank.description}</p>
 
                   <div className="space-y-6">
-                    {bank.accountTypes.map((account, accIndex) => (
-                      <div 
-                        key={accIndex}
+                    {(bank.accountTypes ?? []).map(account => (
+                      <div
+                        key={account.id}
                         className="border rounded-lg p-4 hover:border-primary transition-colors"
                       >
                         <div className="flex justify-between items-start mb-4">
@@ -356,7 +187,7 @@ const BankAccount: React.FC = () => {
                           <div>
                             <h5 className="font-medium text-gray-900 mb-2">Features</h5>
                             <ul className="list-disc list-inside space-y-1 text-gray-600">
-                              {account.features.map((feature, idx) => (
+                              {(account.features ?? []).map((feature, idx) => (
                                 <li key={idx}>{feature}</li>
                               ))}
                             </ul>
@@ -376,7 +207,7 @@ const BankAccount: React.FC = () => {
                           <div>
                             <h5 className="font-medium text-gray-900 mb-2">Requirements</h5>
                             <ul className="list-disc list-inside space-y-1 text-gray-600">
-                              {account.requirements.map((req, idx) => (
+                              {(account.requirements ?? []).map((req, idx) => (
                                 <li key={idx}>{req}</li>
                               ))}
                             </ul>
@@ -410,6 +241,7 @@ const BankAccount: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

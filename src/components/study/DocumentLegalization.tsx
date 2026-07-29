@@ -1,79 +1,21 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Prestataires de légalisation ET de reconnaissance, servis par le backend
+// (ServiceProvider, serviceType = "legalization" | "recognition").
 interface DocumentService {
+  id: number;
   provider: string;
   country: string;
-  services: string[];
-  processingTime: string;
-  price: string;
-  rating: number;
-  type: 'legalization' | 'recognition';
-  requirements: string[];
+  serviceType: string;
+  services?: string[];
+  processingTime?: string;
+  price?: string;
+  rating?: number;
+  requirements?: string[];
 }
-
-const mockServices: DocumentService[] = [
-  {
-    provider: "Global Docs International",
-    country: "United Kingdom",
-    services: ["Document Authentication", "Apostille", "Embassy Legalization"],
-    processingTime: "5-7 business days",
-    price: "$200-$300",
-    rating: 4.8,
-    type: "legalization",
-    requirements: ["Original Documents", "Passport Copy", "Application Form"]
-  },
-  {
-    provider: "UK NARIC",
-    country: "United Kingdom",
-    services: ["Qualification Recognition", "Statement of Comparability", "Career Path Report"],
-    processingTime: "15-20 business days",
-    price: "$250-$400",
-    rating: 4.7,
-    type: "recognition",
-    requirements: ["Original Diploma", "Transcripts", "Certified Translations"]
-  },
-  {
-    provider: "EuroLegal Services",
-    country: "Germany",
-    services: ["Document Translation", "Authentication", "Embassy Legalization"],
-    processingTime: "7-10 business days",
-    price: "$150-$250",
-    rating: 4.6,
-    type: "legalization",
-    requirements: ["Original Documents", "Passport Copy", "Proof of Address"]
-  },
-  {
-    provider: "German ENIC-NARIC",
-    country: "Germany",
-    services: ["Degree Recognition", "Professional Qualification Assessment"],
-    processingTime: "20-25 business days",
-    price: "$200-$350",
-    rating: 4.5,
-    type: "recognition",
-    requirements: ["Notarized Diploma Copy", "Transcript Translation", "CV"]
-  },
-  {
-    provider: "LegalDocs France",
-    country: "France",
-    services: ["Document Authentication", "Translation", "Ministry Legalization"],
-    processingTime: "8-12 business days",
-    price: "$180-$280",
-    rating: 4.7,
-    type: "legalization",
-    requirements: ["Original Documents", "ID Card Copy", "Proof of Purpose"]
-  },
-  {
-    provider: "ENIC-NARIC France",
-    country: "France",
-    services: ["Academic Recognition", "Professional Recognition", "Comparability Statement"],
-    processingTime: "15-20 business days",
-    price: "$220-$380",
-    rating: 4.6,
-    type: "recognition",
-    requirements: ["Original Diploma", "Course Descriptions", "Official Translations"]
-  }
-];
 
 const DocumentServices: React.FC = () => {
   const [residenceCountry, setResidenceCountry] = useState<string>("");
@@ -83,13 +25,22 @@ const DocumentServices: React.FC = () => {
   const [serviceType, setServiceType] = useState<'legalization' | 'recognition' | 'all'>('all');
 
   const { countries: allCountries } = useCountries();
- 
 
-  const filteredServices = mockServices.filter(service => {
-    if (destinationCountry && service.country !== destinationCountry) return false;
-    if (serviceType !== 'all' && service.type !== serviceType) return false;
-    return true;
-  });
+  // « all » interroge les deux familles explicitement : omettre le filtre ramènerait
+  // aussi les prestataires de visa travail, qui n'ont rien à faire sur cette page.
+  const { items: filteredServices, loading, error } = useApiList<DocumentService>(
+    () =>
+      serviceType === 'all'
+        ? Promise.all([
+            apiService.getServiceProviders({ type: 'legalization', country: destinationCountry }),
+            apiService.getServiceProviders({ type: 'recognition', country: destinationCountry }),
+          ]).then(([legalization, recognition]) => ({
+            data: [...(legalization.data ?? []), ...(recognition.data ?? [])],
+          }))
+        : apiService.getServiceProviders({ type: serviceType, country: destinationCountry }),
+    [serviceType, destinationCountry],
+    { errorMessage: 'Unable to load document services. Please try again later.' }
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -223,27 +174,41 @@ const DocumentServices: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading document services...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.length > 0 ? (
-            filteredServices.map((service, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredServices.map(service => (
+              <div key={service.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-primary">{service.provider}</h3>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      service.type === 'legalization' 
-                        ? 'bg-blue-100 text-blue-800' 
+                      service.serviceType === 'legalization'
+                        ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
-                      {service.type === 'legalization' ? 'Legalization' : 'Translation & Recognition'}
+                      {service.serviceType === 'legalization' ? 'Legalization' : 'Translation & Recognition'}
                     </span>
                   </div>
                   <p className="text-gray-600 mb-4">{service.country}</p>
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Services:</span>{" "}
-                      {service.services.join(", ")}
+                      {(service.services ?? []).join(", ")}
                     </p>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Processing Time:</span>{" "}
@@ -253,14 +218,16 @@ const DocumentServices: React.FC = () => {
                       <span className="font-medium">Price Range:</span>{" "}
                       {service.price}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Rating:</span>{" "}
-                      {service.rating}/5.0
-                    </p>
+                    {service.rating != null && (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Rating:</span>{" "}
+                        {service.rating}/5.0
+                      </p>
+                    )}
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">Requirements:</span>
                       <ul className="list-disc list-inside mt-1 ml-2">
-                        {service.requirements.map((req, idx) => (
+                        {(service.requirements ?? []).map((req, idx) => (
                           <li key={idx}>{req}</li>
                         ))}
                       </ul>
@@ -278,6 +245,7 @@ const DocumentServices: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
         {/* Information Sections */}
         <div className="space-y-6 mt-12">

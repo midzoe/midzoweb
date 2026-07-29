@@ -27,6 +27,13 @@ const NewsSlider = () => {
 
   const readMore = { en: 'Read More', fr: 'Lire la Suite', de: 'Mehr Lesen' };
 
+  /**
+   * Destination d'un article (story 1.7). Un `link` explicite reste prioritaire :
+   * les articles seedés pointent vers leurs pages de services et doivent continuer
+   * de le faire. À défaut, on ouvre la page de lecture générique.
+   */
+  const targetOf = (item: NewsItem) => item.link || `/actualites/${item.id}`;
+
   // L'article mis en avant est indexé : sans garde, une liste vide ferait planter le rendu.
   const featured = newsItems[active] ?? newsItems[0];
 
@@ -70,19 +77,19 @@ const NewsSlider = () => {
                 {featured.category}
               </span>
               <h3 className="text-xl md:text-2xl font-bold text-white mb-2">
-                {getTitle(featured)}
+                <Link to={targetOf(featured)} className="hover:text-secondary transition-colors duration-200">
+                  {getTitle(featured)}
+                </Link>
               </h3>
               <p className="text-white/80 text-sm hidden md:block line-clamp-2 mb-3">
                 {getDesc(featured)}
               </p>
-              {featured.link && (
-                <Link
-                  to={featured.link}
-                  className="inline-block text-secondary font-semibold text-sm hover:text-white transition-colors"
-                >
-                  {readMore[lang]} →
-                </Link>
-              )}
+              <Link
+                to={targetOf(featured)}
+                className="inline-block text-secondary font-semibold text-sm hover:text-white transition-colors"
+              >
+                {readMore[lang]} →
+              </Link>
             </div>
           </div>
 
@@ -101,10 +108,14 @@ const NewsSlider = () => {
         {/* News Cards Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {newsItems.map((item, i) => (
-            <div
+            // Le clic mène à la lecture (action principale) ; le survol se contente de
+            // remonter l'article dans le bandeau. Les points sous le bandeau restent le
+            // moyen de le piloter au doigt.
+            <Link
               key={item.id}
-              onClick={() => setActive(i)}
-              className={`cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${i === active ? 'ring-2 ring-primary' : ''}`}
+              to={targetOf(item)}
+              onMouseEnter={() => setActive(i)}
+              className={`block cursor-pointer rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${i === active ? 'ring-2 ring-primary' : ''}`}
             >
               <div className="relative h-32">
                 <img src={item.image} alt={getTitle(item)} className="w-full h-full object-cover" />
@@ -120,7 +131,7 @@ const NewsSlider = () => {
                 </h4>
                 <p className="text-xs text-gray-500 line-clamp-2">{getDesc(item)}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
           </>

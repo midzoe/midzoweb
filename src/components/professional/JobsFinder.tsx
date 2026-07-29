@@ -1,91 +1,35 @@
-import React, { useState } from 'react';
-import { useCountries } from '../../hooks/useCountries';
 
+import React, { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
+
+// Offres d'emploi servies par le backend (Job).
 interface Job {
+  id: number;
   title: string;
   company: string;
+  country: string;
+  city?: string;
   location: string;
   type: string;
-  salary: string;
-  experience: string;
-  description: string;
-  requirements: string[];
-  benefits: string[];
-  posted: string;
-  image: string;
+  salary?: string;
+  experience?: string;
+  description?: string;
+  requirements?: string[];
+  benefits?: string[];
+  applyUrl?: string;
+  image?: string;
+  postedAt?: string;
 }
 
-const mockJobs: Job[] = [
-  {
-    title: "Senior Software Engineer",
-    company: "Tech Innovations GmbH",
-    location: "Berlin, Germany",
-    type: "Full-time",
-    salary: "€65,000 - €85,000",
-    experience: "5+ years",
-    description: "Looking for an experienced software engineer to join our growing team.",
-    requirements: [
-      "5+ years of experience in full-stack development",
-      "Strong knowledge of JavaScript/TypeScript",
-      "Experience with React and Node.js",
-      "Good understanding of cloud services"
-    ],
-    benefits: [
-      "Flexible working hours",
-      "Remote work options",
-      "Health insurance",
-      "Professional development budget"
-    ],
-    posted: "2 days ago",
-    image: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    title: "Marketing Manager",
-    company: "Global Brands Ltd",
-    location: "London, United Kingdom",
-    type: "Full-time",
-    salary: "£45,000 - £60,000",
-    experience: "3-5 years",
-    description: "Seeking a creative marketing manager to lead our digital campaigns.",
-    requirements: [
-      "3-5 years of digital marketing experience",
-      "Strong analytical skills",
-      "Experience with marketing automation tools",
-      "Excellent communication skills"
-    ],
-    benefits: [
-      "Performance bonuses",
-      "Gym membership",
-      "Company events",
-      "Training opportunities"
-    ],
-    posted: "1 week ago",
-    image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    title: "Data Scientist",
-    company: "Analytics Pro",
-    location: "Paris, France",
-    type: "Full-time",
-    salary: "€50,000 - €70,000",
-    experience: "2-4 years",
-    description: "Join our data science team to work on cutting-edge AI projects.",
-    requirements: [
-      "Masters in Data Science or related field",
-      "Experience with Python and ML frameworks",
-      "Strong statistical background",
-      "Good communication skills"
-    ],
-    benefits: [
-      "Flexible hours",
-      "Remote work options",
-      "Health coverage",
-      "Stock options"
-    ],
-    posted: "3 days ago",
-    image: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-  }
-];
+/** « il y a 2 jours » à partir de la date de publication renvoyée par l'API. */
+const postedLabel = (postedAt?: string) => {
+  if (!postedAt) return '';
+  const date = new Date(postedAt);
+  return isNaN(date.getTime()) ? '' : formatDistanceToNow(date, { addSuffix: true });
+};
 
 const JobsFinder: React.FC = () => {
   const [location, setLocation] = useState<string>("");
@@ -98,11 +42,11 @@ const JobsFinder: React.FC = () => {
   const experienceLevels = ["Entry Level", "1-3 years", "3-5 years", "5+ years"];
   const industries = ["Technology", "Marketing", "Finance", "Healthcare", "Education"];
 
-  const filteredJobs = mockJobs.filter(job => {
-    if (location && !job.location.includes(location)) return false;
-    if (jobType && job.type !== jobType) return false;
-    return true;
-  });
+  const { items: filteredJobs, loading, error } = useApiList<Job>(
+    () => apiService.getJobs({ country: location, type: jobType }),
+    [location, jobType],
+    { errorMessage: 'Unable to load job offers. Please try again later.' }
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -178,20 +122,36 @@ const JobsFinder: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-2 text-gray-600">Loading job offers...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="space-y-6">
           {filteredJobs.length > 0 ? (
-            filteredJobs.map((job, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredJobs.map(job => (
+              <div key={job.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-primary">{job.title}</h3>
                       <p className="text-gray-600">{job.company}</p>
                     </div>
-                    <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                      {job.posted}
-                    </span>
+                    {job.postedAt && (
+                      <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                        {postedLabel(job.postedAt)}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-6">
@@ -217,7 +177,7 @@ const JobsFinder: React.FC = () => {
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2">Requirements</h4>
                         <ul className="list-disc list-inside space-y-1 text-gray-600">
-                          {job.requirements.map((req, idx) => (
+                          {(job.requirements ?? []).map((req, idx) => (
                             <li key={idx}>{req}</li>
                           ))}
                         </ul>
@@ -225,7 +185,7 @@ const JobsFinder: React.FC = () => {
                       <div>
                         <h4 className="font-medium text-gray-900 mb-2">Benefits</h4>
                         <ul className="list-disc list-inside space-y-1 text-gray-600">
-                          {job.benefits.map((benefit, idx) => (
+                          {(job.benefits ?? []).map((benefit, idx) => (
                             <li key={idx}>{benefit}</li>
                           ))}
                         </ul>
@@ -250,6 +210,7 @@ const JobsFinder: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

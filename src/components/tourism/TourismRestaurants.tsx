@@ -1,45 +1,21 @@
 import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
+import { useApiList } from '../../hooks/useApiList';
+import { apiService } from '../../services/api';
 
+// Restaurants servis par le backend (Restaurant).
 interface Restaurant {
+  id: number;
   name: string;
+  country: string;
+  city?: string;
   location: string;
   cuisine: string;
   priceRange: string;
-  rating: number;
-  reviews: number;
-  features: string[];
+  rating?: number;
+  reviews?: number;
+  features?: string[];
 }
-
-const mockRestaurants: Restaurant[] = [
-  {
-    name: "Le Petit Bistro",
-    location: "Paris, France",
-    cuisine: "French",
-    priceRange: "€€€",
-    rating: 4.8,
-    reviews: 450,
-    features: ["Outdoor Seating", "Wine Bar", "Vegetarian Options"]
-  },
-  {
-    name: "Tapas & More",
-    location: "Barcelona, Spain",
-    cuisine: "Spanish",
-    priceRange: "€€",
-    rating: 4.6,
-    reviews: 320,
-    features: ["Live Music", "Late Night", "Group Friendly"]
-  },
-  {
-    name: "Bella Italia",
-    location: "Rome, Italy",
-    cuisine: "Italian",
-    priceRange: "€€",
-    rating: 4.7,
-    reviews: 580,
-    features: ["Family Style", "Romantic", "Wine Selection"]
-  }
-];
 
 const TourismRestaurants: React.FC = () => {
   const [location, setLocation] = useState<string>("");
@@ -50,12 +26,11 @@ const TourismRestaurants: React.FC = () => {
   const cuisines = ["French", "Italian", "Spanish", "Japanese", "Chinese", "Indian", "American"];
   const priceRanges = ["€", "€€", "€€€", "€€€€"];
 
-  const filteredRestaurants = mockRestaurants.filter(restaurant => {
-    if (location && !restaurant.location.includes(location)) return false;
-    if (cuisine && restaurant.cuisine !== cuisine) return false;
-    if (priceRange && restaurant.priceRange !== priceRange) return false;
-    return true;
-  });
+  const { items: filteredRestaurants, loading, error } = useApiList<Restaurant>(
+    () => apiService.getRestaurants({ country: location, cuisine, price_range: priceRange }),
+    [location, cuisine, priceRange],
+    { errorMessage: 'Unable to load restaurants. Please try again later.' }
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -115,11 +90,25 @@ const TourismRestaurants: React.FC = () => {
           </div>
         </div>
 
+        {/* Loading / Error */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+            <p className="mt-2 text-slate-600">Loading restaurants...</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
         {/* Results */}
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredRestaurants.length > 0 ? (
-            filteredRestaurants.map((restaurant, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            filteredRestaurants.map(restaurant => (
+              <div key={restaurant.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gold-600 mb-2">{restaurant.name}</h3>
                   <p className="text-slate-600 mb-4">{restaurant.location}</p>
@@ -134,12 +123,14 @@ const TourismRestaurants: React.FC = () => {
                     </p>
                     <p className="text-sm text-slate-600">
                       <span className="font-medium">Features:</span>{" "}
-                      {restaurant.features.join(", ")}
+                      {(restaurant.features ?? []).join(", ")}
                     </p>
-                    <p className="text-sm text-slate-600">
-                      <span className="font-medium">Rating:</span>{" "}
-                      {restaurant.rating}/5.0 ({restaurant.reviews} reviews)
-                    </p>
+                    {restaurant.rating != null && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-medium">Rating:</span>{" "}
+                        {restaurant.rating}/5.0 ({restaurant.reviews} reviews)
+                      </p>
+                    )}
                   </div>
                   <button className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
                     Reserve Table
@@ -153,6 +144,7 @@ const TourismRestaurants: React.FC = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
