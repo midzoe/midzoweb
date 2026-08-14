@@ -154,6 +154,14 @@ class ApiService {
     return this.request<any>('/packages');
   }
 
+  /**
+   * Grille commerciale publique (page /packages) : les paliers Study / Tourism / Mix
+   * et la consultation, déjà regroupés par famille et triés par le backend.
+   */
+  async getShowcasePackages() {
+    return this.request<any>('/packages/showcase');
+  }
+
   /** Devis en direct. Le calcul est 100% backend (story 3.2) — l'UI n'affiche que la réponse. */
   async quotePackage(categories: string[], subcategoryIds: number[] = []) {
     return this.request<any>('/packages/quote', {
@@ -335,9 +343,16 @@ class ApiService {
   }
 
   // Travel check (premium) — story 4.3 : `lang` (fr|en) porte la langue du message généré.
-  async checkTravelRequirements(nationality: string, destination: string, lang?: string) {
+  async checkTravelRequirements(
+    nationality: string,
+    destination: string,
+    lang?: string,
+    visaType?: string,
+  ) {
     const params = new URLSearchParams({ nationality, destination });
     if (lang) params.set('lang', lang);
+    // Story 4.7 : une route peut porter une fiche par type de visa (étudiant, tourisme…).
+    if (visaType) params.set('type', visaType);
     return this.request<any>(`/travel/check?${params.toString()}`);
   }
 
@@ -463,8 +478,9 @@ class ApiService {
   }
 
   // Public: Visa lookup
-  async getVisaInfo(fromCountry: string, toCountry: string) {
+  async getVisaInfo(fromCountry: string, toCountry: string, visaType?: string) {
     const params = new URLSearchParams({ from: fromCountry, to: toCountry });
+    if (visaType) params.set('type', visaType);
     return this.request<any>(`/visa?${params.toString()}`);
   }
 
@@ -704,6 +720,15 @@ class ApiService {
   async getEmbassies(country?: string) {
     const qs = country ? `?country=${encodeURIComponent(country)}` : '';
     return this.request<any>(`/embassies${qs}`);
+  }
+
+  /**
+   * Story 4.8 : LA représentation compétente pour un couple (origine, destination) —
+   * celle installée dans le pays du demandeur, à défaut celle qui le dessert.
+   */
+  async getCompetentEmbassy(destination: string, origin: string) {
+    const params = new URLSearchParams({ destination, origin });
+    return this.request<any>(`/embassies?${params.toString()}`);
   }
 
   // Admin: Countries

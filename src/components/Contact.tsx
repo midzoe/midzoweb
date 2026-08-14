@@ -29,6 +29,17 @@ const Contact: React.FC = () => {
       .catch(() => setSubjects([]));
   }, []);
 
+  // Arrivée depuis la grille des packages (`/packages` → « Choisir ») : le message est amorcé
+  // avec le package retenu, pour que la demande parte avec son objet réel. Le texte reste
+  // entièrement modifiable — c'est une amorce, pas un message imposé.
+  useEffect(() => {
+    const pkg = new URLSearchParams(window.location.search).get('package');
+    if (!pkg) return;
+    setFormData((prev) =>
+      prev.message ? prev : { ...prev, message: t('package_prefill', { package: pkg }) }
+    );
+  }, [t]);
+
   const currentSubcategories = useMemo(
     () => subjects.find((s) => s.id === formData.category)?.subcategories || [],
     [subjects, formData.category]

@@ -46,6 +46,7 @@ import Hero from './components/Hero';
 import NewsSlider from './components/NewsSlider';
 import Services from './components/Services';
 import PackageBuilder from './components/PackageBuilder';
+import Packages from './components/Packages';
 import About from './components/About';
 import Contact from './components/Contact';
 import Login from './components/Login';
@@ -167,6 +168,8 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/orientation" element={<OrientationResources />} />
+            {/* Grille commerciale (plaquette) ; /premium reste le constructeur à la carte. */}
+            <Route path="/packages" element={<Packages />} />
             <Route path="/premium" element={<PackageBuilder />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />

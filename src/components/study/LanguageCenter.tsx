@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiService } from '../../services/api';
+import { isVisaOriginCountry, africanCountryLabel } from '../../data/africanCountries';
 
 /**
  * Story 5.4 → 5.14 : centres de langue servis par le backend.
@@ -9,6 +10,10 @@ import { apiService } from '../../services/api';
  * (story 5.3) : quand le niveau de l'étudiant est insuffisant, on l'envoie ici avec
  * ?language=&country=&level=&university=. `country` est le pays de l'université, dans
  * le même vocabulaire que le catalogue universités.
+ *
+ * Le catalogue mêle deux moments : se mettre à niveau **avant le départ** (centres
+ * situés dans les pays d'origine du visa) ou **à destination**. Le filtre « Où
+ * apprendre » sépare les deux, car ce sont deux décisions différentes.
  */
 interface LanguageCenter {
   id: number;
@@ -61,7 +66,8 @@ const COUNTRY_FR: Record<string, string> = {
   Portugal: 'Portugal', China: 'Chine', Belgium: 'Belgique', Luxembourg: 'Luxembourg',
   Morocco: 'Maroc', Senegal: 'Sénégal', Austria: 'Autriche', Ireland: 'Irlande',
 };
-const countryLabel = (c: string) => COUNTRY_FR[c] ?? c;
+/** Destination connue, sinon pays d'origine africain, sinon la valeur brute. */
+const countryLabel = (c: string) => COUNTRY_FR[c] ?? africanCountryLabel(c);
 
 const formatPrice = (c: LanguageCenter) => {
   if (c.priceFrom == null) return null;
@@ -124,6 +130,11 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
             {countryLabel(center.country)}
           </span>
           {center.city && <span className="text-xs text-gray-500">{center.city}</span>}
+          {isVisaOriginCountry(center.country) && (
+            <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+              Avant le départ
+            </span>
+          )}
           {center.isPartner && (
             <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
               Partenaire Midzo
@@ -270,6 +281,8 @@ const LanguageCenterPage: React.FC = () => {
   const cameFromCheck = !!(redirectLanguage || redirectUniversity);
 
   const [country, setCountry] = useState(redirectCountry);
+  /** Où apprendre : partout, avant le départ (pays d'origine), ou à destination. */
+  const [scope, setScope] = useState<'all' | 'origin' | 'study'>('all');
   const [language, setLanguage] = useState(redirectLanguage);
   const [city, setCity] = useState('');
   const [level, setLevel] = useState(redirectLevel);
@@ -328,6 +341,24 @@ const LanguageCenterPage: React.FC = () => {
       });
   }, []);
 
+  /**
+   * « Où apprendre » se joue côté client : l'API ne connaît pas la notion de pays de
+   * départ, mais le pays de chaque fiche suffit à trancher.
+   */
+  const visibleCenters = useMemo(() => {
+    if (scope === 'all') return centers;
+    return centers.filter(c => isVisaOriginCountry(c.country) === (scope === 'origin'));
+  }, [centers, scope]);
+
+  /** Pays des facettes séparés en deux groupes, pour un sélecteur qui raconte le parcours. */
+  const countryGroups = useMemo(() => {
+    const all = facets?.countries ?? [];
+    return {
+      origin: all.filter(c => isVisaOriginCountry(c.name)),
+      study: all.filter(c => !isVisaOriginCountry(c.name)),
+    };
+  }, [facets]);
+
   /** Villes proposées : celles du pays choisi si on en connaît, sinon toutes. */
   const cityOptions = useMemo(() => {
     if (!facets) return [];
@@ -342,11 +373,11 @@ const LanguageCenterPage: React.FC = () => {
   }, [facets]);
 
   const activeFilters = [country, language, city, level, courseType, exam, query.trim()].filter(Boolean).length
-    + (onlyPartners ? 1 : 0);
+    + (onlyPartners ? 1 : 0) + (scope !== 'all' ? 1 : 0);
 
   const resetFilters = () => {
     setCountry(''); setLanguage(''); setCity(''); setLevel('');
-    setCourseType(''); setExam(''); setOnlyPartners(false); setQuery('');
+    setCourseType(''); setExam(''); setOnlyPartners(false); setQuery(''); setScope('all');
   };
 
   const selectCls = 'w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary focus:border-primary';
@@ -386,14 +417,44 @@ const LanguageCenterPage: React.FC = () => {
             className="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary focus:border-primary mb-4"
           />
 
+          {/* Où apprendre : se mettre à niveau au pays, ou une fois arrivé. */}
+          {countryGroups.origin.length > 0 && (
+            <div className="mb-4 inline-flex rounded-lg bg-gray-100 p-0.5" role="group" aria-label="Où apprendre">
+              {([
+                ['all', 'Partout'],
+                ['origin', 'Avant le départ'],
+                ['study', 'À destination'],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => { setScope(value); setCountry(''); setCity(''); }}
+                  aria-pressed={scope === value}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer ${
+                    scope === value ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label htmlFor="lc-country" className="block text-sm font-medium text-gray-700 mb-1.5">Pays</label>
               <select id="lc-country" value={country} onChange={e => { setCountry(e.target.value); setCity(''); }} className={selectCls}>
                 <option value="">Tous les pays</option>
-                {(facets?.countries ?? []).map(c => (
+                {scope !== 'origin' && countryGroups.study.map(c => (
                   <option key={c.name} value={c.name}>{countryLabel(c.name)} ({c.count})</option>
                 ))}
+                {scope !== 'study' && countryGroups.origin.length > 0 && (
+                  <optgroup label="Avant le départ">
+                    {countryGroups.origin.map(c => (
+                      <option key={c.name} value={c.name}>{countryLabel(c.name)} ({c.count})</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
 
@@ -469,13 +530,13 @@ const LanguageCenterPage: React.FC = () => {
         {!loading && !error && (
           <>
             <p className="mb-4 text-sm text-gray-500">
-              {centers.length} centre{centers.length > 1 ? 's' : ''} trouvé{centers.length > 1 ? 's' : ''}
-              {facets && centers.length !== facets.total && <span className="text-gray-400"> sur {facets.total}</span>}
+              {visibleCenters.length} centre{visibleCenters.length > 1 ? 's' : ''} trouvé{visibleCenters.length > 1 ? 's' : ''}
+              {facets && visibleCenters.length !== facets.total && <span className="text-gray-400"> sur {facets.total}</span>}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {centers.length > 0 ? (
-                centers.map(center => (
+              {visibleCenters.length > 0 ? (
+                visibleCenters.map(center => (
                   <CenterCard key={center.id} center={center} highlightLevel={redirectLevel || level} />
                 ))
               ) : (
