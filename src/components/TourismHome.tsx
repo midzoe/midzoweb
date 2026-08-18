@@ -1,14 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNews, NewsItem } from '../hooks/useNews';
+import { useCategories, catalogText } from '../hooks/useCategories';
 import {
   CalendarIcon,
   GlobeAltIcon,
   TrophyIcon,
   PaperAirplaneIcon,
   UsersIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  MapPinIcon,
+  BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
 
 const TourismHome = () => {
@@ -18,6 +21,8 @@ const TourismHome = () => {
   const [showQuiz, setShowQuiz] = useState(false);
   // Pas de filtre `scope` : la section affiche l'ensemble des actualités, comme avant.
   const { news: newsItems, loading: newsLoading } = useNews();
+  const { categories: catalogCategories, serviceDetails } = useCategories();
+  const tServices = useMemo(() => i18n.getFixedT(null, 'services'), [i18n, i18n.language]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -30,56 +35,28 @@ const TourismHome = () => {
     lang === 'fr' ? item.titleFr : lang === 'de' ? item.titleDe : item.title;
 
 
-  const categories = [
-    {
-      id: 'events',
-      title: 'Events & Spectacles',
-      icon: CalendarIcon,
-      description: 'Vivez les plus grands moments sportifs du monde',
-      subline: 'World Cup 2026 • AFCON • Olympics',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: '/services/tourism-events',
-      accentColor: 'gold',
-      spots: '45 spots left',
-      testimonial: 'C\'était inoubliable! L\'atmosphère au stade était incroyable. — Marie, Paris'
-    },
-    {
-      id: 'safari',
-      title: 'Safari & Africa',
-      icon: GlobeAltIcon,
-      description: 'Découvrez l\'Afrique authentique et sauvage',
-      subline: 'Botswana • Lesotho • Namibia',
-      image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: '/services/tourism-safari',
-      accentColor: 'emerald',
-      spots: '12 spots left',
-      testimonial: 'J\'ai vu les Big Five de près. Les guides Midzoe étaient exceptionnels. — Ahmed, Casablanca'
-    },
-    {
-      id: 'sports',
-      title: 'Sports Tourism',
-      icon: TrophyIcon,
-      description: 'Voyagez autour de votre passion sportive',
-      subline: 'Marathons • Grand Slams • F1',
-      image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: '/services/tourism-sports',
-      accentColor: 'blue',
-      spots: '28 spots left',
-      testimonial: 'Marathoner depuis 15 ans, c\'est le meilleur voyage marathon que j\'ai jamais fait. — Pierre, Lyon'
-    },
-    {
-      id: 'partners',
-      title: 'Flights & Stays',
-      icon: PaperAirplaneIcon,
-      description: 'Vol + hôtel avec nos meilleures plateforme partenaires',
-      subline: 'Booking • Expedia • Skyscanner',
-      image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: '/services/tourism-partners',
-      accentColor: 'slate',
-      spots: 'Unlimited',
-      testimonial: 'Les meilleurs prix du marché, facile à booker. — Leila, Dakar'
-    }
-  ];
+  // Les cartes de cette section reprennent les services de la catégorie « tourism »
+  // du catalogue : titre, description, image et lien viennent de la base, donc
+  // publier un service en admin l'ajoute ici sans toucher au code. Icône et
+  // couleur d'accent restent de la présentation, appliquées par position.
+  const CARD_ICONS = [CalendarIcon, GlobeAltIcon, TrophyIcon, PaperAirplaneIcon, MapPinIcon, BuildingOffice2Icon];
+
+  const categories = useMemo(() => {
+    const tourism = catalogCategories.find(c => c.id === 'tourism');
+    if (!tourism) return [];
+    const details = serviceDetails['tourism'] ?? {};
+    return tourism.services
+      .map(name => details[name])
+      .filter(Boolean)
+      .map((detail, i) => ({
+        id: detail.learnMoreLink || detail.name,
+        title: catalogText(tServices, `${detail.translationKey}.name`, detail.name),
+        icon: CARD_ICONS[i % CARD_ICONS.length],
+        subline: catalogText(tServices, `${detail.translationKey}.description`, detail.description),
+        image: detail.image,
+        link: detail.learnMoreLink,
+      }));
+  }, [catalogCategories, serviceDetails, tServices]);
 
   const deals = [
     {
@@ -278,12 +255,8 @@ const TourismHome = () => {
                           </div>
                           <h3 className="text-2xl md:text-3xl font-bold text-white">{cat.title}</h3>
                         </div>
-                        <span className="text-xs bg-gold-500 text-slate-900 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap ml-2">
-                          {cat.spots}
-                        </span>
                       </div>
-                      <p className="text-white/80 text-sm mb-2 font-light">{cat.subline}</p>
-                      <p className="text-white/70 text-xs italic mb-4">"{cat.testimonial}"</p>
+                      <p className="text-white/80 text-sm mb-4 font-light line-clamp-3">{cat.subline}</p>
                       <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-semibold group-hover:bg-white/30 transition-colors duration-200">
                         Découvrir <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
                       </div>

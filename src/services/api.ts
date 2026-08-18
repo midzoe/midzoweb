@@ -675,6 +675,34 @@ class ApiService {
     return this.request<any>(`/admin/partners/${id}`, { method: 'DELETE' });
   }
 
+  // ─── Catalogue de services (catégories + services) ───────────
+  // Le catalogue public de /services et du TripWizard vient de ces tables :
+  // toute la fiche (libellé, description, image, lien, étapes) est éditable ici.
+  async adminGetCategories() {
+    return this.request<any>('/admin/categories');
+  }
+  async adminCreateCategory(data: object) {
+    return this.request<any>('/admin/categories', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateCategory(id: string, data: object) {
+    return this.request<any>(`/admin/categories/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteCategory(id: string) {
+    return this.request<any>(`/admin/categories/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
+  async adminGetServices(categoryId?: string) {
+    return this.request<any>(`/admin/services${categoryId ? `?categoryId=${encodeURIComponent(categoryId)}` : ''}`);
+  }
+  async adminCreateService(data: object) {
+    return this.request<any>('/admin/services', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateService(id: number, data: object) {
+    return this.request<any>(`/admin/services/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteService(id: number) {
+    return this.request<any>(`/admin/services/${id}`, { method: 'DELETE' });
+  }
+
   // ─── Epic 7 — Espace voyage / trips ─────────────────────────
   async getTrips() {
     return this.request<any>('/trips');
@@ -840,6 +868,17 @@ class ApiService {
   }
   async adminDeletePackage(id: number) {
     return this.request<any>(`/admin/packages/${id}`, { method: 'DELETE' });
+  }
+
+  /**
+   * Configuration tarifaire globale du moteur de devis (prix par service supplémentaire,
+   * remises dégressives, devise). Singleton : la route ne prend pas d'id.
+   */
+  async adminGetPricingConfig() {
+    return this.request<any>('/admin/pricing-config');
+  }
+  async adminUpdatePricingConfig(data: object) {
+    return this.request<any>('/admin/pricing-config', { method: 'PUT', body: JSON.stringify(data) });
   }
 
   // Story 9.2/9.7 — file de validation + validation

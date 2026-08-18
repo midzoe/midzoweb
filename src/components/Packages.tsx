@@ -9,6 +9,7 @@ import {
   CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
+import { useCategories } from '../hooks/useCategories';
 
 /**
  * Grille commerciale publique — reprise de la plaquette « MIDZOE PACKAGES ».
@@ -88,21 +89,27 @@ const FAMILY_TABS: { id: Family; labelKey: string; icon: React.ElementType }[] =
   { id: 'mix', labelKey: 'family_mix', icon: Squares2X2Icon },
 ];
 
-/** Piliers de service de la plaquette : 5 par famille, avec la page de service correspondante. */
-const PILLARS: Record<'study' | 'tourism', { icon: React.ElementType; key: string; href: string }[]> = {
+/**
+ * Piliers de service de la plaquette : 5 par famille. Le texte est éditorial
+ * (la plaquette regroupe plusieurs services sous un même pilier), mais la
+ * DESTINATION vient du catalogue : `service` désigne un service par sa clé de
+ * traduction, et son `learnMoreLink` réel est résolu au rendu. `href` ne sert
+ * que de repli si le service a été retiré du catalogue.
+ */
+const PILLARS: Record<'study' | 'tourism', { icon: React.ElementType; key: string; service: string; href: string }[]> = {
   study: [
-    { icon: DocumentCheckIcon, key: 'study_1', href: '/services/document-legalization' },
-    { icon: BuildingLibraryIcon, key: 'study_2', href: '/services/university-finder' },
-    { icon: ChatBubbleLeftRightIcon, key: 'study_3', href: '/services/language-center' },
-    { icon: HomeIcon, key: 'study_4', href: '/services/student-accommodation' },
-    { icon: PaperAirplaneIcon, key: 'study_5', href: '/services/student-visa' },
+    { icon: DocumentCheckIcon, key: 'study_1', service: 'study.documentLegalization', href: '/services/document-legalization' },
+    { icon: BuildingLibraryIcon, key: 'study_2', service: 'study.universityFinder', href: '/services/university-finder' },
+    { icon: ChatBubbleLeftRightIcon, key: 'study_3', service: 'study.languageCenter', href: '/services/language-center' },
+    { icon: HomeIcon, key: 'study_4', service: 'study.studentAccommodation', href: '/services/student-accommodation' },
+    { icon: PaperAirplaneIcon, key: 'study_5', service: 'study.studentVisa', href: '/services/student-visa' },
   ],
   tourism: [
-    { icon: HomeModernIcon, key: 'tourism_1', href: '/services/accommodation' },
-    { icon: PaperAirplaneIcon, key: 'tourism_2', href: '/flights' },
-    { icon: MapIcon, key: 'tourism_3', href: '/services/tourist-sites' },
-    { icon: UserGroupIcon, key: 'tourism_4', href: '/services/tourism-partners' },
-    { icon: ChatBubbleLeftRightIcon, key: 'tourism_5', href: '/services/language-center' },
+    { icon: HomeModernIcon, key: 'tourism_1', service: 'tourism.accommodation', href: '/services/accommodation' },
+    { icon: PaperAirplaneIcon, key: 'tourism_2', service: 'study.flightBooking', href: '/flights' },
+    { icon: MapIcon, key: 'tourism_3', service: 'tourism.touristSites', href: '/services/tourist-sites' },
+    { icon: UserGroupIcon, key: 'tourism_4', service: 'tourism.flightsStays', href: '/services/tourism-partners' },
+    { icon: ChatBubbleLeftRightIcon, key: 'tourism_5', service: 'study.languageCenter', href: '/services/language-center' },
   ],
 };
 
@@ -134,6 +141,21 @@ function formatPrice(cents: number, currency: string, locale: string): string {
 
 const Packages: React.FC = () => {
   const { t, i18n } = useTranslation('packages');
+  const { serviceDetails } = useCategories();
+
+  // clé de traduction -> lien réel du catalogue : un lien modifié en admin suit
+  // automatiquement, au lieu de rester figé dans le code de cette page.
+  const linkByService = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const services of Object.values(serviceDetails)) {
+      for (const detail of Object.values(services)) {
+        if (detail.translationKey && detail.learnMoreLink) {
+          map[detail.translationKey] = detail.learnMoreLink;
+        }
+      }
+    }
+    return map;
+  }, [serviceDetails]);
   const [packages, setPackages] = useState<ShowcasePackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -263,10 +285,10 @@ const Packages: React.FC = () => {
               {t('included_services')}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {PILLARS[family].map(({ icon: Icon, key, href }, index) => (
+              {PILLARS[family].map(({ icon: Icon, key, service, href }, index) => (
                 <Link
                   key={key}
-                  to={href}
+                  to={linkByService[service] ?? href}
                   className="group flex flex-col rounded-2xl border border-stone-200/80 bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover"
                 >
                   <div className="flex items-center gap-3">

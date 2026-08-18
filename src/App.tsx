@@ -24,6 +24,8 @@ import AdminStudyCountries from './components/admin/AdminStudyCountries';
 import AdminTourismCountries from './components/admin/AdminTourismCountries';
 import AdminAccommodations from './components/admin/AdminAccommodations';
 import AdminPackages from './components/admin/AdminPackages';
+import AdminPricing from './components/admin/AdminPricing';
+import AdminServices from './components/admin/AdminServices';
 import AdminContactMessages from './components/admin/AdminContactMessages';
 import AdminNewsletter from './components/admin/AdminNewsletter';
 import AdminValidation from './components/admin/AdminValidation';
@@ -143,6 +145,8 @@ function AppContent() {
             <Route path="/admin/tourism-countries" element={<AdminLayout><AdminTourismCountries /></AdminLayout>} />
             <Route path="/admin/accommodations" element={<AdminLayout><AdminAccommodations /></AdminLayout>} />
             <Route path="/admin/packages" element={<AdminLayout><AdminPackages /></AdminLayout>} />
+            <Route path="/admin/pricing" element={<AdminLayout><AdminPricing /></AdminLayout>} />
+            <Route path="/admin/services" element={<AdminLayout><AdminServices /></AdminLayout>} />
             <Route path="/admin/contact-messages" element={<AdminLayout><AdminContactMessages /></AdminLayout>} />
             <Route path="/admin/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
             <Route path="/admin/validation" element={<AdminLayout><AdminValidation /></AdminLayout>} />

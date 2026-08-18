@@ -36,10 +36,6 @@
       "name": "Dokumentenlegalisierung",
       "description": "Lassen Sie Ihre Dokumente im Ausland offiziell beglaubigen"
     },
-    "diploMissingKey": {
-      "name": "Diplomanerkennung",
-      "description": "Stellen Sie sicher, dass Ihre Qualifikationen international anerkannt sind"
-    },
     "studentFlights": {
       "name": "Studentenflüge",
       "description": "Finden Sie erschwingliche Flugoptionen für Studierende"
@@ -110,15 +106,39 @@
     "description": "Personalisierte Beratung für Ihre internationalen Projekte",
     "school": {
       "name": "Schul-Orientierung",
-      "description": "Beratung bei der Wahl der richtigen Schule, des Landes und Programms für Ihr Studium im Ausland"
+      "description": "Beratung bei der Wahl der richtigen Schule, des Landes und Programms für Ihr Studium im Ausland",
+      "steps": [
+        "Profilbewertung (akademischer Hintergrund, Ziele, Budget)",
+        "Land & Schulempfehlung",
+        "Programmauswahl & Eignungsprüfung",
+        "Bewerbungszeitplan & Checkliste",
+        "Visum, Unterkunft & Briefing vor der Abreise",
+        "Premium: Sitzung mit einem Spezialisten, vor Ort oder virtuell"
+      ]
     },
     "career": {
       "name": "Karriere-Orientierung",
-      "description": "Internationaler Arbeitsmarkt, Kompetenzanalyse und Karriereplanung im Ausland"
+      "description": "Internationaler Arbeitsmarkt, Kompetenzanalyse und Karriereplanung im Ausland",
+      "steps": [
+        "Bewertung von Fähigkeiten & Erfahrung",
+        "Kartierung des internationalen Arbeitsmarktes",
+        "Internationale Aufbereitung von Lebenslauf & LinkedIn",
+        "Empfehlung von Zielland & Branche",
+        "Beratung zum Arbeitsvisum",
+        "Einführung in relevante Berufsnetzwerke"
+      ]
     },
     "training": {
       "name": "Ausbildungs-Orientierung",
-      "description": "Finden Sie das richtige Berufsausbildungsprogramm oder die richtige Zertifizierung für Ihre Karriereziele"
+      "description": "Finden Sie das richtige Berufsausbildungsprogramm oder die richtige Zertifizierung für Ihre Karriereziele",
+      "steps": [
+        "Bewertung Ihres Weiterbildungsbedarfs",
+        "Suche nach internationalen Weiterbildungsprogrammen",
+        "Überprüfung von Zertifizierungen & Akkreditierungen",
+        "Empfehlung von Land & Institution",
+        "Unterstützung bei Visum & Unterkunft",
+        "Premium: dedizierter Berater für die komplette Umsetzung"
+      ]
     }
   },
   "professional": {
@@ -151,6 +171,10 @@
     "flightBooking": {
       "name": "Flugbuchung",
       "description": "Praktische Flugbuchung mit flexiblen Reisearrangements"
+    },
+    "documentLegalization": {
+      "name": "Legalisierung beruflicher Dokumente",
+      "description": "Legalisierung, Apostille und beglaubigte Übersetzung Ihrer Arbeitszeugnisse, Diplome und beruflichen Nachweise."
     }
   },
   "business": {

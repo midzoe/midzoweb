@@ -10,12 +10,15 @@ export interface Category {
 }
 
 export interface ServiceDetail {
+  /** Libellé de secours : `displayName` de la base, sinon la clé de catalogue. */
   name: string;
   description: string;
   image: string;
   learnMoreLink: string;
   translationKey: string;
   isExternal?: boolean;
+  /** Étapes du parcours, saisies en admin. Vide = section masquée. */
+  steps: string[];
 }
 
 export interface ServiceDetailsByCategory {
@@ -29,6 +32,32 @@ interface CategoriesData {
 
 const EMPTY: CategoriesData = { categories: [], serviceDetails: {} };
 
+type TLike = (key: string, options?: Record<string, unknown>) => unknown;
+
+/**
+ * Texte du catalogue : la BASE fait foi, la traduction n'est qu'un raffinage.
+ *
+ * Avant, l'écran n'affichait QUE `t(clé)` : un service ajouté en base sans clé
+ * i18n s'affichait en clé brute, et modifier un libellé en base ne changeait
+ * rien à l'écran. Ici la valeur de la base sert de `defaultValue`, donc :
+ *   - clé traduite présente  -> la traduction s'affiche ;
+ *   - clé absente ou vide    -> le libellé saisi en admin s'affiche.
+ */
+export function catalogText(t: TLike, key: string | undefined, fallback: string): string {
+  if (!key) return fallback;
+  const value = t(key, { defaultValue: fallback });
+  return typeof value === 'string' ? value : fallback;
+}
+
+/** Idem pour une liste (étapes d'un parcours) : i18n prioritaire, base en repli. */
+export function catalogList(t: TLike, key: string | undefined, fallback: string[]): string[] {
+  if (!key) return fallback;
+  const value = t(key, { returnObjects: true, defaultValue: fallback });
+  return Array.isArray(value) && value.every((v) => typeof v === 'string')
+    ? (value as string[])
+    : fallback;
+}
+
 // Cache module : les fetchs backend n'ont lieu qu'une seule fois, partagés par tous les composants.
 let cache: CategoriesData | null = null;
 let inflight: Promise<CategoriesData> | null = null;
@@ -39,6 +68,9 @@ function buildData(rawCategories: any[], rawServices: any[]): CategoriesData {
   const servicesByCategory = new Map<string, any[]>();
   for (const s of rawServices) {
     if (!s?.name || !s?.categoryId) continue;
+    // `isActive === false` masque le service. Un backend antérieur à ce champ
+    // renvoie `undefined` : on l'interprète comme actif, pas comme masqué.
+    if (s.isActive === false) continue;
     if (!servicesByCategory.has(s.categoryId)) servicesByCategory.set(s.categoryId, []);
     servicesByCategory.get(s.categoryId)!.push(s);
   }
@@ -64,6 +96,7 @@ function buildData(rawCategories: any[], rawServices: any[]): CategoriesData {
         image: s.image ?? '',
         learnMoreLink: s.learnMoreLink ?? '',
         translationKey: s.translationKey ?? '',
+        steps: Array.isArray(s.steps) ? s.steps.map((x: any) => String(x)) : [],
         ...(s.isExternal ? { isExternal: true } : {}),
       };
     }

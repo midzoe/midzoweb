@@ -36,10 +36,6 @@
       "name": "Document Legalization",
       "description": "Get your documents officially recognized abroad"
     },
-    "diploMissingKey": {
-      "name": "Diploma Recognition",
-      "description": "Ensure your qualifications are recognized internationally"
-    },
     "studentFlights": {
       "name": "Student Flights",
       "description": "Find affordable flight options for students"
@@ -110,15 +106,39 @@
     "description": "Personalized guidance for your international projects",
     "school": {
       "name": "School Orientation",
-      "description": "Guidance on choosing the right school, country and program for your studies abroad"
+      "description": "Guidance on choosing the right school, country and program for your studies abroad",
+      "steps": [
+        "Profile assessment (academic background, goals, budget)",
+        "Country & school recommendation",
+        "Program selection & eligibility check",
+        "Application timeline & checklist",
+        "Visa, accommodation & pre-departure briefing",
+        "Premium: in-person or virtual session with a specialist"
+      ]
     },
     "career": {
       "name": "Career Orientation",
-      "description": "International job market insights, skills assessment and career planning abroad"
+      "description": "International job market insights, skills assessment and career planning abroad",
+      "steps": [
+        "Skills & experience assessment",
+        "International job market mapping",
+        "CV & LinkedIn international formatting",
+        "Target country & sector recommendation",
+        "Work visa guidance",
+        "Introduction to relevant professional networks"
+      ]
     },
     "training": {
       "name": "Training Orientation",
-      "description": "Find the right professional training program or certification matching your career goals"
+      "description": "Find the right professional training program or certification matching your career goals",
+      "steps": [
+        "Training needs assessment",
+        "International training program search",
+        "Certification & accreditation verification",
+        "Country & institution recommendation",
+        "Visa & accommodation support",
+        "Premium: dedicated advisor for full program setup"
+      ]
     }
   },
   "professional": {
@@ -151,6 +171,10 @@
     "flightBooking": {
       "name": "Flight Booking",
       "description": "Convenient flight booking with professional travel arrangements and flexible scheduling"
+    },
+    "documentLegalization": {
+      "name": "Professional Document Legalization",
+      "description": "Legalization, apostille and sworn translation of your work certificates, diplomas and professional references."
     }
   },
   "business": {
