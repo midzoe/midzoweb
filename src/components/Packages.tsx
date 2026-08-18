@@ -40,19 +40,15 @@ interface ShowcasePackage {
   is_highlighted: boolean;
 }
 
-/** Identité visuelle par famille — bleu « études », vert « tourisme », dégradé pour le mix. */
+/**
+ * Identité visuelle par famille — elle reprend le code couleur des univers du site :
+ * vert « primary » pour les études (pages /services/*, cf. components/study), or « gold »
+ * pour le tourisme (cf. TourismHome), et le mariage des deux pour le mix.
+ */
 const THEME: Record<Family | 'consultation', {
   text: string; bg: string; ring: string; bar: string; button: string; softText: string;
 }> = {
   study: {
-    text: 'text-secondary',
-    bg: 'bg-secondary/10',
-    ring: 'ring-secondary/25',
-    bar: 'bg-secondary',
-    button: 'bg-secondary hover:bg-secondary/90',
-    softText: 'text-secondary/70',
-  },
-  tourism: {
     text: 'text-primary-dark',
     bg: 'bg-primary/10',
     ring: 'ring-primary/25',
@@ -60,21 +56,29 @@ const THEME: Record<Family | 'consultation', {
     button: 'bg-primary hover:bg-primary-dark',
     softText: 'text-primary-dark/70',
   },
-  mix: {
-    text: 'text-secondary',
-    bg: 'bg-gradient-to-r from-secondary/10 to-primary/10',
-    ring: 'ring-secondary/20',
-    bar: 'bg-gradient-to-r from-secondary to-primary',
-    button: 'bg-gradient-to-r from-secondary to-primary hover:opacity-90',
-    softText: 'text-stone-500',
-  },
-  consultation: {
+  tourism: {
     text: 'text-gold-700',
     bg: 'bg-gold-100',
-    ring: 'ring-gold-300',
+    ring: 'ring-gold-400/40',
     bar: 'bg-gold-500',
     button: 'bg-gold-600 hover:bg-gold-700',
     softText: 'text-gold-700/70',
+  },
+  mix: {
+    text: 'text-primary-dark',
+    bg: 'bg-gradient-to-r from-primary/10 to-gold-200/60',
+    ring: 'ring-gold-400/30',
+    bar: 'bg-gradient-to-r from-primary to-gold-500',
+    button: 'bg-gradient-to-r from-primary to-gold-600 hover:opacity-90',
+    softText: 'text-stone-500',
+  },
+  consultation: {
+    text: 'text-stone-800',
+    bg: 'bg-stone-100',
+    ring: 'ring-stone-300',
+    bar: 'bg-stone-800',
+    button: 'bg-stone-900 hover:bg-stone-800',
+    softText: 'text-stone-500',
   },
 };
 
@@ -181,7 +185,7 @@ const Packages: React.FC = () => {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-secondary/10 blur-3xl"
+          className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-gold-300/25 blur-3xl"
         />
         <div className="relative mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8 lg:py-20">
           <p className="font-display text-sm uppercase tracking-[0.28em] text-gold-600">
@@ -231,7 +235,7 @@ const Packages: React.FC = () => {
                   onClick={() => setFamily(id)}
                   className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
                     active
-                      ? `${THEME[id].bar} text-white shadow-sm`
+                      ? `${THEME[id].button} text-white shadow-sm`
                       : 'text-stone-500 hover:bg-stone-50 hover:text-stone-800'
                   }`}
                 >
@@ -381,7 +385,7 @@ const Packages: React.FC = () => {
         {/* ── Consultation personnalisée ─────────────────────────────────── */}
         {consultation && (
           <section className="mt-16">
-            <div className="grid grid-cols-1 gap-6 rounded-3xl border-2 border-dashed border-gold-300 bg-gold-50/50 p-8 lg:grid-cols-[1.4fr_1fr] lg:items-center lg:p-10">
+            <div className="grid grid-cols-1 gap-6 rounded-3xl border-2 border-dashed border-stone-300 bg-white/70 p-8 lg:grid-cols-[1.4fr_1fr] lg:items-center lg:p-10">
               <div>
                 <p className="font-display text-sm uppercase tracking-[0.22em] text-gold-600">
                   {t('consultation_eyebrow')}
@@ -400,7 +404,7 @@ const Packages: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-gold-200 bg-white p-6 text-center shadow-card">
+              <div className="rounded-2xl border border-stone-200 bg-white p-6 text-center shadow-card">
                 <CalendarDaysIcon className="mx-auto h-8 w-8 text-gold-600" />
                 <p className="mt-4 font-display text-4xl font-semibold tabular-nums text-stone-900">
                   {formatPrice(consultation.price_from_cents, consultation.currency, i18n.language)}
@@ -410,7 +414,7 @@ const Packages: React.FC = () => {
                 </p>
                 <Link
                   to={chooseHref(consultation)}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gold-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-gold-700"
+                  className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-colors ${THEME.consultation.button}`}
                 >
                   {t('consultation_cta')}
                   <ArrowRightIcon className="h-4 w-4" />
