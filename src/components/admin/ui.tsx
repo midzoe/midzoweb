@@ -205,14 +205,17 @@ export const Field: React.FC<{ label: string; required?: boolean; children: Reac
   </div>
 );
 
-export const TextInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
-  <input {...props} className={fieldInputCls} />
+// `className` est FUSIONNÉ, pas ignoré : la version précédente écrasait la prop après le spread,
+// si bien qu'un `className` passé par un écran disparaissait en silence (alignement d'une colonne
+// de montants, par exemple). Aucun appelant n'en passait — c'est donc purement additif.
+export const TextInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ className = '', ...props }) => (
+  <input {...props} className={`${fieldInputCls} ${className}`} />
 );
-export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => (
-  <textarea {...props} className={fieldInputCls} />
+export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = ({ className = '', ...props }) => (
+  <textarea {...props} className={`${fieldInputCls} ${className}`} />
 );
-export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ children, ...props }) => (
-  <select {...props} className={`${fieldInputCls} cursor-pointer`}>{children}</select>
+export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ children, className = '', ...props }) => (
+  <select {...props} className={`${fieldInputCls} cursor-pointer ${className}`}>{children}</select>
 );
 
 /** Bouton secondaire (annuler, etc.). */
