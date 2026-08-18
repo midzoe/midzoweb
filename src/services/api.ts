@@ -853,6 +853,23 @@ class ApiService {
     });
   }
 
+  /**
+   * Journal des paiements (lecture seule) : la vérité reste chez Stripe, l'admin
+   * consulte et rapproche via `stripe_session_id`.
+   */
+  async adminGetPurchases(params: {
+    page?: number; limit?: number; status?: string; kind?: string; search?: string;
+  } = {}) {
+    const qs = new URLSearchParams();
+    if (params.page) qs.set('page', String(params.page));
+    if (params.limit) qs.set('limit', String(params.limit));
+    if (params.status) qs.set('status', params.status);
+    if (params.kind) qs.set('kind', params.kind);
+    if (params.search) qs.set('search', params.search);
+    const suffix = qs.toString() ? `?${qs}` : '';
+    return this.request<any>(`/admin/purchases${suffix}`);
+  }
+
   // Story 9.3 — dossier premium
   async adminGetPremiumCase(userId: number) {
     return this.request<any>(`/admin/premium-cases/${userId}`);

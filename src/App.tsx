@@ -9,6 +9,7 @@ import { useLeadCapture } from './hooks/useLeadCapture';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminUsers from './components/admin/AdminUsers';
+import AdminPayments from './components/admin/AdminPayments';
 import AdminNews from './components/admin/AdminNews';
 import AdminBlogs from './components/admin/AdminBlogs';
 import AdminVisa from './components/admin/AdminVisa';
@@ -127,6 +128,7 @@ function AppContent() {
             {/* ─── Admin Routes ──────────────────────────────── */}
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+            <Route path="/admin/payments" element={<AdminLayout><AdminPayments /></AdminLayout>} />
             <Route path="/admin/news" element={<AdminLayout><AdminNews /></AdminLayout>} />
             <Route path="/admin/blogs" element={<AdminLayout><AdminBlogs /></AdminLayout>} />
             <Route path="/admin/visa" element={<AdminLayout><AdminVisa /></AdminLayout>} />

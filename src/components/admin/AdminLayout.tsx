@@ -30,6 +30,7 @@ import {
   BriefcaseIcon,
   ClipboardDocumentCheckIcon,
   BanknotesIcon,
+  CreditCardIcon,
 } from '@heroicons/react/24/outline';
 
 // Navigation groupée (design data-dense : sections claires plutôt qu'une longue liste plate).
@@ -42,6 +43,7 @@ const navGroups: {
     items: [
       { href: '/admin', label: 'Dashboard', icon: HomeIcon, exact: true },
       { href: '/admin/users', label: 'Utilisateurs', icon: UsersIcon },
+      { href: '/admin/payments', label: 'Paiements', icon: CreditCardIcon },
       { href: '/admin/validation', label: 'File de validation', icon: ShieldCheckIcon },
     ],
   },
