@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
-import { useCategories } from '../hooks/useCategories';
+import { useCategories, catalogText } from '../hooks/useCategories';
 import { format } from 'date-fns';
 import {
   PlusCircleIcon, StarIcon, XMarkIcon,
@@ -25,21 +25,25 @@ interface Trip {
   progress: number;
 }
 
-const quickServices = [
-  { name: 'University Finder', link: '/services/university-finder', bg: 'bg-blue-50',   color: 'text-blue-600',   border: 'border-blue-100',   emoji: '🎓' },
-  { name: 'Student Visa',      link: '/services/student-visa',       bg: 'bg-indigo-50', color: 'text-indigo-600', border: 'border-indigo-100', emoji: '📋' },
-  { name: 'Flight Booking',    link: '/flights',                     bg: 'bg-orange-50', color: 'text-orange-600', border: 'border-orange-100', emoji: '✈️' },
-  { name: 'Insurance',         link: '/insurance',                   bg: 'bg-green-50',  color: 'text-green-600',  border: 'border-green-100',  emoji: '🛡️' },
-  { name: 'Language Center',   link: '/services/language-center',    bg: 'bg-purple-50', color: 'text-purple-600', border: 'border-purple-100', emoji: '🗣️' },
-  { name: 'Jobs Finder',       link: '/services/jobs-finder',        bg: 'bg-amber-50',  color: 'text-amber-600',  border: 'border-amber-100',  emoji: '💼' },
+// Palette de tuiles, appliquée par position : les couleurs sont de la présentation,
+// pas de la donnée — seul le contenu des tuiles vient du catalogue.
+const TILE_PALETTE = [
+  { bg: 'bg-blue-50',   color: 'text-blue-600',   border: 'border-blue-100' },
+  { bg: 'bg-indigo-50', color: 'text-indigo-600', border: 'border-indigo-100' },
+  { bg: 'bg-orange-50', color: 'text-orange-600', border: 'border-orange-100' },
+  { bg: 'bg-green-50',  color: 'text-green-600',  border: 'border-green-100' },
+  { bg: 'bg-purple-50', color: 'text-purple-600', border: 'border-purple-100' },
+  { bg: 'bg-amber-50',  color: 'text-amber-600',  border: 'border-amber-100' },
 ];
 
 const Dashboard: React.FC = () => {
-  const { t } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation('dashboard');
+  // Les libellés du catalogue vivent dans le namespace `services`, pas `dashboard`.
+  const tServices = useMemo(() => i18n.getFixedT(null, 'services'), [i18n, i18n.language]);
   const { user } = useAuth();
-  // Sert uniquement l'icône de catégorie des activités récentes : pendant le
-  // chargement, `categories` est vide et l'icône de repli s'affiche.
-  const { categories } = useCategories();
+  // Catalogue : icône de catégorie des activités récentes ET tuiles d'accès rapide.
+  // Pendant le chargement, `categories` est vide et les tuiles ne s'affichent pas.
+  const { categories, serviceDetails } = useCategories();
   const [showTripForm, setShowTripForm]       = useState(false);
   const [showTripWizard, setShowTripWizard]   = useState(false);
   const [selectedTrip, setSelectedTrip]       = useState<Trip | null>(null);
@@ -64,6 +68,36 @@ const Dashboard: React.FC = () => {
     setShowTripWizard(false);
     setSelectedTrip(null);
   };
+
+  // Accès rapides = les premiers services du catalogue, dans l'ordre défini en
+  // admin. Cette liste était figée dans le code et pointait notamment vers
+  // « Jobs Finder », page alors absente du catalogue public.
+  const quickServices = useMemo(() => {
+    // Une colonne par catégorie, puis on prend en tourniquet : six tuiles issues
+    // d'une seule catégorie donneraient six fois la même icône et ne montreraient
+    // qu'une facette du catalogue.
+    const columns = categories.map(category =>
+      category.services
+        .map(serviceName => serviceDetails[category.id]?.[serviceName])
+        .filter((detail): detail is NonNullable<typeof detail> => !!detail?.learnMoreLink)
+        .map(detail => ({
+          key: `${category.id}:${detail.name}:${detail.learnMoreLink}`,
+          name: catalogText(tServices, `${detail.translationKey}.name`, detail.name),
+          link: detail.learnMoreLink,
+          emoji: category.icon || '🌍',
+        }))
+    );
+
+    const tiles: { key: string; name: string; link: string; emoji: string }[] = [];
+    const depth = Math.max(0, ...columns.map(c => c.length));
+    for (let row = 0; row < depth && tiles.length < 6; row++) {
+      for (const column of columns) {
+        if (tiles.length >= 6) break;
+        if (column[row]) tiles.push(column[row]);
+      }
+    }
+    return tiles;
+  }, [categories, serviceDetails, tServices]);
 
   const stats = {
     totalTrips:     trips.length,
@@ -207,16 +241,19 @@ const Dashboard: React.FC = () => {
             </Link>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-            {quickServices.map(svc => (
+            {quickServices.map((svc, i) => {
+              const tone = TILE_PALETTE[i % TILE_PALETTE.length];
+              return (
               <Link
-                key={svc.name}
+                key={svc.key}
                 to={svc.link}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border ${svc.border} ${svc.bg} hover:shadow-md hover:-translate-y-0.5 transition-all group`}
+                className={`flex flex-col items-center gap-2 p-4 rounded-xl border ${tone.border} ${tone.bg} hover:shadow-md hover:-translate-y-0.5 transition-all group`}
               >
                 <span className="text-2xl group-hover:scale-110 transition-transform">{svc.emoji}</span>
-                <span className={`text-xs font-medium text-center leading-tight ${svc.color}`}>{svc.name}</span>
+                <span className={`text-xs font-medium text-center leading-tight ${tone.color}`}>{svc.name}</span>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </div>
 

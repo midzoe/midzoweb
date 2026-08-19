@@ -9,6 +9,7 @@ import { useLeadCapture } from './hooks/useLeadCapture';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminUsers from './components/admin/AdminUsers';
+import AdminPayments from './components/admin/AdminPayments';
 import AdminNews from './components/admin/AdminNews';
 import AdminBlogs from './components/admin/AdminBlogs';
 import AdminVisa from './components/admin/AdminVisa';
@@ -23,6 +24,8 @@ import AdminStudyCountries from './components/admin/AdminStudyCountries';
 import AdminTourismCountries from './components/admin/AdminTourismCountries';
 import AdminAccommodations from './components/admin/AdminAccommodations';
 import AdminPackages from './components/admin/AdminPackages';
+import AdminPricing from './components/admin/AdminPricing';
+import AdminServices from './components/admin/AdminServices';
 import AdminContactMessages from './components/admin/AdminContactMessages';
 import AdminNewsletter from './components/admin/AdminNewsletter';
 import AdminValidation from './components/admin/AdminValidation';
@@ -46,6 +49,7 @@ import Hero from './components/Hero';
 import NewsSlider from './components/NewsSlider';
 import Services from './components/Services';
 import PackageBuilder from './components/PackageBuilder';
+import Packages from './components/Packages';
 import About from './components/About';
 import Contact from './components/Contact';
 import Login from './components/Login';
@@ -126,6 +130,7 @@ function AppContent() {
             {/* ─── Admin Routes ──────────────────────────────── */}
             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+            <Route path="/admin/payments" element={<AdminLayout><AdminPayments /></AdminLayout>} />
             <Route path="/admin/news" element={<AdminLayout><AdminNews /></AdminLayout>} />
             <Route path="/admin/blogs" element={<AdminLayout><AdminBlogs /></AdminLayout>} />
             <Route path="/admin/visa" element={<AdminLayout><AdminVisa /></AdminLayout>} />
@@ -140,6 +145,8 @@ function AppContent() {
             <Route path="/admin/tourism-countries" element={<AdminLayout><AdminTourismCountries /></AdminLayout>} />
             <Route path="/admin/accommodations" element={<AdminLayout><AdminAccommodations /></AdminLayout>} />
             <Route path="/admin/packages" element={<AdminLayout><AdminPackages /></AdminLayout>} />
+            <Route path="/admin/pricing" element={<AdminLayout><AdminPricing /></AdminLayout>} />
+            <Route path="/admin/services" element={<AdminLayout><AdminServices /></AdminLayout>} />
             <Route path="/admin/contact-messages" element={<AdminLayout><AdminContactMessages /></AdminLayout>} />
             <Route path="/admin/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
             <Route path="/admin/validation" element={<AdminLayout><AdminValidation /></AdminLayout>} />
@@ -167,6 +174,8 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/orientation" element={<OrientationResources />} />
+            {/* Grille commerciale (plaquette) ; /premium reste le constructeur à la carte. */}
+            <Route path="/packages" element={<Packages />} />
             <Route path="/premium" element={<PackageBuilder />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />

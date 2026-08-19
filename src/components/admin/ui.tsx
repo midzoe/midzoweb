@@ -132,17 +132,28 @@ export const PrimaryButton: React.FC<{
   </button>
 );
 
-/** Conteneur de table avec en-tête cohérent. `head` = <tr>…<th/>…</tr>. */
-export const TableShell: React.FC<{ head: React.ReactNode; children: React.ReactNode }> = ({ head, children }) => (
+/**
+ * Conteneur de table avec en-tête cohérent. `head` = <tr>…<th/>…</tr>.
+ * L'alignement par défaut (left) ne s'applique qu'aux `th` qui n'en portent pas :
+ * sinon `[&>th]:text-left` (spécificité supérieure) écrasait `<th className="text-right">`.
+ * `striped` : lignes alternées, utile dès que la table dépasse 5-6 colonnes.
+ */
+export const TableShell: React.FC<{ head: React.ReactNode; children: React.ReactNode; striped?: boolean }> = ({
+  head,
+  children,
+  striped = false,
+}) => (
   <Card className="overflow-hidden">
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-stone-50 border-b border-stone-200">
-          <tr className="[&>th]:px-4 [&>th]:py-3.5 [&>th]:text-left [&>th]:text-[11px] [&>th]:font-semibold [&>th]:uppercase [&>th]:tracking-[0.12em] [&>th]:text-stone-500">
+          <tr className="[&>th]:px-4 [&>th]:py-3.5 [&>th]:whitespace-nowrap [&>th:not(.text-right):not(.text-center)]:text-left [&>th]:text-[11px] [&>th]:font-semibold [&>th]:uppercase [&>th]:tracking-[0.12em] [&>th]:text-stone-500">
             {head}
           </tr>
         </thead>
-        <tbody className="divide-y divide-stone-100">{children}</tbody>
+        <tbody className={`divide-y divide-stone-100 ${striped ? '[&>tr:nth-child(even)]:bg-stone-50/70' : ''}`}>
+          {children}
+        </tbody>
       </table>
     </div>
   </Card>
@@ -194,14 +205,17 @@ export const Field: React.FC<{ label: string; required?: boolean; children: Reac
   </div>
 );
 
-export const TextInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => (
-  <input {...props} className={fieldInputCls} />
+// `className` est FUSIONNÉ, pas ignoré : la version précédente écrasait la prop après le spread,
+// si bien qu'un `className` passé par un écran disparaissait en silence (alignement d'une colonne
+// de montants, par exemple). Aucun appelant n'en passait — c'est donc purement additif.
+export const TextInput: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ className = '', ...props }) => (
+  <input {...props} className={`${fieldInputCls} ${className}`} />
 );
-export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => (
-  <textarea {...props} className={fieldInputCls} />
+export const TextArea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = ({ className = '', ...props }) => (
+  <textarea {...props} className={`${fieldInputCls} ${className}`} />
 );
-export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ children, ...props }) => (
-  <select {...props} className={`${fieldInputCls} cursor-pointer`}>{children}</select>
+export const Select: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({ children, className = '', ...props }) => (
+  <select {...props} className={`${fieldInputCls} cursor-pointer ${className}`}>{children}</select>
 );
 
 /** Bouton secondaire (annuler, etc.). */

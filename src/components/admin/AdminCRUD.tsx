@@ -104,7 +104,6 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
     }
   };
 
-  const tableFields = fields.filter(f => !f.hideInTable);
   const totalPages = Math.ceil(total / limit);
 
   const renderCell = (item: any, f: FieldDef) => {
@@ -119,9 +118,17 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
     if (f.type === 'select' && val) {
       return <Badge tone="slate">{String(val)}</Badge>;
     }
-    const text = String(val ?? '—');
-    return <span className={val == null || val === '' ? 'text-stone-400' : 'text-stone-700'}>{text.slice(0, 80)}</span>;
+    const empty = val == null || val === '';
+    const text = empty ? '—' : String(val);
+    // Tronqué en une ligne (le titre porte la valeur complète) plutôt que replié sur 3 lignes.
+    return (
+      <span title={empty ? undefined : text} className={`block max-w-[20rem] truncate ${empty ? 'text-stone-400' : 'text-stone-700'}`}>
+        {text}
+      </span>
+    );
   };
+
+  const tableFields = fields.filter(f => !f.hideInTable);
 
   return (
     <div>
@@ -129,10 +136,18 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
         title={title}
         subtitle={subtitle ?? `${total} élément${total > 1 ? 's' : ''}`}
         actions={
-          <PrimaryButton onClick={openCreate}>
-            <PlusIcon className="h-4 w-4" />
-            Ajouter
-          </PrimaryButton>
+          <>
+            {/* Le compteur reste visible même quand `subtitle` occupe la ligne de description. */}
+            {subtitle && !loading && (
+              <span className="hidden sm:inline-flex items-center rounded-full bg-stone-100 px-3 py-1 text-xs font-medium tabular-nums text-stone-500">
+                {total} élément{total > 1 ? 's' : ''}
+              </span>
+            )}
+            <PrimaryButton onClick={openCreate}>
+              <PlusIcon className="h-4 w-4" />
+              Ajouter
+            </PrimaryButton>
+          </>
         }
       />
 
@@ -212,6 +227,7 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
       )}
 
       <TableShell
+        striped
         head={<>
           {tableFields.map(f => <th key={f.key}>{f.label}</th>)}
           <th className="text-right">Actions</th>
@@ -222,11 +238,11 @@ const AdminCRUD: React.FC<AdminCRUDProps> = ({
         ) : items.length === 0 ? (
           <EmptyRow colSpan={tableFields.length + 1}>Aucun élément — cliquez « Ajouter » pour commencer.</EmptyRow>
         ) : items.map(item => (
-          <tr key={item.id} className="hover:bg-stone-50 transition-colors duration-150">
+          <tr key={item.id} className="hover:bg-gold-100/70 transition-colors duration-150">
             {tableFields.map(f => (
-              <td key={f.key} className="px-4 py-3">{renderCell(item, f)}</td>
+              <td key={f.key} className="px-4 py-3.5 align-middle whitespace-nowrap">{renderCell(item, f)}</td>
             ))}
-            <td className="px-4 py-3">
+            <td className="px-4 py-3.5 align-middle">
               <div className="flex items-center justify-end gap-1">
                 <IconButton tone="blue" title="Modifier" onClick={() => openEdit(item)}><PencilIcon className="h-4 w-4" /></IconButton>
                 <IconButton tone="rose" title="Supprimer" onClick={() => handleDelete(item.id)}><TrashIcon className="h-4 w-4" /></IconButton>

@@ -36,10 +36,6 @@
       "name": "Légalisation de Documents",
       "description": "Faites officialiser vos documents à l'étranger"
     },
-    "diploMissingKey": {
-      "name": "Reconnaissance de Diplôme",
-      "description": "Assurez-vous que vos qualifications sont reconnues internationalement"
-    },
     "studentFlights": {
       "name": "Vols Étudiants",
       "description": "Trouvez des options de vol abordables pour les étudiants"
@@ -83,6 +79,10 @@
     "flightBooking": {
       "name": "Réservation de Vol",
       "description": "Réservation de vols pratique avec des arrangements de voyage flexibles"
+    },
+    "documentLegalization": {
+      "name": "Légalisation de documents professionnels",
+      "description": "Légalisation, apostille et traduction assermentée de vos attestations de travail, diplômes et références professionnelles."
     }
   },
   "tourism": {
@@ -142,15 +142,39 @@
     "description": "Accompagnement personnalisé pour vos projets internationaux",
     "school": {
       "name": "Orientation École",
-      "description": "Conseils pour choisir la bonne école, pays et programme pour vos études à l'étranger"
+      "description": "Conseils pour choisir la bonne école, pays et programme pour vos études à l'étranger",
+      "steps": [
+        "Évaluation du profil (parcours académique, objectifs, budget)",
+        "Recommandation de pays & d’école",
+        "Choix du programme & vérification d’éligibilité",
+        "Calendrier de candidature & checklist",
+        "Visa, logement & briefing avant départ",
+        "Premium : séance avec un spécialiste, en présentiel ou à distance"
+      ]
     },
     "career": {
       "name": "Orientation Carrière",
-      "description": "Analyse des marchés du travail internationaux, bilan de compétences et planification carrière"
+      "description": "Analyse des marchés du travail internationaux, bilan de compétences et planification carrière",
+      "steps": [
+        "Évaluation des compétences & de l’expérience",
+        "Cartographie du marché du travail international",
+        "Formatage CV & LinkedIn à l’international",
+        "Recommandation pays & secteur cible",
+        "Conseils visa de travail",
+        "Introduction aux réseaux professionnels pertinents"
+      ]
     },
     "training": {
       "name": "Orientation Formation",
-      "description": "Trouvez le bon programme de formation professionnelle, certification ou formation technique à l'étranger"
+      "description": "Trouvez le bon programme de formation professionnelle, certification ou formation technique à l'étranger",
+      "steps": [
+        "Évaluation de vos besoins en formation",
+        "Recherche de programmes de formation internationaux",
+        "Vérification des certifications & accréditations",
+        "Recommandation pays & institution",
+        "Accompagnement visa & logement",
+        "Premium : conseiller dédié pour la mise en place complète"
+      ]
     }
   },
   "business": {

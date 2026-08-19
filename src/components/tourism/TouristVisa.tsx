@@ -70,8 +70,8 @@ const TouristVisa: React.FC = () => {
           </div>
         </div>
 
-        {/* Visa requirement result + embassy (story 4.5) */}
-        <VisaChecker nationality={nationality} destination={destinationCountry} />
+        {/* Visa requirement result + embassy (story 4.5), fiche détaillée (story 4.7) */}
+        <VisaChecker nationality={nationality} destination={destinationCountry} visaType="Tourisme" />
       </div>
     </div>
   );

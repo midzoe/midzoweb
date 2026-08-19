@@ -4,9 +4,10 @@ import {
   MagnifyingGlassIcon, LanguageIcon, GlobeAltIcon, SparklesIcon,
   ArrowTopRightOnSquareIcon, ChevronRightIcon, EyeIcon, EyeSlashIcon, AcademicCapIcon,
   HomeModernIcon, IdentificationIcon, ExclamationTriangleIcon, Squares2X2Icon,
-  TableCellsIcon, BanknotesIcon, ClockIcon, UserGroupIcon,
+  TableCellsIcon, BanknotesIcon, ClockIcon, UserGroupIcon, PaperAirplaneIcon,
 } from '@heroicons/react/24/outline';
 import { apiService } from '../../services/api';
+import { VISA_ORIGIN_COUNTRIES, isVisaOriginCountry, africanCountryLabel } from '../../data/africanCountries';
 import {
   PageHeader, PrimaryButton, SecondaryButton, Card, StatCard, IconButton, Badge,
   Field, TextInput, TextArea, Select,
@@ -15,11 +16,17 @@ import {
 /**
  * Story 5.4 → 5.14 : gestion des centres de langue.
  *
- * Le `country` d'un centre reprend le vocabulaire du **catalogue universités**
- * (« Germany », « France »…) : c'est ce qui permet à un étudiant recalé sur l'exigence
- * de langue d'une université d'atterrir sur les centres du bon pays (5.3 → 5.8). Le
- * sélecteur de pays et les suggestions de villes sont donc alimentés par les
- * universités en base, et l'écran signale les pays d'études encore sans centre.
+ * Le catalogue couvre deux moments distincts, d'où la segmentation de l'écran :
+ *
+ * — **À destination** : le `country` reprend le vocabulaire du **catalogue universités**
+ *   (« Germany », « France »…), c'est ce qui permet à un étudiant recalé sur l'exigence
+ *   de langue d'une université d'atterrir sur les centres du bon pays (5.3 → 5.8). Le
+ *   sélecteur de pays et les suggestions de villes sont alimentés par les universités
+ *   en base, et l'écran signale les pays d'études encore sans centre.
+ * — **Avant le départ** : les centres situés dans les 20 pays de départ du module visa
+ *   (Alliance française de Lomé, Goethe d'Abidjan…). Ces pays n'ont pas d'université au
+ *   catalogue : ils sont donc exclus de la couverture, des partenariats universitaires
+ *   et de l'alerte « pays sans centre », qui ne parlent que de destinations.
  */
 
 const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -30,8 +37,8 @@ const COURSE_TYPES = [
 const EXAMS = [
   'TestDaF', 'DSH', 'telc', 'Goethe-Zertifikat', 'ÖSD',
   'IELTS', 'TOEFL', 'Cambridge', 'Duolingo English Test',
-  'DELF', 'DALF', 'TCF', 'TEF',
-  'DELE', 'SIELE', 'CILS', 'CELI',
+  'DELF', 'DALF', 'TCF', 'TEF', 'TEFAQ', 'TOEIC', 'DAEFLE',
+  'DELE', 'SIELE', 'CILS', 'CELI', 'PLIDA',
   'CNaVT', 'NT2', 'CAPLE', 'CELPE-Bras', 'HSK', 'TISUS', 'Swedex',
 ];
 const LANGUAGES = [
@@ -39,7 +46,12 @@ const LANGUAGES = [
   'Néerlandais', 'Portugais', 'Suédois', 'Chinois', 'Arabe',
 ];
 const PRICE_UNITS = ['semaine', 'mois', 'cours', 'heure', 'session'];
-const CURRENCIES = ['EUR', 'CHF', 'GBP', 'USD', 'CAD', 'SEK', 'CNY', 'MAD', 'XOF'];
+// Les devises des pays de départ figurent ici : sans elles, l'éditeur afficherait un
+// sélecteur vide sur une fiche libellée en francs CFA ou en nairas.
+const CURRENCIES = [
+  'EUR', 'CHF', 'GBP', 'USD', 'CAD', 'SEK', 'CNY',
+  'XOF', 'XAF', 'MAD', 'TND', 'EGP', 'NGN', 'GHS', 'KES', 'ZAR', 'GNF', 'CDF',
+];
 
 /** Chaque langue porte sa teinte : on repère un bloc linguistique d'un coup d'œil. */
 const LANG_ACCENT: Record<string, { rail: string; chip: string; dot: string }> = {
@@ -64,7 +76,23 @@ const COUNTRY_FR: Record<string, string> = {
   Portugal: 'Portugal', China: 'Chine', Belgium: 'Belgique', Luxembourg: 'Luxembourg',
   Morocco: 'Maroc', Senegal: 'Sénégal', Austria: 'Autriche', Ireland: 'Irlande',
 };
-const countryLabel = (c: string) => COUNTRY_FR[c] ?? c;
+/** Destination connue, sinon pays de départ africain, sinon la valeur brute. */
+const countryLabel = (c: string) => COUNTRY_FR[c] ?? africanCountryLabel(c);
+
+/** Un centre « avant le départ » se reconnaît à son pays : un pays de départ du visa. */
+const isOrigin = (country: string) => isVisaOriginCountry(country);
+
+/** Options de pays servies partout : destinations d'abord, pays de départ ensuite. */
+const CountryOptionGroups: React.FC<{ study: string[]; origin: string[] }> = ({ study, origin }) => (
+  <>
+    <optgroup label="À destination — pays d’études">
+      {study.map(c => <option key={c} value={c}>{countryLabel(c)}</option>)}
+    </optgroup>
+    <optgroup label="Avant le départ — pays d’origine">
+      {origin.map(c => <option key={c} value={c}>{countryLabel(c)}</option>)}
+    </optgroup>
+  </>
+);
 
 interface CenterRow {
   id: number;
@@ -392,6 +420,7 @@ const CenterCard: React.FC<{ c: CenterRow; onEdit: () => void; onDelete: () => v
                 {c.levels}
               </span>
             )}
+            {isOrigin(c.country) && <Badge tone="indigo"><PaperAirplaneIcon className="h-3.5 w-3.5" /> Avant le départ</Badge>}
             {c.isPartner && <Badge tone="green"><SparklesIcon className="h-3.5 w-3.5" /> Partenaire</Badge>}
             {draft && <Badge tone="amber"><EyeSlashIcon className="h-3.5 w-3.5" /> Brouillon</Badge>}
           </div>
@@ -531,6 +560,9 @@ const CenterTable: React.FC<{
                 <td className="px-4 py-3 text-stone-600">
                   {countryLabel(c.country)}
                   {c.city && <span className="text-stone-400"> · {c.city}</span>}
+                  {isOrigin(c.country) && (
+                    <span className="ml-1.5 rounded-full bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600">départ</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 tabular-nums text-stone-600">{c.levels ?? '—'}</td>
                 <td className="px-4 py-3 text-right tabular-nums">
@@ -570,6 +602,8 @@ const AdminLanguageCenters: React.FC = () => {
 
   // Filtres
   const [query, setQuery] = useState('');
+  /** Segment du catalogue : tout, centres à destination, centres au pays de départ. */
+  const [scope, setScope] = useState<'all' | 'study' | 'origin'>('all');
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
   const [language, setLanguage] = useState('');
@@ -627,6 +661,8 @@ const AdminLanguageCenters: React.FC = () => {
   }, [editorOpen]);
 
   /* ── Référentiel pays / villes : universités d'abord, complété par les centres ── */
+  // Ne compte que les destinations : un centre au pays de départ n'est pas une lacune
+  // de couverture, il ne doit ni entrer dans ce tableau ni fausser ses ratios.
   const coverage = useMemo(() => {
     const map = new Map<string, { country: string; universities: number; centers: number }>();
     for (const u of universities) {
@@ -635,6 +671,7 @@ const AdminLanguageCenters: React.FC = () => {
       map.set(u.country, row);
     }
     for (const c of items) {
+      if (isOrigin(c.country)) continue;
       const row = map.get(c.country) ?? { country: c.country, universities: 0, centers: 0 };
       row.centers++;
       map.set(c.country, row);
@@ -642,7 +679,10 @@ const AdminLanguageCenters: React.FC = () => {
     return [...map.values()].sort((a, b) => b.centers - a.centers || b.universities - a.universities || a.country.localeCompare(b.country));
   }, [universities, items]);
 
-  const countryOptions = useMemo(() => coverage.map(r => r.country), [coverage]);
+  const studyCountryOptions = useMemo(() => coverage.map(r => r.country), [coverage]);
+
+  /** Pays de départ proposés : les 20 du visa, pour rester aligné sur les fiches visa. */
+  const originCountryOptions = useMemo(() => VISA_ORIGIN_COUNTRIES.map(c => c.value), []);
 
   const languageMix = useMemo(() => {
     const map = new Map<string, number>();
@@ -684,17 +724,27 @@ const AdminLanguageCenters: React.FC = () => {
   }, [items]);
 
   const stats = useMemo(() => {
-    const countries = new Set(items.map(c => c.country));
+    const studyCountries = new Set(items.filter(c => !isOrigin(c.country)).map(c => c.country));
+    const originCountries = new Set(items.filter(c => isOrigin(c.country)).map(c => c.country));
+    const originCenters = items.filter(c => isOrigin(c.country)).length;
     const partners = items.filter(c => c.isPartner).length;
     const drafts = items.filter(isDraft).length;
     const uncovered = coverage.filter(r => r.universities > 0 && r.centers === 0);
     const avg = items.length ? Math.round(items.reduce((s, c) => s + completeness(c), 0) / items.length) : 0;
-    return { countries: countries.size, langs: languageMix.length, partners, drafts, uncovered, avg };
+    return {
+      countries: studyCountries.size,
+      originCountries: originCountries.size,
+      originCenters,
+      studyCenters: items.length - originCenters,
+      langs: languageMix.length, partners, drafts, uncovered, avg,
+    };
   }, [items, coverage, languageMix]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items.filter(c => {
+      if (scope === 'origin' && !isOrigin(c.country)) return false;
+      if (scope === 'study' && isOrigin(c.country)) return false;
       if (country && c.country !== country) return false;
       if (city && c.city !== city) return false;
       if (language && c.language !== language) return false;
@@ -707,7 +757,7 @@ const AdminLanguageCenters: React.FC = () => {
         .some(v => (v ?? '').toLowerCase().includes(q))
         || (c.examsPrepared ?? []).some(e => e.toLowerCase().includes(q));
     });
-  }, [items, query, country, city, language, level, courseType, onlyPartners, onlyDrafts]);
+  }, [items, scope, query, country, city, language, level, courseType, onlyPartners, onlyDrafts]);
 
   const groups = useMemo(() => {
     if (!groupByCountry || view === 'table') return null;
@@ -716,14 +766,18 @@ const AdminLanguageCenters: React.FC = () => {
       if (!map.has(c.country)) map.set(c.country, []);
       map.get(c.country)!.push(c);
     }
-    return [...map.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    // Destinations d'abord, pays de départ en fin de liste : on lit le parcours dans l'ordre.
+    return [...map.entries()].sort((a, b) =>
+      Number(isOrigin(a[0])) - Number(isOrigin(b[0]))
+      || b[1].length - a[1].length
+      || countryLabel(a[0]).localeCompare(countryLabel(b[0]), 'fr'));
   }, [filtered, groupByCountry, view]);
 
   const activeFilters = [country, city, language, level, courseType, query.trim()].filter(Boolean).length
-    + (onlyPartners ? 1 : 0) + (onlyDrafts ? 1 : 0);
+    + (onlyPartners ? 1 : 0) + (onlyDrafts ? 1 : 0) + (scope !== 'all' ? 1 : 0);
   const resetFilters = () => {
     setQuery(''); setCountry(''); setCity(''); setLanguage(''); setLevel('');
-    setCourseType(''); setOnlyPartners(false); setOnlyDrafts(false);
+    setCourseType(''); setOnlyPartners(false); setOnlyDrafts(false); setScope('all');
   };
 
   const flash = (msg: string) => { setNotice(msg); setTimeout(() => setNotice(''), 3500); };
@@ -796,7 +850,9 @@ const AdminLanguageCenters: React.FC = () => {
     <div>
       <PageHeader
         title="Centres de langue"
-        subtitle={`${items.length} centre${items.length > 1 ? 's' : ''} · ${stats.countries} pays · ${stats.langs} langues enseignées`}
+        subtitle={`${items.length} centre${items.length > 1 ? 's' : ''} · ${stats.countries} pays d’études${
+          stats.originCountries ? ` · ${stats.originCountries} pays de départ` : ''
+        } · ${stats.langs} langues enseignées`}
         actions={
           <>
             <IconButton title="Rafraîchir" onClick={load} disabled={loading}>
@@ -816,10 +872,14 @@ const AdminLanguageCenters: React.FC = () => {
       {notice && <div className="mb-4 rounded-lg border border-primary/20 bg-primary/10 p-3 text-sm text-primary">{notice}</div>}
 
       {/* ── Synthèse ── */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Centres" value={items.length} icon={LanguageIcon} tone="primary" hint={`fiches remplies à ${stats.avg}% en moyenne`} />
-        <StatCard label="Pays couverts" value={stats.countries} icon={GlobeAltIcon} tone="gold"
+        <StatCard label="Pays d’études" value={stats.countries} icon={GlobeAltIcon} tone="gold"
           hint={stats.uncovered.length ? `${stats.uncovered.length} pays d’études sans centre` : 'Tous les pays d’études couverts'} />
+        <StatCard label="Avant le départ" value={stats.originCenters} icon={PaperAirplaneIcon} tone="indigo"
+          hint={stats.originCenters === 0
+            ? 'aucun centre au pays de départ'
+            : `${stats.originCountries} pays de départ sur ${originCountryOptions.length}`} />
         <StatCard label="Partenaires" value={stats.partners} icon={SparklesIcon} tone="teal"
           hint={stats.partners === 0 ? 'aucun partenariat déclaré' : undefined} />
         <StatCard label="Brouillons" value={stats.drafts} icon={EyeSlashIcon} tone={stats.drafts ? 'rose' : 'indigo'}
@@ -864,6 +924,28 @@ const AdminLanguageCenters: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Segment : les deux moments du parcours, avec leur volume respectif. */}
+            <div className="inline-flex rounded-lg bg-stone-100 p-0.5" role="group" aria-label="Moment du parcours">
+              {([
+                ['all', 'Tous', items.length],
+                ['study', 'À destination', stats.studyCenters],
+                ['origin', 'Avant le départ', stats.originCenters],
+              ] as const).map(([value, label, count]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => { setScope(value); setCountry(''); setCity(''); }}
+                  aria-pressed={scope === value}
+                  className={`inline-flex items-center gap-1.5 rounded-[7px] px-3 py-1.5 text-xs font-medium transition-colors duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                    scope === value ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700'
+                  }`}
+                >
+                  {label}
+                  <span className="tabular-nums text-stone-400">{count}</span>
+                </button>
+              ))}
+            </div>
+
             {/* Vue cartes / tableau : lecture détaillée ou balayage dense. */}
             <div className="inline-flex rounded-lg bg-stone-100 p-0.5" role="group" aria-label="Mode d’affichage">
               {([
@@ -901,7 +983,11 @@ const AdminLanguageCenters: React.FC = () => {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <select value={country} onChange={e => { setCountry(e.target.value); setCity(''); }} aria-label="Filtrer par pays" className={selectCls}>
             <option value="">Tous les pays</option>
-            {countryOptions.map(c => <option key={c} value={c}>{countryLabel(c)}</option>)}
+            {scope === 'origin'
+              ? originCountryOptions.map(c => <option key={c} value={c}>{countryLabel(c)}</option>)
+              : scope === 'study'
+                ? studyCountryOptions.map(c => <option key={c} value={c}>{countryLabel(c)}</option>)
+                : <CountryOptionGroups study={studyCountryOptions} origin={originCountryOptions} />}
           </select>
 
           <select value={city} onChange={e => setCity(e.target.value)} aria-label="Filtrer par ville" className={selectCls}>
@@ -965,18 +1051,31 @@ const AdminLanguageCenters: React.FC = () => {
       ) : filtered.length === 0 ? (
         <Card className="py-20 text-center">
           <LanguageIcon className="mx-auto h-10 w-10 text-stone-300" />
-          <p className="mt-4 font-display text-lg text-stone-700">
-            {items.length === 0 ? 'Aucun centre de langue' : 'Aucun résultat'}
-          </p>
-          <p className="mt-1 text-sm text-stone-500">
-            {items.length === 0
-              ? 'Ajoutez un centre : il apparaîtra pour les étudiants du pays concerné.'
-              : 'Essayez d’élargir vos filtres.'}
-          </p>
-          <div className="mt-5 flex justify-center gap-3">
-            {activeFilters > 0 && <SecondaryButton onClick={resetFilters}>Réinitialiser les filtres</SecondaryButton>}
-            {items.length === 0 && <PrimaryButton onClick={() => openCreate()}><PlusIcon className="h-4 w-4" /> Ajouter un centre</PrimaryButton>}
-          </div>
+          {(() => {
+            const emptyOrigin = scope === 'origin' && stats.originCenters === 0;
+            return (
+              <>
+                <p className="mt-4 font-display text-lg text-stone-700">
+                  {items.length === 0 ? 'Aucun centre de langue'
+                    : emptyOrigin ? 'Aucun centre au pays de départ'
+                    : 'Aucun résultat'}
+                </p>
+                <p className="mt-1 text-sm text-stone-500">
+                  {items.length === 0
+                    ? 'Ajoutez un centre : il apparaîtra pour les étudiants du pays concerné.'
+                    : emptyOrigin
+                      ? 'Ajoutez les instituts où l’on prépare son niveau de langue avant de partir — Alliance française, Goethe-Institut, écoles privées.'
+                      : 'Essayez d’élargir vos filtres.'}
+                </p>
+                <div className="mt-5 flex justify-center gap-3">
+                  {activeFilters > 0 && !emptyOrigin && <SecondaryButton onClick={resetFilters}>Réinitialiser les filtres</SecondaryButton>}
+                  {(items.length === 0 || emptyOrigin) && (
+                    <PrimaryButton onClick={() => openCreate()}><PlusIcon className="h-4 w-4" /> Ajouter un centre</PrimaryButton>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </Card>
       ) : view === 'table' ? (
         <CenterTable rows={filtered} onEdit={openEdit} onDelete={handleDelete} onTogglePublish={togglePublish} />
@@ -997,6 +1096,7 @@ const AdminLanguageCenters: React.FC = () => {
                     {countryLabel(key)}
                   </h2>
                   <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium tabular-nums text-stone-600">{list.length}</span>
+                  {isOrigin(key) && <Badge tone="indigo"><PaperAirplaneIcon className="h-3.5 w-3.5" /> Avant le départ</Badge>}
                   <span className="ml-2 h-px flex-1 bg-gradient-to-r from-gold-300/60 via-stone-200 to-transparent" />
                 </button>
                 {!isCollapsed && (
@@ -1052,7 +1152,7 @@ const AdminLanguageCenters: React.FC = () => {
                 <Field label="Pays" required>
                   <Select value={form.country} onChange={e => { set('country', e.target.value); set('universityPartners', []); }}>
                     <option value="">— Choisir —</option>
-                    {countryOptions.map(c => <option key={c} value={c}>{countryLabel(c)}</option>)}
+                    <CountryOptionGroups study={studyCountryOptions} origin={originCountryOptions} />
                   </Select>
                 </Field>
                 <Field label="Ville">
@@ -1061,8 +1161,9 @@ const AdminLanguageCenters: React.FC = () => {
               </div>
               <datalist id="admin-lc-cities">{formCityOptions.map(c => <option key={c} value={c} />)}</datalist>
               <p className="-mt-2 text-xs text-stone-400">
-                Le pays reprend le vocabulaire du catalogue universités : c’est ce qui relie le centre
-                aux étudiants recalés sur l’exigence de langue d’une université de ce pays.
+                {isOrigin(form.country)
+                  ? `Centre au pays de départ : il s’adresse aux candidats qui préparent leur niveau de langue depuis ${countryLabel(form.country)}, avant le visa.`
+                  : 'Le pays reprend le vocabulaire du catalogue universités : c’est ce qui relie le centre aux étudiants recalés sur l’exigence de langue d’une université de ce pays.'}
               </p>
 
               <Field label="Adresse">
@@ -1164,7 +1265,14 @@ const AdminLanguageCenters: React.FC = () => {
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-gold-700">
                   Universités partenaires {form.country && <span className="normal-case tracking-normal text-stone-400">— {countryLabel(form.country)}</span>}
                 </p>
-                {form.country ? (
+                {isOrigin(form.country) ? (
+                  // Le catalogue universités ne contient que des destinations : un centre au
+                  // pays de départ n'a donc aucun partenaire à cocher ici.
+                  <p className="text-xs text-stone-400">
+                    Sans objet pour un centre au pays de départ : ce bloc liste les universités
+                    du catalogue, qui sont toutes à destination.
+                  </p>
+                ) : form.country ? (
                   <>
                     <TextInput value={partnerQuery} onChange={e => setPartnerQuery(e.target.value)} placeholder="Filtrer les universités du pays…" />
                     <div className="mt-3">

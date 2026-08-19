@@ -14,6 +14,8 @@
   "discount": "Remise",
   "total": "Total",
   "quote_error": "Impossible de calculer le prix. Veuillez réessayer.",
+  "pricing_unavailable": "Les tarifs de ce parcours ne sont pas encore configurés. Contactez-nous pour obtenir votre devis.",
+  "pricing_unavailable_cta": "Nous contacter",
   "calculating": "Calcul en cours…",
   "recommended_upgrade": "Recommandé pour vous",
   "added_categories": "Catégories ajoutées",

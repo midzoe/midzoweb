@@ -1,13 +1,28 @@
-import  { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCategories } from '../hooks/useCategories';
+import { useCategories, catalogText } from '../hooks/useCategories';
 import { Link, useLocation } from 'react-router-dom';
+
+/** Lien interne (react-router) ou externe (nouvel onglet) selon l'URL saisie en admin. */
+const LinkOrAnchor: React.FC<{
+  to: string;
+  external: boolean;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ to, external, className, children }) =>
+  external ? (
+    <a href={to} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>
+  ) : (
+    <Link to={to} className={className}>{children}</Link>
+  );
 
 const Services = () => {
   const { t } = useTranslation('services');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const location = useLocation();
   const { categories, serviceDetails, loading, error } = useCategories();
+  // Libellés : traduction si elle existe, sinon le texte saisi en base (admin).
+  const label = (key: string, fallback: string) => catalogText(t, key, fallback);
 
   // Synchronize category with URL hash on mount and when location changes.
   // Dépend aussi de `categories` : le hash peut arriver avant le chargement backend.
@@ -77,7 +92,7 @@ const Services = () => {
                     : 'bg-white text-gray-600 hover:bg-gray-100'}`}
               >
                 <span className="mr-2">{category.icon}</span>
-                {t(`filters.${category.id}`)}
+                {label(`filters.${category.id}`, category.name)}
               </button>
             ))}
           </div>
@@ -95,33 +110,44 @@ const Services = () => {
                 <div className="flex items-center gap-4 mb-6">
                   <span className="text-4xl">{category.icon}</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-primary">{t(`${category.id}.title`)}</h2>
-                    <p className="text-gray-600 mt-1">{t(`${category.id}.description`)}</p>
+                    <h2 className="text-2xl font-bold text-primary">{label(`${category.id}.title`, category.name)}</h2>
+                    <p className="text-gray-600 mt-1">{label(`${category.id}.description`, category.description)}</p>
                   </div>
                 </div>
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {category.services.map((service) => {
-                    const serviceDetail = serviceDetails[category.id][service];
+                    // Une catégorie fraîchement créée en admin n'a pas encore de service :
+                    // l'indexation directe plantait la page entière.
+                    const serviceDetail = serviceDetails[category.id]?.[service];
+                    if (!serviceDetail) return null;
+                    const name = label(`${serviceDetail.translationKey}.name`, serviceDetail.name);
+                    const description = label(`${serviceDetail.translationKey}.description`, serviceDetail.description);
+                    // Un lien saisi en admin peut pointer hors du site : `<Link>` le
+                    // traiterait comme une route interne et afficherait une page vide.
+                    const isExternalLink = /^https?:\/\//i.test(serviceDetail.learnMoreLink);
                     return (
                       <div 
                         key={service}
                         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
                       >
-                        <img 
-                          src={serviceDetail.image} 
-                          alt={serviceDetail.name}
-                          className="w-full h-48 object-cover"
-                        />
+                        {serviceDetail.image && (
+                          <img
+                            src={serviceDetail.image}
+                            alt={name}
+                            className="w-full h-48 object-cover"
+                          />
+                        )}
                         <div className="p-6">
                           <h3 className="text-xl font-bold text-primary mb-2">
-                            {t(`${serviceDetail.translationKey}.name`)}
+                            {name}
                           </h3>
                           <p className="text-gray-600 mb-4">
-                            {t(`${serviceDetail.translationKey}.description`)}
+                            {description}
                           </p>
-                          <Link
+                          <LinkOrAnchor
                             to={serviceDetail.learnMoreLink}
+                            external={isExternalLink}
                             className="inline-flex items-center text-secondary hover:text-primary transition-colors duration-300"
                           >
                             {t('services.learn_more')}
@@ -138,7 +164,7 @@ const Services = () => {
                                 d="M14 5l7 7m0 0l-7 7m7-7H3"
                               />
                             </svg>
-                          </Link>
+                          </LinkOrAnchor>
                         </div>
                       </div>
                     );

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -282,6 +282,25 @@ const PackageBuilder: React.FC = () => {
                     </span>
                   </div>
 
+                  {/*
+                    Sous-total nul = les tarifs du moteur de devis ne sont pas renseignés
+                    (packages du moteur à 0 € et/ou PricingConfig à 0). Afficher « 0.00 EUR »
+                    comme un vrai prix tromperait le visiteur, et l'adhésion est de toute façon
+                    impossible : le checkout exige un montant dû. On dit la vérité et on donne
+                    une sortie plutôt que de laisser un devis mort à l'écran.
+                  */}
+                  {quote.subtotal_cents === 0 ? (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-sm text-amber-800">{t('pricing_unavailable')}</p>
+                      <Link
+                        to="/contact"
+                        className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-amber-300 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                      >
+                        {t('pricing_unavailable_cta')}
+                      </Link>
+                    </div>
+                  ) : (
+                    <>
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>{t('base')}</span>
                     <span>{formatAmount(quote.base_price_cents, quote.currency)}</span>
@@ -349,6 +368,8 @@ const PackageBuilder: React.FC = () => {
                         </p>
                       )}
                     </div>
+                  )}
+                    </>
                   )}
                 </div>
               )}

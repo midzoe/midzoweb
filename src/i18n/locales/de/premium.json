@@ -14,6 +14,8 @@
   "discount": "Rabatt",
   "total": "Gesamt",
   "quote_error": "Preis kann nicht berechnet werden. Bitte versuchen Sie es erneut.",
+  "pricing_unavailable": "Die Preise für diesen Weg sind noch nicht konfiguriert. Kontaktieren Sie uns für Ihr Angebot.",
+  "pricing_unavailable_cta": "Kontakt aufnehmen",
   "calculating": "Wird berechnet…",
   "recommended_upgrade": "Für Sie empfohlen",
   "added_categories": "Hinzugefügte Kategorien",

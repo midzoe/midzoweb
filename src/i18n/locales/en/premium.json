@@ -14,6 +14,8 @@
   "discount": "Discount",
   "total": "Total",
   "quote_error": "Unable to compute the price. Please try again.",
+  "pricing_unavailable": "Pricing for this journey is not configured yet. Contact us to get your quote.",
+  "pricing_unavailable_cta": "Contact us",
   "calculating": "Calculating…",
   "recommended_upgrade": "Recommended for you",
   "added_categories": "Added categories",

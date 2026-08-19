@@ -22,6 +22,7 @@ import {
   PaperAirplaneIcon,
   HomeModernIcon,
   CubeIcon,
+  CurrencyEuroIcon,
   Cog6ToothIcon,
   LightBulbIcon,
   RssIcon,
@@ -30,6 +31,8 @@ import {
   BriefcaseIcon,
   ClipboardDocumentCheckIcon,
   BanknotesIcon,
+  CreditCardIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 
 // Navigation groupée (design data-dense : sections claires plutôt qu'une longue liste plate).
@@ -42,6 +45,7 @@ const navGroups: {
     items: [
       { href: '/admin', label: 'Dashboard', icon: HomeIcon, exact: true },
       { href: '/admin/users', label: 'Utilisateurs', icon: UsersIcon },
+      { href: '/admin/payments', label: 'Paiements', icon: CreditCardIcon },
       { href: '/admin/validation', label: 'File de validation', icon: ShieldCheckIcon },
     ],
   },
@@ -93,7 +97,9 @@ const navGroups: {
       { href: '/admin/flights', label: 'Vols', icon: PaperAirplaneIcon },
       { href: '/admin/insurance-plans', label: 'Assurances', icon: ShieldCheckIcon },
       { href: '/admin/banks', label: 'Banques', icon: BanknotesIcon },
+      { href: '/admin/services', label: 'Catalogue services', icon: Squares2X2Icon },
       { href: '/admin/packages', label: 'Packages', icon: CubeIcon },
+      { href: '/admin/pricing', label: 'Tarifs (devis)', icon: CurrencyEuroIcon },
       { href: '/admin/countries', label: 'Pays (fiches)', icon: GlobeAltIcon },
       { href: '/admin/settings', label: 'Paramètres', icon: Cog6ToothIcon },
     ],
