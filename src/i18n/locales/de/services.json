@@ -1,0 +1,224 @@
+{
+  "page_title": "Unsere Dienstleistungen",
+  "page_subtitle": "Umfassende Unterstützung für Ihre internationale Reise",
+  "filters": {
+    "all": "Alle Dienstleistungen",
+    "study": "Studium & Ausbildung",
+    "tourism": "Tourismus",
+    "orientation": "Orientierung",
+    "professional": "Beruflich",
+    "business": "Geschäft"
+  },
+  "study": {
+    "title": "Auslandsstudium Services",
+    "description": "Alles, was Sie brauchen, um in Ihrem Auslandsstudium erfolgreich zu sein",
+    "universityFinder": {
+      "name": "Universität Finder",
+      "description": "Finden Sie die perfekte Universität für Ihre akademischen Ziele"
+    },
+    "studentVisa": {
+      "name": "Studentenvisum",
+      "description": "Fachkundige Beratung bei der Studentenvisum-Antragsstellung"
+    },
+    "studentAccommodation": {
+      "name": "Studentenunterkünfte",
+      "description": "Finden Sie sichere, erschwingliche Unterkünfte in der Nähe Ihrer Universität"
+    },
+    "bankAccount": {
+      "name": "Bankkonto Eröffnung",
+      "description": "Eröffnen und verwalten Sie ein Bankkonto im Zielland"
+    },
+    "languageCenter": {
+      "name": "Sprachzentrum",
+      "description": "Bereiten Sie sich auf Ihr Studium mit Sprachkursen vor"
+    },
+    "documentLegalization": {
+      "name": "Dokumentenlegalisierung",
+      "description": "Lassen Sie Ihre Dokumente im Ausland offiziell beglaubigen"
+    },
+    "studentFlights": {
+      "name": "Studentenflüge",
+      "description": "Finden Sie erschwingliche Flugoptionen für Studierende"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Umfassender Versicherungsschutz für Ihr Auslandsstudium"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Buchen Sie Ihre Flüge zu Studentenpreisen mit flexiblen Optionen"
+    }
+  },
+  "tourism": {
+    "title": "Tourismus",
+    "description": "Kuratierte Reiseerlebnisse — Events, Safari, Sport und mehr",
+    "events": {
+      "name": "Events & Spektakel",
+      "description": "WM 2026, AFCON, Olympia — Komplettpakete mit Flügen, Unterkunft und Tickets"
+    },
+    "safari": {
+      "name": "Safari & Afrika-Entdeckung",
+      "description": "Lesotho, Botswana, Namibia, Simbabwe — authentische Afrika-Erlebnisse die wir in- und auswendig kennen"
+    },
+    "sports": {
+      "name": "Sporttourismus",
+      "description": "Marathons, Grand Slams, F1, Rugby — Reisen rund um Ihre Sportleidenschaft"
+    },
+    "touristVisa": {
+      "name": "Touristenvisum",
+      "description": "Vereinfachte Touristenvisum-Unterstützung für reibungslose Auslandsreisen"
+    },
+    "flightsStays": {
+      "name": "Flüge & Aufenthalte",
+      "description": "Standard-Flug+Hotel-Pakete über unsere Partnerplattformen (Booking, Expedia, Skyscanner)"
+    },
+    "accommodation": {
+      "name": "Tourismusunterkunft",
+      "description": "Buchen Sie verifizierte Hotels und Unterkünfte weltweit"
+    },
+    "restaurants": {
+      "name": "Restaurants & Gastronomie",
+      "description": "Entdecken Sie authentische lokale Speiseerlebnisse"
+    },
+    "touristSites": {
+      "name": "Touristensehenswürdigkeiten",
+      "description": "Finden Sie Sehenswürdigkeiten und versteckte Juwelen"
+    },
+    "travelInsurance": {
+      "name": "Reiseversicherung",
+      "description": "Umfassender Schutz für sorgenfreies Reisen"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Zugang zu wettbewerbsfähigen Flugpreisen weltweit"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Versicherungsschutz für Ihre Reisebedürfnisse"
+    },
+    "languageCenter": {
+      "name": "Sprachzentrum",
+      "description": "Hochwertige Sprachkurse für Reisende"
+    }
+  },
+  "orientation": {
+    "title": "Orientierung",
+    "description": "Personalisierte Beratung für Ihre internationalen Projekte",
+    "school": {
+      "name": "Schul-Orientierung",
+      "description": "Beratung bei der Wahl der richtigen Schule, des Landes und Programms für Ihr Studium im Ausland",
+      "steps": [
+        "Profilbewertung (akademischer Hintergrund, Ziele, Budget)",
+        "Land & Schulempfehlung",
+        "Programmauswahl & Eignungsprüfung",
+        "Bewerbungszeitplan & Checkliste",
+        "Visum, Unterkunft & Briefing vor der Abreise",
+        "Premium: Sitzung mit einem Spezialisten, vor Ort oder virtuell"
+      ]
+    },
+    "career": {
+      "name": "Karriere-Orientierung",
+      "description": "Internationaler Arbeitsmarkt, Kompetenzanalyse und Karriereplanung im Ausland",
+      "steps": [
+        "Bewertung von Fähigkeiten & Erfahrung",
+        "Kartierung des internationalen Arbeitsmarktes",
+        "Internationale Aufbereitung von Lebenslauf & LinkedIn",
+        "Empfehlung von Zielland & Branche",
+        "Beratung zum Arbeitsvisum",
+        "Einführung in relevante Berufsnetzwerke"
+      ]
+    },
+    "training": {
+      "name": "Ausbildungs-Orientierung",
+      "description": "Finden Sie das richtige Berufsausbildungsprogramm oder die richtige Zertifizierung für Ihre Karriereziele",
+      "steps": [
+        "Bewertung Ihres Weiterbildungsbedarfs",
+        "Suche nach internationalen Weiterbildungsprogrammen",
+        "Überprüfung von Zertifizierungen & Akkreditierungen",
+        "Empfehlung von Land & Institution",
+        "Unterstützung bei Visum & Unterkunft",
+        "Premium: dedizierter Berater für die komplette Umsetzung"
+      ]
+    }
+  },
+  "professional": {
+    "title": "Berufliche Services",
+    "description": "Fördern Sie Ihre Karriere mit internationalen Möglichkeiten",
+    "trainingFinder": {
+      "name": "Schulungsangebote",
+      "description": "Greifen Sie auf Kurse zur beruflichen Entwicklung weltweit zu"
+    },
+    "jobsFinder": {
+      "name": "Jobsuche",
+      "description": "Entdecken Sie Karrierechancen in Ihrem Bereich"
+    },
+    "workVisa": {
+      "name": "Arbeitsvisum",
+      "description": "Umfassende Anleitung zu Arbeitsvisum-Anträgen"
+    },
+    "skillsCertification": {
+      "name": "Kompetenzzertifizierung",
+      "description": "Lassen Sie Ihre beruflichen Kompetenzen international zertifizieren"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Umfassender Versicherungsschutz für Ihre beruflichen Bedürfnisse"
+    },
+    "languageCenter": {
+      "name": "Sprachzentrum",
+      "description": "Sprachkurse zur Verbesserung Ihrer beruflichen Kommunikationsfähigkeiten"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Praktische Flugbuchung mit flexiblen Reisearrangements"
+    },
+    "documentLegalization": {
+      "name": "Legalisierung beruflicher Dokumente",
+      "description": "Legalisierung, Apostille und beglaubigte Übersetzung Ihrer Arbeitszeugnisse, Diplome und beruflichen Nachweise."
+    }
+  },
+  "business": {
+    "title": "Business Services",
+    "description": "Geschäftsreise- und Netzwerklösungen",
+    "networkingEvents": {
+      "name": "Business-Networking-Events",
+      "description": "Nehmen Sie an kuratierten Geschäftsveranstaltungen teil"
+    },
+    "corporateAccommodation": {
+      "name": "Unternehmensunterkunft",
+      "description": "Premium-Unterkunftslösungen für Geschäftsreisende"
+    },
+    "businessVisa": {
+      "name": "Geschäftsvisum",
+      "description": "Fachkundige Unterstützung bei Geschäftsvisum-Anträgen"
+    },
+    "transportation": {
+      "name": "Transportdienstleistungen",
+      "description": "Zuverlässige Transportlösungen für Geschäftsreisende"
+    },
+    "meetingVenues": {
+      "name": "Besprechungsräume",
+      "description": "Zugang zu professionellen Besprechungsräumen und Konferenzeinrichtungen"
+    },
+    "restaurants": {
+      "name": "Restaurantreservierungen",
+      "description": "Tische in geschäftsgeeigneten Restaurants buchen"
+    },
+    "insurance": {
+      "name": "Versicherung",
+      "description": "Umfassender Versicherungsschutz für Ihre Geschäftsreisebedürfnisse"
+    },
+    "languageCenter": {
+      "name": "Sprachzentrum",
+      "description": "Sprachkurse und Programme zur Entwicklung von Geschäftskommunikationsfähigkeiten"
+    },
+    "flightBooking": {
+      "name": "Flugbuchung",
+      "description": "Premium-Flugbuchung mit Business-Class-Optionen"
+    }
+  },
+  "services": {
+    "learn_more": "Mehr Erfahren",
+    "load_error": "Unsere Dienstleistungen können derzeit nicht geladen werden. Bitte versuchen Sie es später erneut."
+  }
+}

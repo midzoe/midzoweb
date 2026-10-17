@@ -1,0 +1,81 @@
+{
+  "fields": {
+    "email": "Email",
+    "identifier": "Email or Username",
+    "password": "Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "country": "Country",
+    "city": "City",
+    "address": "Address",
+    "zipCode": "ZIP Code",
+    "message": "Message",
+    "subject": "Subject",
+    "username": "Username",
+    "confirmPassword": "Confirm Password",
+    "dateOfBirth": "Date of Birth",
+    "nationality": "Nationality",
+    "countryOfInterest": "Country of Interest",
+    "studyLevel": "Study Level"
+  },
+  "placeholders": {
+    "email": "Enter your email",
+    "password": "Enter your password",
+    "firstName": "Enter your first name",
+    "lastName": "Enter your last name",
+    "phone": "Enter your phone number",
+    "country": "Select a country",
+    "city": "Enter your city",
+    "message": "Write your message here",
+    "subject": "Enter subject"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email_invalid": "Please enter a valid email",
+    "password_short": "Password must be at least 6 characters",
+    "passwords_mismatch": "Passwords do not match",
+    "name_short": "Name must be at least 2 characters",
+    "phone_invalid": "Please enter a valid phone number"
+  },
+  "errors": {
+    "field_required": "{{field}} is required",
+    "invalid_email": "Invalid email address",
+    "invalid_password": "Password must be at least 6 characters",
+    "password_mismatch": "Passwords do not match",
+    "unknown_error": "An unknown error occurred"
+  },
+  "buttons": {
+    "login": "Log In",
+    "register": "Register",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save Changes",
+    "reset": "Reset"
+  },
+  "messages": {
+    "success": "Form submitted successfully",
+    "error": "An error occurred while submitting the form",
+    "loading": "Loading...",
+    "login_failed": "Incorrect username or password."
+  },
+  "register": {
+    "title": "Create an Account",
+    "subtitle": "Join Midzoe to access all our services",
+    "have_account": "Already have an account?",
+    "sign_in": "Sign in",
+    "no_account": "Don't have an account?",
+    "success": "Account created successfully! Welcome to Midzoe.",
+    "error_email_exists": "An account with this email already exists.",
+    "error_generic": "Registration failed. Please try again.",
+    "verify_title": "Verify Your Email",
+    "verify_subtitle": "We sent a 6-digit code to {{email}}",
+    "verify_code_label": "Verification Code",
+    "verify_code_placeholder": "000000",
+    "verify_button": "Verify Email",
+    "verify_error": "Invalid or expired code. Please try again.",
+    "resend_code": "Resend Code",
+    "resend_success": "A new code has been sent to your email."
+  }
+}

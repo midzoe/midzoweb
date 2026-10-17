@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { categories } from '../data/categories';
-import { serviceDetails } from '../data/services';
-import { regions } from '../data/regions';
+import { useCategories } from '../hooks/useCategories';
+import { useCountries } from '../hooks/useCountries';
 import { XMarkIcon, ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import PremiumOnboarding from './PremiumOnboarding';
 
 interface TripWizardProps {
   isOpen: boolean;
@@ -218,7 +219,7 @@ const AccommodationModal: React.FC<AccommodationModalProps> = ({
     }
   ];
 
-  const allCountries = regions.flatMap(region => region.countries).sort();
+  const { countries: allCountries } = useCountries();
   const cities = Array.from(new Set(mockAccommodations.map(acc => acc.city))).sort();
   const types = ["Hotel", "Resort", "Apartment", "Villa", "Guesthouse"];
   const priceRanges = [
@@ -666,6 +667,16 @@ const UniversityModal: React.FC<UniversityModalProps> = ({
 };
 
 const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
+  const { regions } = useCountries();
+  const { user } = useAuth();
+  // `categories[].services` (ordonné par le backend) pilote la séquence d'étapes du wizard.
+  const { categories, serviceDetails, loading: categoriesLoading } = useCategories();
+
+  // Gate profil premium (story 3.9) : un premium au profil incomplet doit compléter
+  // nationalité/résidence/langue AVANT d'entrer dans le wizard. La complétude est jugée
+  // par le backend (/completeness), jamais par l'UI.
+  const [gate, setGate] = useState<'idle' | 'checking' | 'blocked' | 'ok'>('idle');
+
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRegion, setSelectedRegion] = useState<string>('');
@@ -706,6 +717,41 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
       });
     }
   }, [isOpen]);
+
+  // Gate profil premium : à l'ouverture, on interroge le backend. Seuls les premium sont gatés ;
+  // une panne réseau ne doit pas enfermer un premium hors de ses trips (dégradation gracieuse).
+  useEffect(() => {
+    if (!isOpen) {
+      setGate('idle');
+      return;
+    }
+    if (!user?.is_premium) {
+      setGate('ok');
+      return;
+    }
+    let mounted = true;
+    setGate('checking');
+    apiService
+      .getProfileCompleteness()
+      .then((res: any) => {
+        if (mounted) setGate(res?.complete ? 'ok' : 'blocked');
+      })
+      .catch(() => {
+        if (mounted) setGate('ok');
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen, user]);
+
+  // Après soumission du formulaire : le backend retranche (le formulaire peut avoir été
+  // validé sans satisfaire toute la règle) — on ne débloque que si /completeness le confirme.
+  const handleGateComplete = () => {
+    apiService
+      .getProfileCompleteness()
+      .then((res: any) => setGate(res?.complete ? 'ok' : 'blocked'))
+      .catch(() => setGate('ok'));
+  };
 
   const validateField = (field: string, value: string) => {
     const errors: {[key: string]: string} = {};
@@ -847,7 +893,13 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
         <h2 className="text-3xl font-bold text-gray-900 mb-2">✈️ What type of adventure awaits?</h2>
         <p className="text-gray-600 text-lg">Choose your trip category to get started with personalized recommendations</p>
       </div>
-      
+
+      {categoriesLoading && (
+        <div className="flex justify-center py-12">
+          <div className="h-10 w-10 rounded-full border-4 border-gray-200 border-t-primary animate-spin" />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {categories.map((category, index) => (
           <button
@@ -1517,6 +1569,21 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
   };
 
   if (!isOpen) return null;
+
+  // Gate profil premium (story 3.9) : tant que le profil n'est pas complet, on affiche le
+  // formulaire bloquant à la place du wizard. Fermer le gate ferme le wizard (pas d'entrée
+  // à profil incomplet). Un premium complet, un non-premium, ou une panne réseau → 'ok'.
+  if (gate === 'checking') {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="h-10 w-10 rounded-full border-4 border-white/40 border-t-white animate-spin" />
+      </div>
+    );
+  }
+
+  if (gate === 'blocked') {
+    return <PremiumOnboarding isOpen onClose={onClose} onComplete={handleGateComplete} />;
+  }
 
   const category = categories.find(c => c.id === selectedCategory);
   const totalSteps = category ? category.services.length + 2 : 1;

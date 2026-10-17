@@ -1,45 +1,52 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { studyCountries, tourismCountries, getContinentForCountry } from '../data/countryAvailability';
+import { useTranslation } from 'react-i18next';
+import { useCountries } from '../hooks/useCountries';
 
 const Hero = () => {
+  const { t } = useTranslation('hero');
+  const { t: tCountries } = useTranslation('countries');
   const [expandedStudy, setExpandedStudy] = useState(false);
-  const [expandedTourism, setExpandedTourism] = useState(false);
+  const { studyCountries, getContinentForCountry, loading: countriesLoading } = useCountries();
+
+  const getCountryName = (country: string) => {
+    return tCountries(`names.${country}`, country);
+  };
 
   return (
     <div className="relative bg-white">
       {/* Hero Image Section */}
       <div className="relative h-[600px] overflow-hidden">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: 'url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80")',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30" />
         </div>
-        
+
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
-              Your Gateway to
-              <span className="block text-primary">Global Opportunities</span>
+              {t('main_heading')}
+              <span className="block text-primary">{t('main_highlight')}</span>
             </h1>
             <p className="text-xl text-white/90 mb-8 leading-relaxed">
-              Let Midzoe be your trusted companion in every international journey. Whether you're pursuing education abroad 🎓, seeking professional growth 💼, exploring new destinations 🌍, or expanding your business ventures 🤝, we're here to make your global experience seamless and memorable.
+              {t('main_description')}
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
                 to="/services"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-white hover:text-primary transition-colors"
               >
-                Explore Services
+                {t('explore_services')}
               </Link>
               <Link
                 to="/about"
-                className="inline-flex items-center px-6 py-3 border-2 border-white text-base font-medium rounded-md text-white hover:bg-white hover:text-gray-900 transition-colors"
+                className="inline-flex items-center px-6 py-3 border-2 border-white text-base font-medium rounded-md text-white hover:bg-white hover:text-primary transition-colors"
               >
-                Learn More
+                {t('common:buttons.learnMore')}
               </Link>
             </div>
           </div>
@@ -50,9 +57,9 @@ const Hero = () => {
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900">Why Choose Midzoe?</h2>
+            <h2 className="text-3xl font-bold text-gray-900">{t('value_proposition_title')}</h2>
             <p className="mt-4 text-lg text-gray-600">
-              We make your international journey smooth, safe, and memorable
+              {t('value_proposition_subtitle')}
             </p>
           </div>
 
@@ -61,42 +68,42 @@ const Hero = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🌟</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Expert Guidance</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('value_1_title')}</h3>
               <p className="text-gray-600">
-                Get personalized support from our experienced travel specialists at every step
+                {t('value_1_description')}
               </p>
             </div>
             <div className="text-center p-6">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">🔒</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Safe & Secure</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('value_2_title')}</h3>
               <p className="text-gray-600">
-                Travel with confidence knowing you're protected by our comprehensive support system
+                {t('value_2_description')}
               </p>
             </div>
             <div className="text-center p-6">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">💎</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Premium Experience</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('value_3_title')}</h3>
               <p className="text-gray-600">
-                Enjoy high-quality services and exclusive benefits with our premium packages
+                {t('value_3_description')}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Your Global Journey Starts Here - Proposition 3 */}
+      {/* Your Global Journey Starts Here */}
       <div className="bg-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900">
-              Your Global Journey Starts Here
+              {t('journey_title')}
             </h2>
             <p className="mt-4 text-xl text-gray-600">
-              Tailored experiences for your goals
+              {t('journey_subtitle')}
             </p>
           </div>
 
@@ -109,9 +116,9 @@ const Hero = () => {
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-8">
                 <div className="flex-1">
                   <div className="text-6xl md:text-7xl mb-6">🎓</div>
-                  <h3 className="text-3xl md:text-4xl font-bold mb-3">Study Abroad</h3>
+                  <h3 className="text-3xl md:text-4xl font-bold mb-3">{t('study_title')}</h3>
                   <p className="text-lg md:text-xl mb-8 text-blue-50 max-w-2xl">
-                    Access to world-class education, expert guidance, and seamless university integration
+                    {t('study_description')}
                   </p>
 
                   {/* Featured destinations - First 4 */}
@@ -122,15 +129,17 @@ const Hero = () => {
                         to={`/country/${country}`}
                         className="px-4 py-2 bg-blue-500 rounded-full text-sm font-medium hover:bg-blue-400 transition cursor-pointer"
                       >
-                        {getContinentForCountry(country)} {country}
+                        {getContinentForCountry(country)} {getCountryName(country)}
                       </Link>
                     ))}
-                    <button
-                      onClick={() => setExpandedStudy(!expandedStudy)}
-                      className="px-4 py-2 bg-blue-400/60 rounded-full text-sm font-medium hover:bg-blue-400 transition"
-                    >
-                      +{studyCountries.length - 4} more
-                    </button>
+                    {studyCountries.length > 4 && (
+                      <button
+                        onClick={() => setExpandedStudy(!expandedStudy)}
+                        className="px-4 py-2 bg-blue-400/60 rounded-full text-sm font-medium hover:bg-blue-400 transition"
+                      >
+                        +{studyCountries.length - 4} {t('study_more')}
+                      </button>
+                    )}
                   </div>
 
                   {/* Expanded countries list */}
@@ -142,7 +151,7 @@ const Hero = () => {
                           to={`/country/${country}`}
                           className="px-3 py-2 bg-blue-600 rounded-lg text-sm hover:bg-blue-500 transition text-center font-medium"
                         >
-                          {getContinentForCountry(country)} {country}
+                          {getContinentForCountry(country)} {getCountryName(country)}
                         </Link>
                       ))}
                     </div>
@@ -152,91 +161,78 @@ const Hero = () => {
                     to="/services#study"
                     className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition"
                   >
-                    Explore Programs <span>→</span>
+                    {t('study_cta')} <span>→</span>
                   </Link>
                 </div>
 
                 {/* Statistics box */}
                 <div className="bg-blue-500/20 backdrop-blur-sm rounded-xl p-6 md:p-8 text-center border border-blue-400/30 md:min-w-max">
-                  <p className="text-sm text-blue-100 mb-2 font-medium">Available in</p>
-                  <p className="text-5xl md:text-6xl font-black text-white">{studyCountries.length}</p>
-                  <p className="text-sm text-blue-100 mt-2 font-medium">Countries</p>
+                  <p className="text-sm text-blue-100 mb-2 font-medium">{t('study_available')}</p>
+                  <p className="text-5xl md:text-6xl font-black text-white">
+                    {countriesLoading ? '—' : studyCountries.length}
+                  </p>
+                  <p className="text-sm text-blue-100 mt-2 font-medium">{t('study_countries')}</p>
                   <div className="mt-6 pt-6 border-t border-blue-400/30">
-                    <p className="text-xs text-blue-100 mb-3">Click to explore</p>
-                    <p className="text-xs text-blue-100">Each country has detailed info</p>
+                    <p className="text-xs text-blue-100 mb-3">{t('study_click_explore')}</p>
+                    <p className="text-xs text-blue-100">{t('study_country_details')}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* TOURISM Card - Expandable */}
-            <div className="relative bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-8 md:p-12 overflow-hidden hover:shadow-2xl transition-all duration-300">
+            {/* ORIENTATION Card */}
+            <div className="relative bg-gradient-to-br from-purple-600 to-indigo-700 text-white rounded-2xl p-8 md:p-12 overflow-hidden hover:shadow-2xl transition-all duration-300">
               {/* Animated background circle */}
-              <div className="absolute -right-12 -bottom-12 w-56 h-56 bg-emerald-400 rounded-full opacity-20 group-hover:scale-110 transition-transform duration-500"></div>
+              <div className="absolute -right-12 -bottom-12 w-40 h-40 bg-purple-500 rounded-full opacity-20 group-hover:scale-125 transition-transform duration-500"></div>
 
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-8">
                 <div className="flex-1">
-                  <div className="text-6xl md:text-7xl mb-6">🌍</div>
-                  <h3 className="text-3xl md:text-4xl font-bold mb-3">Global Tourism</h3>
-                  <p className="text-lg md:text-xl mb-8 text-emerald-50 max-w-2xl">
-                    Explore experiences across all continents with curated travel packages and local insights
+                  <div className="text-6xl md:text-7xl mb-6">🧭</div>
+                  <h3 className="text-3xl md:text-4xl font-bold mb-3">Orientation</h3>
+                  <p className="text-lg md:text-xl mb-8 text-purple-50 max-w-2xl">
+                    Besoin de conseils avant votre grand projet? Orientation vous guide à travers les décisions clés — études, carrière ou business.
                   </p>
 
-                  {/* Featured destinations - First 6 */}
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {tourismCountries.slice(0, 6).map((country) => (
-                      <Link
-                        key={country}
-                        to={`/country/${country}`}
-                        className="px-4 py-2 bg-emerald-400 rounded-full text-sm font-medium hover:bg-emerald-300 transition cursor-pointer"
-                      >
-                        {getContinentForCountry(country)} {country}
-                      </Link>
-                    ))}
-                    <button
-                      onClick={() => setExpandedTourism(!expandedTourism)}
-                      className="px-4 py-2 bg-emerald-400/60 rounded-full text-sm font-medium hover:bg-emerald-400 transition"
-                    >
-                      +{tourismCountries.length - 6} more
-                    </button>
-                  </div>
-
-                  {/* Expanded countries list */}
-                  {expandedTourism && (
-                    <div className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-3 bg-emerald-500/20 rounded-lg p-4 max-h-64 overflow-y-auto">
-                      {tourismCountries.map((country) => (
-                        <Link
-                          key={country}
-                          to={`/country/${country}`}
-                          className="px-3 py-2 bg-emerald-600 rounded-lg text-sm hover:bg-emerald-500 transition text-center font-medium"
-                        >
-                          {getContinentForCountry(country)} {country}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-
                   <Link
-                    to="/services#tourism"
-                    className="inline-flex items-center gap-2 bg-white text-emerald-600 px-6 py-3 rounded-lg font-bold hover:bg-emerald-50 transition"
+                    to="/services#orientation"
+                    className="inline-flex items-center gap-2 bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition"
                   >
-                    Explore Destinations <span>→</span>
+                    Découvrir l'Orientation <span>→</span>
                   </Link>
                 </div>
 
-                {/* Statistics box */}
-                <div className="bg-emerald-500/20 backdrop-blur-sm rounded-xl p-6 md:p-8 text-center border border-emerald-400/30 md:min-w-max">
-                  <p className="text-sm text-emerald-100 mb-2 font-medium">Available in</p>
-                  <p className="text-5xl md:text-6xl font-black text-white">{tourismCountries.length}</p>
-                  <p className="text-sm text-emerald-100 mt-2 font-medium">Countries</p>
-                  <div className="mt-6 pt-6 border-t border-emerald-400/30">
-                    <p className="text-xs text-emerald-100 mb-3">Click to explore</p>
-                    <p className="text-xs text-emerald-100">Each country has detailed info</p>
-                  </div>
+                {/* Info box */}
+                <div className="bg-purple-500/20 backdrop-blur-sm rounded-xl p-6 md:p-8 text-center border border-purple-400/30 md:min-w-max">
+                  <p className="text-sm text-purple-100 mb-3 font-medium">3 Parcours</p>
+                  <ul className="space-y-2 text-sm text-purple-100">
+                    <li>🏫 Orientation École</li>
+                    <li>💼 Orientation Carrière</li>
+                    <li>📚 Orientation Formation</li>
+                  </ul>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* CTA vers Midzoe Tourism */}
+      <div className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-20 overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 text-center">
+          <p className="text-secondary font-semibold mb-2">Envie d'aventure?</p>
+          <h2 className="text-4xl font-bold mb-4">Découvrez Midzoe Tourism</h2>
+          <p className="text-gray-300 max-w-2xl mx-auto mb-8 text-lg">
+            Safari en Afrique, Coupe du Monde 2026, Tourisme Sportif, Événements mondiaux... Vivez les expériences qui font rêver.
+          </p>
+          <Link
+            to="/tourism"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-secondary hover:bg-orange-500 text-white font-bold rounded-lg transition-colors text-lg"
+          >
+            Entrer dans Midzoe Tourism <span>🌍</span>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,24 +1,80 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import apiService from '../services/api';
+
+interface SubjectCategory {
+  id: string;
+  name: string;
+  subcategories: { id: number | string; name: string; isOther?: boolean }[];
+}
 
 const Contact: React.FC = () => {
+  const { t } = useTranslation('contact');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
+    category: '',
+    subcategory: '',
     message: ''
   });
+  // Story 8.2/8.6 : arbre des sujets servi par le backend (catégories → sous-catégories + « Autre »).
+  const [subjects, setSubjects] = useState<SubjectCategory[]>([]);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    apiService
+      .getContactSubjects()
+      .then((res) => setSubjects(res?.subjects || []))
+      .catch(() => setSubjects([]));
+  }, []);
+
+  // Arrivée depuis la grille des packages (`/packages` → « Choisir ») : le message est amorcé
+  // avec le package retenu, pour que la demande parte avec son objet réel. Le texte reste
+  // entièrement modifiable — c'est une amorce, pas un message imposé.
+  useEffect(() => {
+    const pkg = new URLSearchParams(window.location.search).get('package');
+    if (!pkg) return;
+    setFormData((prev) =>
+      prev.message ? prev : { ...prev, message: t('package_prefill', { package: pkg }) }
+    );
+  }, [t]);
+
+  const currentSubcategories = useMemo(
+    () => subjects.find((s) => s.id === formData.category)?.subcategories || [],
+    [subjects, formData.category]
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission logic would go here
-    console.log('Form submitted:', formData);
+    setStatus('sending');
+    setErrorMsg('');
+    try {
+      const selected = subjects.find((s) => s.id === formData.category);
+      await apiService.sendContact({
+        name: formData.name,
+        email: formData.email,
+        subject: selected?.name,
+        category: formData.category || undefined,
+        subcategory: formData.subcategory || undefined,
+        message: formData.message,
+      });
+      setStatus('sent');
+      setFormData({ name: '', email: '', category: '', subcategory: '', message: '' });
+    } catch (err: any) {
+      setStatus('error');
+      setErrorMsg(err?.message || 'Une erreur est survenue.');
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    // Changer de catégorie réinitialise la sous-catégorie (le filtre se pré-sélectionne, AC 8.6).
+    if (name === 'category') {
+      setFormData((prev) => ({ ...prev, category: value, subcategory: '' }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const offices = [
@@ -52,20 +108,20 @@ const Contact: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-primary mb-4">Contact Us</h1>
+          <h1 className="text-4xl font-bold text-primary mb-4">{t('page_title')}</h1>
           <p className="text-xl text-gray-600">
-            Get in touch with our team for any questions or assistance
+            {t('page_subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('form_title')}</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
+                  {t('fields.name')}
                 </label>
                 <input
                   type="text"
@@ -80,7 +136,7 @@ const Contact: React.FC = () => {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
+                  {t('fields.email')}
                 </label>
                 <input
                   type="email"
@@ -94,29 +150,47 @@ const Contact: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('fields.subject')}
                 </label>
                 <select
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
+                  id="category"
+                  name="category"
+                  value={formData.category}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
                 >
                   <option value="">Select a subject</option>
-                  <option value="Study">Study Abroad</option>
-                  <option value="Professional">Professional Training</option>
-                  <option value="Tourism">Tourism</option>
-                  <option value="Business">Business Travel</option>
-                  <option value="Other">Other</option>
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
                 </select>
               </div>
 
+              {currentSubcategories.length > 0 && (
+                <div>
+                  <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('fields.subcategory', { defaultValue: 'Sous-catégorie' })}
+                  </label>
+                  <select
+                    id="subcategory"
+                    name="subcategory"
+                    value={formData.subcategory}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">—</option>
+                    {currentSubcategories.map((sub) => (
+                      <option key={String(sub.id)} value={sub.name}>{sub.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Message
+                  {t('fields.message')}
                 </label>
                 <textarea
                   id="message"
@@ -131,10 +205,20 @@ const Contact: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors"
+                disabled={status === 'sending'}
+                className="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-60"
               >
-                Send Message
+                {status === 'sending' ? '…' : t('buttons.send')}
               </button>
+
+              {status === 'sent' && (
+                <p className="text-green-600 text-sm text-center">
+                  {t('feedback.sent', { defaultValue: 'Message envoyé, merci ! Nous revenons vers vous rapidement.' })}
+                </p>
+              )}
+              {status === 'error' && (
+                <p className="text-red-600 text-sm text-center">{errorMsg}</p>
+              )}
             </form>
           </div>
 
@@ -170,9 +254,9 @@ const Contact: React.FC = () => {
                     </h3>
                     <div className="space-y-2 text-gray-600">
                       <p>{office.address}</p>
-                      <p>Phone: {office.phone}</p>
-                      <p>Email: {office.email}</p>
-                      <p>Hours: {office.hours}</p>
+                      <p>{t('info.phone')}: {office.phone}</p>
+                      <p>{t('info.email')}: {office.email}</p>
+                      <p>{t('info.hours')}: {office.hours}</p>
                     </div>
                   </div>
                 ))}

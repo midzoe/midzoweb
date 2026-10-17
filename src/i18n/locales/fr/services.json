@@ -1,0 +1,224 @@
+{
+  "page_title": "Nos Services",
+  "page_subtitle": "Support complet pour votre voyage international",
+  "filters": {
+    "all": "Tous les Services",
+    "study": "Études & Formations",
+    "tourism": "Tourisme",
+    "orientation": "Orientation",
+    "professional": "Professionnel",
+    "business": "Affaires"
+  },
+  "study": {
+    "title": "Services d'Études à l'Étranger",
+    "description": "Tout ce dont vous avez besoin pour réussir votre parcours éducatif à l'étranger",
+    "universityFinder": {
+      "name": "Recherche d'Université",
+      "description": "Découvrez l'université parfaite pour vos objectifs académiques"
+    },
+    "studentVisa": {
+      "name": "Visa Étudiant",
+      "description": "Expertise complète pour la demande de visa étudiant"
+    },
+    "studentAccommodation": {
+      "name": "Logement Étudiant",
+      "description": "Trouvez un logement sûr et abordable près de votre université"
+    },
+    "bankAccount": {
+      "name": "Ouverture de Compte Bancaire",
+      "description": "Ouvrez et gérez un compte bancaire dans votre pays de destination"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Préparez-vous à vos études avec des cours de langue"
+    },
+    "documentLegalization": {
+      "name": "Légalisation de Documents",
+      "description": "Faites officialiser vos documents à l'étranger"
+    },
+    "studentFlights": {
+      "name": "Vols Étudiants",
+      "description": "Trouvez des options de vol abordables pour les étudiants"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance complète adaptée à vos besoins pour les études"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Réservez vos vols avec des tarifs étudiants spéciaux et des options flexibles"
+    }
+  },
+  "professional": {
+    "title": "Services Professionnels",
+    "description": "Avancez votre carrière avec opportunités internationales",
+    "trainingFinder": {
+      "name": "Recherche de Formation",
+      "description": "Accédez à des cours de développement professionnel mondiaux"
+    },
+    "jobsFinder": {
+      "name": "Recherche d'Emploi",
+      "description": "Découvrez des opportunités de carrière dans votre domaine"
+    },
+    "workVisa": {
+      "name": "Visa de Travail",
+      "description": "Orientation complète pour les demandes de visa de travail"
+    },
+    "skillsCertification": {
+      "name": "Certification des Compétences",
+      "description": "Faites certifier et reconnaître vos compétences professionnelles à l'international"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance complète pour vos besoins professionnels"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Cours de langue pour améliorer vos compétences en communication professionnelle"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Réservation de vols pratique avec des arrangements de voyage flexibles"
+    },
+    "documentLegalization": {
+      "name": "Légalisation de documents professionnels",
+      "description": "Légalisation, apostille et traduction assermentée de vos attestations de travail, diplômes et références professionnelles."
+    }
+  },
+  "tourism": {
+    "title": "Tourisme",
+    "description": "Expériences de voyage sur mesure — événements, safari, sports et plus",
+    "events": {
+      "name": "Événements & Spectacles",
+      "description": "Coupe du Monde 2026, CAN, JO — packages complets vols, hébergement et billets"
+    },
+    "safari": {
+      "name": "Safari & Découverte Afrique",
+      "description": "Lesotho, Botswana, Namibie, Zimbabwe — expériences authentiques que nous connaissons sur le bout des doigts"
+    },
+    "sports": {
+      "name": "Tourisme Sportif",
+      "description": "Marathons, Grands Chelems, F1, rugby — voyages construits autour de votre passion sportive"
+    },
+    "touristVisa": {
+      "name": "Visa Touristique",
+      "description": "Assistance visa touristique simplifiée pour voyager sans tracas"
+    },
+    "flightsStays": {
+      "name": "Vols & Séjours",
+      "description": "Packages vols + hôtel standard via nos plateformes partenaires (Booking, Expedia, Skyscanner)"
+    },
+    "accommodation": {
+      "name": "Hébergement Touristique",
+      "description": "Réservez des hôtels et hébergements vérifiés mondialement"
+    },
+    "restaurants": {
+      "name": "Restaurants & Gastronomie",
+      "description": "Découvrez des expériences culinaires locales authentiques"
+    },
+    "touristSites": {
+      "name": "Sites Touristiques",
+      "description": "Trouvez les attractions incontournables et les joyaux cachés"
+    },
+    "travelInsurance": {
+      "name": "Assurance Voyage",
+      "description": "Couverture complète pour un voyage sans souci"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Accédez à des tarifs aériens compétitifs et des options de vol pratiques"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance adaptée à vos besoins de voyage"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Cours de langue de qualité pour les voyageurs"
+    }
+  },
+  "orientation": {
+    "title": "Orientation",
+    "description": "Accompagnement personnalisé pour vos projets internationaux",
+    "school": {
+      "name": "Orientation École",
+      "description": "Conseils pour choisir la bonne école, pays et programme pour vos études à l'étranger",
+      "steps": [
+        "Évaluation du profil (parcours académique, objectifs, budget)",
+        "Recommandation de pays & d’école",
+        "Choix du programme & vérification d’éligibilité",
+        "Calendrier de candidature & checklist",
+        "Visa, logement & briefing avant départ",
+        "Premium : séance avec un spécialiste, en présentiel ou à distance"
+      ]
+    },
+    "career": {
+      "name": "Orientation Carrière",
+      "description": "Analyse des marchés du travail internationaux, bilan de compétences et planification carrière",
+      "steps": [
+        "Évaluation des compétences & de l’expérience",
+        "Cartographie du marché du travail international",
+        "Formatage CV & LinkedIn à l’international",
+        "Recommandation pays & secteur cible",
+        "Conseils visa de travail",
+        "Introduction aux réseaux professionnels pertinents"
+      ]
+    },
+    "training": {
+      "name": "Orientation Formation",
+      "description": "Trouvez le bon programme de formation professionnelle, certification ou formation technique à l'étranger",
+      "steps": [
+        "Évaluation de vos besoins en formation",
+        "Recherche de programmes de formation internationaux",
+        "Vérification des certifications & accréditations",
+        "Recommandation pays & institution",
+        "Accompagnement visa & logement",
+        "Premium : conseiller dédié pour la mise en place complète"
+      ]
+    }
+  },
+  "business": {
+    "title": "Services aux Entreprises",
+    "description": "Solutions de voyage d'affaires et de réseautage",
+    "networkingEvents": {
+      "name": "Événements de Réseautage",
+      "description": "Participez à des événements d'affaires pour développer votre réseau professionnel"
+    },
+    "corporateAccommodation": {
+      "name": "Hébergement d'Entreprise",
+      "description": "Solutions d'hébergement premium pour les voyageurs d'affaires"
+    },
+    "businessVisa": {
+      "name": "Visa d'Affaires",
+      "description": "Assistance experte pour les demandes de visa d'affaires"
+    },
+    "transportation": {
+      "name": "Services de Transport",
+      "description": "Solutions de transport fiables pour les voyageurs d'affaires"
+    },
+    "meetingVenues": {
+      "name": "Salles de Réunion",
+      "description": "Accès à des espaces de réunion professionnels et salles de conférence"
+    },
+    "restaurants": {
+      "name": "Réservations de Restaurants",
+      "description": "Réservez des tables dans des restaurants adaptés aux affaires"
+    },
+    "insurance": {
+      "name": "Assurance",
+      "description": "Couverture d'assurance complète pour vos voyages d'affaires"
+    },
+    "languageCenter": {
+      "name": "Centre Linguistique",
+      "description": "Cours de langue et programmes de développement en communication des affaires"
+    },
+    "flightBooking": {
+      "name": "Réservation de Vol",
+      "description": "Réservation de vols premium avec options classe affaires"
+    }
+  },
+  "services": {
+    "learn_more": "En Savoir Plus",
+    "load_error": "Impossible de charger nos services pour le moment. Veuillez réessayer plus tard."
+  }
+}

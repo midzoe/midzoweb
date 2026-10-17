@@ -1,0 +1,42 @@
+{
+  "welcome": "Bienvenue {{name}}! 👋",
+  "welcome_subtitle": "Votre parcours voyage en un coup d'œil",
+  "statistics": {
+    "total_trips": "Voyages Totaux",
+    "continents_visited": "Continents",
+    "cities_explored": "Villes",
+    "services_used": "Terminés"
+  },
+  "next_trip": "Prochain Départ",
+  "countdown_to": "Décompte pour {{destination}}",
+  "days_away": "jours jusqu'au départ",
+  "active_trips": "Voyages en Cours",
+  "completed_trips": "Voyages Terminés",
+  "no_trips": "Aucun voyage pour le moment. Créez-en un pour commencer!",
+  "create_trip": "Créer un Voyage",
+  "view_trip": "Afficher le Voyage",
+  "edit_trip": "Modifier",
+  "delete_trip": "Supprimer",
+  "trip_status": {
+    "ongoing": "En cours",
+    "completed": "Terminé",
+    "planned": "Planifié"
+  },
+  "quick_services": "Liens Rapides",
+  "view_services": "Afficher Tous les Services",
+  "recent_activity": "Activité Récente",
+  "activity_empty": "Aucune activité récente",
+  "favorite_destinations": "Destinations Préférées",
+  "no_favorites": "Aucune préférée pour le moment",
+  "all_categories": "Toutes les Catégories",
+  "check_trip": "Vérifier le Voyage",
+  "plan_studies": "Planifier mes Études",
+  "view_profile": "Afficher le Profil",
+  "select_category_message": "Veuillez sélectionner une catégorie pour voir les liens rapides pertinents",
+  "quick_access": "Accès Rapide",
+  "new_trip": "Nouveau Voyage",
+  "no_trips_subtitle": "Commencez à planifier votre premier voyage international avec Midzoe",
+  "plan_trip_cta": "Planifier un Voyage",
+  "recent_services_title": "Récemment Utilisés",
+  "explore_now": "Explorer les Services"
+}

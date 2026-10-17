@@ -1,0 +1,224 @@
+{
+  "page_title": "Our Services",
+  "page_subtitle": "Comprehensive support for your international journey",
+  "filters": {
+    "all": "All Services",
+    "study": "Study & Training",
+    "tourism": "Tourism",
+    "orientation": "Orientation",
+    "professional": "Professional",
+    "business": "Business"
+  },
+  "study": {
+    "title": "Study Abroad Services",
+    "description": "Everything you need to succeed in your educational journey abroad",
+    "universityFinder": {
+      "name": "University Finder",
+      "description": "Discover the perfect university for your academic goals"
+    },
+    "studentVisa": {
+      "name": "Student Visa",
+      "description": "Expert guidance through the student visa application process"
+    },
+    "studentAccommodation": {
+      "name": "Student Accommodation",
+      "description": "Find safe, affordable housing near your university"
+    },
+    "bankAccount": {
+      "name": "Bank Account Setup",
+      "description": "Open and manage a bank account in your destination country"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Prepare for your studies with language courses"
+    },
+    "documentLegalization": {
+      "name": "Document Legalization",
+      "description": "Get your documents officially recognized abroad"
+    },
+    "studentFlights": {
+      "name": "Student Flights",
+      "description": "Find affordable flight options for students"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage tailored to your needs for study purposes"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Book your flights with special student rates and flexible options for international travel"
+    }
+  },
+  "tourism": {
+    "title": "Tourism",
+    "description": "Curated travel experiences — events, safari, sports and more",
+    "events": {
+      "name": "Events & Spectacles",
+      "description": "World Cup 2026, AFCON, Olympics — complete packages with flights, accommodation and tickets"
+    },
+    "safari": {
+      "name": "Safari & Africa Discovery",
+      "description": "Lesotho, Botswana, Namibia, Zimbabwe — authentic Africa experiences we know inside out"
+    },
+    "sports": {
+      "name": "Sports Tourism",
+      "description": "Marathons, Grand Slams, F1, rugby — travel built around your passion for sport"
+    },
+    "touristVisa": {
+      "name": "Tourist Visa",
+      "description": "Streamlined tourist visa assistance for hassle-free international travel"
+    },
+    "flightsStays": {
+      "name": "Flights & Stays",
+      "description": "Standard flight + hotel packages via our trusted partner platforms (Booking, Expedia, Skyscanner)"
+    },
+    "accommodation": {
+      "name": "Tourism Accommodation",
+      "description": "Book verified hotels and accommodations worldwide"
+    },
+    "restaurants": {
+      "name": "Restaurants & Food",
+      "description": "Discover authentic local dining experiences"
+    },
+    "touristSites": {
+      "name": "Tourist Sites",
+      "description": "Find must-see attractions and hidden gems"
+    },
+    "travelInsurance": {
+      "name": "Travel Insurance",
+      "description": "Comprehensive coverage for worry-free travel"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Access competitive airfare rates and convenient flight options worldwide"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage for your travel needs"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Quality language courses for travelers"
+    }
+  },
+  "orientation": {
+    "title": "Orientation",
+    "description": "Personalized guidance for your international projects",
+    "school": {
+      "name": "School Orientation",
+      "description": "Guidance on choosing the right school, country and program for your studies abroad",
+      "steps": [
+        "Profile assessment (academic background, goals, budget)",
+        "Country & school recommendation",
+        "Program selection & eligibility check",
+        "Application timeline & checklist",
+        "Visa, accommodation & pre-departure briefing",
+        "Premium: in-person or virtual session with a specialist"
+      ]
+    },
+    "career": {
+      "name": "Career Orientation",
+      "description": "International job market insights, skills assessment and career planning abroad",
+      "steps": [
+        "Skills & experience assessment",
+        "International job market mapping",
+        "CV & LinkedIn international formatting",
+        "Target country & sector recommendation",
+        "Work visa guidance",
+        "Introduction to relevant professional networks"
+      ]
+    },
+    "training": {
+      "name": "Training Orientation",
+      "description": "Find the right professional training program or certification matching your career goals",
+      "steps": [
+        "Training needs assessment",
+        "International training program search",
+        "Certification & accreditation verification",
+        "Country & institution recommendation",
+        "Visa & accommodation support",
+        "Premium: dedicated advisor for full program setup"
+      ]
+    }
+  },
+  "professional": {
+    "title": "Professional Services",
+    "description": "Advance your career with international opportunities",
+    "trainingFinder": {
+      "name": "Training Finder",
+      "description": "Access professional development courses worldwide"
+    },
+    "jobsFinder": {
+      "name": "Jobs Finder",
+      "description": "Discover career opportunities in your field"
+    },
+    "workVisa": {
+      "name": "Work Visa",
+      "description": "Complete guidance on work visa applications"
+    },
+    "skillsCertification": {
+      "name": "Skills Certification",
+      "description": "Get your professional skills certified and recognized internationally"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage for your professional needs"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Language courses to enhance your professional communication skills"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Convenient flight booking with professional travel arrangements and flexible scheduling"
+    },
+    "documentLegalization": {
+      "name": "Professional Document Legalization",
+      "description": "Legalization, apostille and sworn translation of your work certificates, diplomas and professional references."
+    }
+  },
+  "business": {
+    "title": "Business Services",
+    "description": "Business travel and networking solutions",
+    "networkingEvents": {
+      "name": "Business Networking Events",
+      "description": "Participate in curated business events to expand your professional network internationally"
+    },
+    "corporateAccommodation": {
+      "name": "Corporate Accommodation",
+      "description": "Premium accommodation solutions for business travelers"
+    },
+    "businessVisa": {
+      "name": "Business Visa Assistance",
+      "description": "Expert support for business visa applications"
+    },
+    "transportation": {
+      "name": "Transportation Services",
+      "description": "Reliable transportation solutions for business travelers"
+    },
+    "meetingVenues": {
+      "name": "Meeting Venues",
+      "description": "Access to professional meeting spaces and conference facilities worldwide"
+    },
+    "restaurants": {
+      "name": "Restaurant Reservations",
+      "description": "Book tables at business-appropriate restaurants for client meetings and corporate events"
+    },
+    "insurance": {
+      "name": "Insurance",
+      "description": "Comprehensive insurance coverage for your business travel needs"
+    },
+    "languageCenter": {
+      "name": "Language Center",
+      "description": "Language courses and business communication skills development programs"
+    },
+    "flightBooking": {
+      "name": "Flight Booking",
+      "description": "Premium flight booking with business class options and corporate travel arrangements"
+    }
+  },
+  "services": {
+    "learn_more": "Learn More",
+    "load_error": "Unable to load our services right now. Please try again later."
+  }
+}

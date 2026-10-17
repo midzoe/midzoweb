@@ -1,13 +1,31 @@
-import  { useState, useEffect } from 'react';
-import { categories } from '../data/categories';
-import { serviceDetails } from '../data/services';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useCategories, catalogText } from '../hooks/useCategories';
 import { Link, useLocation } from 'react-router-dom';
 
+/** Lien interne (react-router) ou externe (nouvel onglet) selon l'URL saisie en admin. */
+const LinkOrAnchor: React.FC<{
+  to: string;
+  external: boolean;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ to, external, className, children }) =>
+  external ? (
+    <a href={to} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>
+  ) : (
+    <Link to={to} className={className}>{children}</Link>
+  );
+
 const Services = () => {
+  const { t } = useTranslation('services');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const location = useLocation();
+  const { categories, serviceDetails, loading, error } = useCategories();
+  // Libellés : traduction si elle existe, sinon le texte saisi en base (admin).
+  const label = (key: string, fallback: string) => catalogText(t, key, fallback);
 
-  // Synchronize category with URL hash on mount and when location changes
+  // Synchronize category with URL hash on mount and when location changes.
+  // Dépend aussi de `categories` : le hash peut arriver avant le chargement backend.
   useEffect(() => {
     const hash = location.hash.slice(1); // Remove '#' from hash
     if (hash && categories.some(cat => cat.id === hash)) {
@@ -18,21 +36,37 @@ const Services = () => {
         element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 0);
     }
-  }, [location.hash]);
+  }, [location.hash, categories]);
 
   const displayedCategories = selectedCategory
     ? categories.filter(category => category.id === selectedCategory)
     : categories;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-16 flex items-center justify-center">
+        <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-16 flex items-center justify-center px-4">
+        <p className="text-center text-gray-600">{t('services.load_error')}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-extrabold text-primary sm:text-5xl">
-            Our Services
+            {t('page_title')}
           </h1>
           <p className="mt-4 text-xl text-gray-600">
-            Comprehensive solutions for all your international needs
+            {t('page_subtitle')}
           </p>
         </div>
 
@@ -41,24 +75,24 @@ const Services = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 
-                ${!selectedCategory 
-                  ? 'bg-primary text-white shadow-lg' 
+              className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300
+                ${!selectedCategory
+                  ? 'bg-primary text-white shadow-lg'
                   : 'bg-white text-gray-600 hover:bg-gray-100'}`}
             >
-              All Categories
+              {t('filters.all')}
             </button>
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 
-                  ${selectedCategory === category.id 
-                    ? 'bg-primary text-white shadow-lg' 
+                className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300
+                  ${selectedCategory === category.id
+                    ? 'bg-primary text-white shadow-lg'
                     : 'bg-white text-gray-600 hover:bg-gray-100'}`}
               >
                 <span className="mr-2">{category.icon}</span>
-                {category.name}
+                {label(`filters.${category.id}`, category.name)}
               </button>
             ))}
           </div>
@@ -76,36 +110,47 @@ const Services = () => {
                 <div className="flex items-center gap-4 mb-6">
                   <span className="text-4xl">{category.icon}</span>
                   <div>
-                    <h2 className="text-2xl font-bold text-primary">{category.name}</h2>
-                    <p className="text-gray-600 mt-1">{category.description}</p>
+                    <h2 className="text-2xl font-bold text-primary">{label(`${category.id}.title`, category.name)}</h2>
+                    <p className="text-gray-600 mt-1">{label(`${category.id}.description`, category.description)}</p>
                   </div>
                 </div>
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {category.services.map((service) => {
-                    const serviceDetail = serviceDetails[category.id][service];
+                    // Une catégorie fraîchement créée en admin n'a pas encore de service :
+                    // l'indexation directe plantait la page entière.
+                    const serviceDetail = serviceDetails[category.id]?.[service];
+                    if (!serviceDetail) return null;
+                    const name = label(`${serviceDetail.translationKey}.name`, serviceDetail.name);
+                    const description = label(`${serviceDetail.translationKey}.description`, serviceDetail.description);
+                    // Un lien saisi en admin peut pointer hors du site : `<Link>` le
+                    // traiterait comme une route interne et afficherait une page vide.
+                    const isExternalLink = /^https?:\/\//i.test(serviceDetail.learnMoreLink);
                     return (
                       <div 
                         key={service}
                         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
                       >
-                        <img 
-                          src={serviceDetail.image} 
-                          alt={serviceDetail.name}
-                          className="w-full h-48 object-cover"
-                        />
+                        {serviceDetail.image && (
+                          <img
+                            src={serviceDetail.image}
+                            alt={name}
+                            className="w-full h-48 object-cover"
+                          />
+                        )}
                         <div className="p-6">
                           <h3 className="text-xl font-bold text-primary mb-2">
-                            {serviceDetail.name}
+                            {name}
                           </h3>
                           <p className="text-gray-600 mb-4">
-                            {serviceDetail.description}
+                            {description}
                           </p>
-                          <Link
+                          <LinkOrAnchor
                             to={serviceDetail.learnMoreLink}
+                            external={isExternalLink}
                             className="inline-flex items-center text-secondary hover:text-primary transition-colors duration-300"
                           >
-                            Learn More
+                            {t('services.learn_more')}
                             <svg
                               className="w-5 h-5 ml-2"
                               fill="none"
@@ -119,7 +164,7 @@ const Services = () => {
                                 d="M14 5l7 7m0 0l-7 7m7-7H3"
                               />
                             </svg>
-                          </Link>
+                          </LinkOrAnchor>
                         </div>
                       </div>
                     );

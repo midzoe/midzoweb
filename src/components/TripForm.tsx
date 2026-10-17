@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { categories } from '../data/categories';
+import { useCategories } from '../hooks/useCategories';
 
 interface TripFormProps {
   isOpen: boolean;
@@ -11,6 +11,8 @@ interface TripFormProps {
 }
 
 const TripForm: React.FC<TripFormProps> = ({ isOpen, onClose, existingTrip, onSave, onDelete }) => {
+  // Alimente le sélecteur de catégorie ; vide tant que le catalogue backend charge.
+  const { categories } = useCategories();
   const [formData, setFormData] = useState(existingTrip || {
     title: '',
     destination: '',
