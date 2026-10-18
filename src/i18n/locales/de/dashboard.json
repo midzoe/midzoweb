@@ -38,5 +38,23 @@
   "no_trips_subtitle": "Beginnen Sie mit der Planung Ihrer ersten internationalen Reise mit Midzoe",
   "plan_trip_cta": "Reise Planen",
   "recent_services_title": "Zuletzt Verwendet",
-  "explore_now": "Services Erkunden"
+  "explore_now": "Services Erkunden",
+  "trip_form": {
+    "new_title": "Neue Reise",
+    "edit_title": "Reise bearbeiten",
+    "title": "Titel der Reise",
+    "destination": "Reiseziel",
+    "start": "Abreisedatum",
+    "end": "Rückreisedatum",
+    "status": "Status",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "add": "Reise erstellen",
+    "close": "Schließen",
+    "dates_error": "Das Rückreisedatum muss nach dem Abreisedatum liegen.",
+    "delete_title": "Diese Reise löschen?",
+    "delete_text": "Die Reise und ihre Leistungen werden gelöscht. Dies kann nicht rückgängig gemacht werden.",
+    "delete_failed": "Löschen fehlgeschlagen. Bitte später erneut versuchen."
+  },
+  "open_trip_space": "Mein Reisebereich (Etappen, Leistungen, Checkliste)"
 }

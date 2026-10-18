@@ -49,8 +49,18 @@ const toTrip = (t: any): Trip => ({
   startDate: t.startDate ?? '',
   endDate: t.endDate ?? '',
   status: t.status === 'completed' ? 'completed' : 'ongoing',
-  progress: t.status === 'completed' ? 100 : 0,
+  progress: t.status === 'completed' ? 100 : preparation(t),
 });
+
+/** Avancement = éléments faits / éléments à faire (services non annulés + checklist). */
+function preparation(t: any): number {
+  const services = (t.services ?? []).filter((s: any) => s.status !== 'cancelled');
+  const items = t.checklistItems ?? [];
+  const total = services.length + items.length;
+  if (!total) return 0;
+  const done = services.filter((s: any) => s.status === 'done').length + items.filter((i: any) => i.isDone).length;
+  return Math.round((done / total) * 100);
+}
 
 /** `format` lève une exception sur une date invalide : un trip sans date ne doit pas casser la page. */
 const safeFormat = (value: string, pattern: string) => {
@@ -125,6 +135,18 @@ const Dashboard: React.FC = () => {
     }
     setShowTripForm(false);
     setShowTripWizard(false);
+    setSelectedTrip(null);
+  };
+
+  const handleDeleteTrip = async () => {
+    if (!selectedTrip) return;
+    try {
+      await apiService.deleteTrip(Number(selectedTrip.id));
+      await loadTrips();
+    } catch {
+      setTripsError(t('trip_form.delete_failed'));
+    }
+    setShowTripForm(false);
     setSelectedTrip(null);
   };
 
@@ -377,6 +399,9 @@ const Dashboard: React.FC = () => {
                   {t('new_trip')}
                 </button>
               </div>
+              <Link to="/my-trips" className="inline-flex items-center gap-1 -mt-3 mb-4 text-xs font-medium text-primary hover:underline">
+                {t('open_trip_space')} →
+              </Link>
 
               {ongoingTrips.length === 0 ? (
                 <div className="text-center py-12 px-4">
@@ -568,6 +593,7 @@ const Dashboard: React.FC = () => {
         onClose={() => { setShowTripForm(false); setSelectedTrip(null); }}
         existingTrip={selectedTrip}
         onSave={handleSaveTrip}
+        onDelete={handleDeleteTrip}
       />
       <TripWizard
         isOpen={showTripWizard}

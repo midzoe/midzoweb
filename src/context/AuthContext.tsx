@@ -79,6 +79,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('midzo_version', AUTH_VERSION);
       return null;
     }
+    // Sans jeton, un utilisateur mémorisé n'est qu'un reste de session : on l'efface au lieu
+    // d'afficher un compte « connecté » dont tous les appels échoueraient.
+    if (!localStorage.getItem('midzo_token')) {
+      localStorage.removeItem('midzo_user');
+      return null;
+    }
     const saved = localStorage.getItem('midzo_user');
     return saved ? JSON.parse(saved) : null;
   });
@@ -105,6 +111,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       try {
         const response = await apiService.getProfile();
+        // Déconnexion pendant la requête : la réponse ne doit pas ressusciter la session.
+        if (!apiService.isAuthenticated()) return;
         if (response.success) {
           setUser(prev => {
             const updated: User = {

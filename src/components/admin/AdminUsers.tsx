@@ -7,6 +7,7 @@ import {
   PaperAirplaneIcon, BanknotesIcon, LanguageIcon, BellAlertIcon,
 } from '@heroicons/react/24/outline';
 import PremiumCasePanel from './PremiumCasePanel';
+import { ALL_COUNTRIES } from '../../data/countryNames';
 import {
   PageHeader, TableShell, EmptyRow, IconButton, Badge, StatCard,
   Modal, Field, TextInput, Select, PrimaryButton, SecondaryButton,
@@ -113,6 +114,15 @@ const Detail: React.FC<{ icon: React.ElementType; label: string; children: React
       <div className="text-sm text-stone-700 break-words">{children}</div>
     </div>
   </div>
+);
+
+/** Même liste que le profil client : une saisie libre (« Sénégalaise ») ne correspondait à aucune valeur. */
+const CountrySelect: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => (
+  <Select value={value} onChange={e => onChange(e.target.value)}>
+    <option value="">—</option>
+    {value && !ALL_COUNTRIES.includes(value) && <option value={value}>{value} (ancienne saisie)</option>}
+    {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+  </Select>
 );
 
 const AdminUsers: React.FC = () => {
@@ -516,10 +526,10 @@ const AdminUsers: React.FC = () => {
               <TextInput value={editing.phone} onChange={e => setEditing({ ...editing, phone: e.target.value })} placeholder="+228 ..." />
             </Field>
             <Field label="Nationalité">
-              <TextInput value={editing.nationality} onChange={e => setEditing({ ...editing, nationality: e.target.value })} />
+              <CountrySelect value={editing.nationality} onChange={v => setEditing({ ...editing, nationality: v })} />
             </Field>
             <Field label="Pays de résidence">
-              <TextInput value={editing.country_of_residence} onChange={e => setEditing({ ...editing, country_of_residence: e.target.value })} />
+              <CountrySelect value={editing.country_of_residence} onChange={v => setEditing({ ...editing, country_of_residence: v })} />
             </Field>
             <Field label="Rôle">
               <Select value={editing.role} onChange={e => setEditing({ ...editing, role: e.target.value })}>

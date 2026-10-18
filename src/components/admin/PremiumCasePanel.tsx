@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { apiService } from '../../services/api';
-import { Modal, Field, Select, TextArea, PrimaryButton, SecondaryButton, Badge } from './ui';
+import { Modal, Field, Select, TextArea, TextInput, PrimaryButton, SecondaryButton, Badge } from './ui';
 
 // Story 9.3/9.8 (FR38) : suivi de dossier premium séparé (statut, notes, achats).
 const STATUSES = ['open', 'in_progress', 'closed'];
+const STATUS_LABELS: Record<string, string> = { open: 'Ouvert', in_progress: 'En cours', closed: 'Clos' };
 const statusTone = (s: string): 'blue' | 'amber' | 'slate' =>
   s === 'open' ? 'blue' : s === 'in_progress' ? 'amber' : 'slate';
 
@@ -12,6 +13,7 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('open');
   const [notes, setNotes] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -23,6 +25,7 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
         setData(res?.data);
         setStatus(res?.data?.case?.status || 'open');
         setNotes(res?.data?.case?.notes || '');
+        setAssignedTo(res?.data?.case?.assignedTo || '');
       })
       .catch(() => setMsg('Impossible de charger le dossier.'))
       .finally(() => alive && setLoading(false));
@@ -32,7 +35,7 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
   const save = async () => {
     setSaving(true); setMsg('');
     try {
-      await apiService.adminUpdatePremiumCase(userId, { status, notes });
+      await apiService.adminUpdatePremiumCase(userId, { status, notes, assignedTo });
       setMsg('Dossier enregistré.');
     } catch { setMsg('Échec de l’enregistrement.'); }
     finally { setSaving(false); }
@@ -60,14 +63,18 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
                 <div className="text-sm text-stone-500 truncate">{u.email}</div>
                 {u.premiumSince && <div className="text-xs text-stone-400">Premium depuis {new Date(u.premiumSince).toLocaleDateString('fr-FR')}</div>}
               </div>
-              <Badge tone={statusTone(status)}>{status}</Badge>
+              <Badge tone={statusTone(status)}>{STATUS_LABELS[status] ?? status}</Badge>
             </div>
           )}
 
           <Field label="Statut du dossier">
             <Select value={status} onChange={e => setStatus(e.target.value)}>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              {STATUSES.map(s => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
             </Select>
+          </Field>
+
+          <Field label="Conseiller assigné">
+            <TextInput value={assignedTo} onChange={e => setAssignedTo(e.target.value)} placeholder="Nom du conseiller MIDZOE" />
           </Field>
 
           <Field label="Notes de suivi">

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 // Epic 7 UI (7.7 dashboard, 7.8 assistant multi-destination, 7.9 checklist « prêt avant départ »).
 // Espace voyage autonome branché sur les endpoints /trips (vérifiés E2E 17/17).
@@ -20,7 +22,39 @@ interface Readiness { ready: boolean; done: number; total: number; missing: { ki
 
 const SERVICE_TYPES = ['flight', 'accommodation', 'visa', 'insurance', 'bank', 'language'];
 
+const SERVICE_LABELS: Record<string, string> = {
+  flight: 'Vol', accommodation: 'Logement', visa: 'Visa', insurance: 'Assurance', bank: 'Compte bancaire', language: 'Cours de langue',
+};
+const STATUS_LABELS: Record<string, string> = {
+  planning: 'En préparation', upcoming: 'À venir', ongoing: 'En cours', completed: 'Terminé',
+};
+// Fiches de projet enregistrées par les parcours Études / Tourisme : du JSON, pas une prestation.
+const RECORD_LABELS: Record<string, string> = { study_project: 'Projet d’études', tourism_project: 'Projet de voyage' };
+
+const statusLabel = (s: string) => STATUS_LABELS[s] ?? s;
+const visibleServices = (t: Trip) => (t.services || []).filter(s => !RECORD_LABELS[s.type] && s.status !== 'cancelled');
+const projectKind = (t: Trip) => (t.services || []).map(s => RECORD_LABELS[s.type]).find(Boolean);
+
 const MyTripsSpace: React.FC = () => {
+  const { user } = useAuth();
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-3xl mx-auto px-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Mon espace voyage</h1>
+          <p className="text-gray-500 mt-2">Connectez-vous pour créer vos voyages, suivre vos services et votre checklist de départ.</p>
+          <div className="flex justify-center gap-3 mt-6">
+            <Link to="/login?redirect=%2Fmy-trips" className="px-5 py-2.5 rounded-xl border border-primary text-primary font-medium">Se connecter</Link>
+            <Link to="/register?redirect=%2Fmy-trips" className="px-5 py-2.5 rounded-xl bg-primary text-white font-medium">Créer un compte</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return <TripSpace />;
+};
+
+const TripSpace: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [history, setHistory] = useState<Trip[]>([]);
   const [nextTrip, setNextTrip] = useState<Trip | null>(null);
@@ -68,7 +102,7 @@ const MyTripsSpace: React.FC = () => {
 
   const addService = async (type: string) => {
     if (!selected) return;
-    await apiService.addTripService(selected.id, { type, label: `${type} — ${selected.title}` });
+    await apiService.addTripService(selected.id, { type, label: SERVICE_LABELS[type] ?? type });
     await refreshSelected();
     await loadAll();
   };
@@ -141,7 +175,7 @@ const MyTripsSpace: React.FC = () => {
               {trips.length ? trips.map(tr => (
                 <button key={tr.id} onClick={() => openTrip(tr.id)} className={`text-left border rounded-lg p-4 hover:shadow ${selected?.id === tr.id ? 'border-primary ring-1 ring-primary' : 'border-gray-200'}`}>
                   <p className="font-medium text-primary">{tr.title}</p>
-                  <p className="text-sm text-gray-500">{tr.status} · {(tr.destinations || []).map(d => d.city || d.country).join(' → ')}</p>
+                  <p className="text-sm text-gray-500">{statusLabel(tr.status)} · {(tr.destinations || []).map(d => d.city || d.country).join(' → ')}</p>
                 </button>
               )) : <p className="text-gray-500">Aucun voyage pour l'instant.</p>}
             </div>
@@ -152,8 +186,18 @@ const MyTripsSpace: React.FC = () => {
         {selected && (
           <section className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">{selected.title}</h2>
-              <button onClick={async () => { await apiService.deleteTrip(selected.id); setSelected(null); await loadAll(); }} className="text-sm text-red-600">Supprimer</button>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800">{selected.title}</h2>
+                {projectKind(selected) && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {projectKind(selected)} — à modifier depuis votre <Link to="/dashboard" className="text-primary underline">dashboard</Link>.
+                  </p>
+                )}
+              </div>
+              <button onClick={async () => {
+                if (!window.confirm(`Supprimer « ${selected.title} » et tous ses services ? Cette action est définitive.`)) return;
+                await apiService.deleteTrip(selected.id); setSelected(null); await loadAll();
+              }} className="text-sm text-red-600">Supprimer</button>
             </div>
 
             {/* Services dynamiques */}
@@ -161,14 +205,14 @@ const MyTripsSpace: React.FC = () => {
               <p className="text-sm font-medium text-gray-700 mb-2">Services</p>
               <div className="flex flex-wrap gap-2 mb-3">
                 {SERVICE_TYPES.map(tp => (
-                  <button key={tp} onClick={() => addService(tp)} className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full">+ {tp}</button>
+                  <button key={tp} onClick={() => addService(tp)} className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full">+ {SERVICE_LABELS[tp]}</button>
                 ))}
               </div>
               <div className="space-y-2">
-                {(selected.services || []).map(svc => (
+                {visibleServices(selected).map(svc => (
                   <label key={svc.id} className="flex items-center gap-3 text-sm">
                     <input type="checkbox" checked={svc.status === 'done'} onChange={() => toggleService(svc)} />
-                    <span className={svc.status === 'done' ? 'line-through text-gray-400' : ''}>{svc.label} <span className="text-gray-400">({svc.type})</span></span>
+                    <span className={svc.status === 'done' ? 'line-through text-gray-400' : ''}>{svc.label}</span>
                   </label>
                 ))}
               </div>

@@ -4,13 +4,13 @@ import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiService } from '../services/api';
 import Newsletter from './Newsletter';
+import AccountSecurity from './AccountSecurity';
+import { ALL_COUNTRIES } from '../data/countryNames';
 import {
   UserIcon,
   EnvelopeIcon,
   PhoneIcon,
   GlobeAltIcon,
-  AcademicCapIcon,
-  BriefcaseIcon,
   LanguageIcon,
   PencilIcon,
   CheckIcon,
@@ -19,27 +19,6 @@ import {
   BellIcon,
 } from '@heroicons/react/24/outline';
 
-const ALL_COUNTRIES = [
-  'Afghanistan', 'Albania', 'Algeria', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
-  'Azerbaijan', 'Bahrain', 'Bangladesh', 'Belarus', 'Belgium', 'Benin', 'Bolivia', 'Bosnia',
-  'Botswana', 'Brazil', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada',
-  'Chad', 'Chile', 'China', 'Colombia', 'Congo', 'Costa Rica', "Côte d'Ivoire", 'Croatia',
-  'Cuba', 'Czech Republic', 'Denmark', 'Dominican Republic', 'DR Congo', 'Ecuador', 'Egypt',
-  'El Salvador', 'Ethiopia', 'Finland', 'France', 'Gabon', 'Georgia', 'Germany', 'Ghana',
-  'Greece', 'Guatemala', 'Guinea', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India',
-  'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan',
-  'Kazakhstan', 'Kenya', 'Kosovo', 'Kuwait', 'Laos', 'Latvia', 'Lebanon', 'Libya',
-  'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Mali', 'Malta', 'Mauritania',
-  'Mauritius', 'Mexico', 'Moldova', 'Mongolia', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia',
-  'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea',
-  'Norway', 'Oman', 'Pakistan', 'Palestine', 'Panama', 'Paraguay', 'Peru', 'Philippines',
-  'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saudi Arabia', 'Senegal',
-  'Serbia', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Somalia', 'South Africa',
-  'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Sweden', 'Switzerland',
-  'Syria', 'Taiwan', 'Tanzania', 'Thailand', 'Togo', 'Tunisia', 'Turkey', 'Uganda',
-  'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan',
-  'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
-].sort();
 
 const ALL_LANGUAGES = [
   'Afrikaans', 'Albanian', 'Amharic', 'Arabic', 'Armenian', 'Azerbaijani', 'Bambara',
@@ -56,28 +35,22 @@ const ALL_LANGUAGES = [
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'Natif'];
 
-const ALL_INTERESTS = [
-  'Adventure Travel', 'Architecture', 'Art & Design', 'Business & Entrepreneurship',
-  'Cinema & Film', 'Cooking & Gastronomy', 'Culture & Heritage', 'Dance & Performing Arts',
-  'Digital Nomad', 'Ecology & Environment', 'Education & Learning', 'Fashion & Style',
-  'Food & Cuisine', 'Health & Wellness', 'History & Archaeology', 'Hiking & Trekking',
-  'International Relations', 'Languages & Linguistics', 'Literature & Writing',
-  'Music', 'Nature & Wildlife', 'Photography', 'Politics & Society', 'Religion & Spirituality',
-  'Safari & Wildlife', 'Science & Technology', 'Sports', 'Start-ups & Innovation',
-  'Sustainable Living', 'Tourism & Discovery', 'Volunteering', 'Yoga & Meditation'
-].sort();
 
 const Profile: React.FC = () => {
-  const { user, updateUserLocally } = useAuth();
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  return <ProfileContent />;
+};
+
+const ProfileContent: React.FC = () => {
+  const { user: authUser, updateUserLocally } = useAuth();
+  const user = authUser!;
   const { t } = useTranslation('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-  const [interestDropdownOpen, setInterestDropdownOpen] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState('');
-
-  if (!user) return <Navigate to="/login" replace />;
 
   const [formData, setFormData] = useState({
     fullName: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || '',
@@ -86,9 +59,6 @@ const Profile: React.FC = () => {
     nationality: user.nationality || '',
     country_of_residence: user.country_of_residence || '',
     languages: (user.languages || []) as { language: string; level: string }[],
-    education: '',
-    occupation: '',
-    interests: [] as string[],
   });
 
   const addLanguage = (lang: string) => {
@@ -106,14 +76,6 @@ const Profile: React.FC = () => {
       languages: formData.languages.map(l => l.language === lang ? { ...l, level } : l),
     });
 
-  const toggleInterest = (interest: string) => {
-    const exists = formData.interests.includes(interest);
-    setFormData({
-      ...formData,
-      interests: exists ? formData.interests.filter(i => i !== interest) : [...formData.interests, interest],
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -122,7 +84,6 @@ const Profile: React.FC = () => {
     const changes = {
       first_name,
       last_name: rest.join(' ') || undefined,
-      email: formData.email || undefined,
       phone: formData.phone || undefined,
       nationality: formData.nationality || undefined,
       country_of_residence: formData.country_of_residence || undefined,
@@ -136,7 +97,6 @@ const Profile: React.FC = () => {
       setTimeout(() => setSaveSuccess(false), 3000);
       setIsEditing(false);
       setLangDropdownOpen(false);
-      setInterestDropdownOpen(false);
     } catch {
       // Une sauvegarde échouée doit se voir : on reste en édition pour préserver la saisie.
       setSaveError(t('save_error'));
@@ -227,11 +187,8 @@ const Profile: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700">{t('fields.email')}</label>
                       <div className="mt-1 flex items-center">
                         <EnvelopeIcon className="h-5 w-5 text-gray-400 mr-2 shrink-0" />
-                        {isEditing ? (
-                          <input type="email" value={formData.email}
-                            onChange={e => setFormData({ ...formData, email: e.target.value })}
-                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" />
-                        ) : <span className="text-gray-900">{formData.email}</span>}
+<span className="text-gray-900">{formData.email}</span>
+                        {isEditing && <span className="ml-2 text-xs text-gray-400">{t('security.email_note')}</span>}
                       </div>
                     </div>
 
@@ -281,38 +238,9 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Education & Work */}
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('education_work')}</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">{t('fields.education')}</label>
-                      <div className="mt-1 flex items-center">
-                        <AcademicCapIcon className="h-5 w-5 text-gray-400 mr-2 shrink-0" />
-                        {isEditing ? (
-                          <input type="text" value={formData.education}
-                            onChange={e => setFormData({ ...formData, education: e.target.value })}
-                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" />
-                        ) : <span className="text-gray-900">{formData.education || '—'}</span>}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">{t('fields.occupation')}</label>
-                      <div className="mt-1 flex items-center">
-                        <BriefcaseIcon className="h-5 w-5 text-gray-400 mr-2 shrink-0" />
-                        {isEditing ? (
-                          <input type="text" value={formData.occupation}
-                            onChange={e => setFormData({ ...formData, occupation: e.target.value })}
-                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" />
-                        ) : <span className="text-gray-900">{formData.occupation || '—'}</span>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Languages with levels */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('languages_interests')}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('fields.languages')}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                     <div>
@@ -349,7 +277,7 @@ const Profile: React.FC = () => {
                           {isEditing && (
                             <div className="relative">
                               <button type="button"
-                                onClick={() => { setLangDropdownOpen(!langDropdownOpen); setInterestDropdownOpen(false); }}
+                                onClick={() => { setLangDropdownOpen(!langDropdownOpen); }}
                                 className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-primary/10 hover:text-primary border border-gray-200">
                                 + {t('add_language')}
                               </button>
@@ -370,44 +298,6 @@ const Profile: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Interests */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('fields.interests')}</label>
-                      <div className="flex-1">
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          {formData.interests.map(interest => (
-                            <span key={interest} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary/10 text-secondary">
-                              {interest}
-                              {isEditing && (
-                                <button type="button" onClick={() => toggleInterest(interest)} className="ml-1 hover:text-red-500">
-                                  <XMarkIcon className="h-3 w-3" />
-                                </button>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                        {isEditing && (
-                          <div className="relative">
-                            <button type="button"
-                              onClick={() => { setInterestDropdownOpen(!interestDropdownOpen); setLangDropdownOpen(false); }}
-                              className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-secondary/10 hover:text-secondary border border-gray-200">
-                              + {t('add_interest')}
-                            </button>
-                            {interestDropdownOpen && (
-                              <div className="absolute z-20 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto">
-                                {ALL_INTERESTS.filter(i => !formData.interests.includes(i)).map(interest => (
-                                  <button key={interest} type="button"
-                                    onClick={() => { toggleInterest(interest); setInterestDropdownOpen(false); }}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-secondary/10 hover:text-secondary">
-                                    {interest}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </div>
 
@@ -424,6 +314,8 @@ const Profile: React.FC = () => {
             </form>
           </div>
         </div>
+
+        <AccountSecurity email={user.email ?? ''} />
 
         {/* Newsletter preferences */}
         <div className="mb-8">

@@ -20,5 +20,25 @@
   "enter_language": "Entrez une nouvelle langue",
   "enter_interest": "Entrez un nouvel intérêt",
   "saved": "Profil mis à jour avec succès.",
-  "save_error": "Impossible d'enregistrer votre profil. Veuillez réessayer."
+  "save_error": "Impossible d'enregistrer votre profil. Veuillez réessayer.",
+  "security": {
+    "title": "Sécurité du compte",
+    "password_title": "Changer mon mot de passe",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "new_hint": "6 caractères minimum",
+    "change_password": "Changer le mot de passe",
+    "password_changed": "Mot de passe modifié.",
+    "password_wrong": "Mot de passe actuel incorrect.",
+    "password_short": "Le nouveau mot de passe doit faire au moins 6 caractères.",
+    "email_title": "Changer mon adresse email",
+    "new_email": "Nouvelle adresse email",
+    "confirm_password": "Mot de passe (confirmation)",
+    "change_email": "Changer l’adresse",
+    "email_changed": "Adresse modifiée : saisissez le code reçu sur la nouvelle adresse à votre prochaine connexion.",
+    "email_taken": "Cette adresse est déjà utilisée par un autre compte.",
+    "email_invalid": "Adresse email invalide.",
+    "error": "Opération impossible. Réessayez plus tard.",
+    "email_note": "Pour changer d’adresse, utilisez la section « Sécurité du compte »."
+  }
 }

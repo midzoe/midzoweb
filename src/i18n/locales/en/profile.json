@@ -20,5 +20,25 @@
   "enter_language": "Enter new language",
   "enter_interest": "Enter new interest",
   "saved": "Profile updated successfully.",
-  "save_error": "Unable to save your profile. Please try again."
+  "save_error": "Unable to save your profile. Please try again.",
+  "security": {
+    "title": "Account security",
+    "password_title": "Change my password",
+    "current": "Current password",
+    "new": "New password",
+    "new_hint": "At least 6 characters",
+    "change_password": "Change password",
+    "password_changed": "Password changed.",
+    "password_wrong": "Current password is incorrect.",
+    "password_short": "The new password must be at least 6 characters.",
+    "email_title": "Change my email address",
+    "new_email": "New email address",
+    "confirm_password": "Password (confirmation)",
+    "change_email": "Change address",
+    "email_changed": "Address changed: enter the code sent to the new address next time you sign in.",
+    "email_taken": "This address is already used by another account.",
+    "email_invalid": "Invalid email address.",
+    "error": "Something went wrong. Please try again later.",
+    "email_note": "To change your address, use the “Account security” section."
+  }
 }

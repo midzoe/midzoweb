@@ -38,5 +38,23 @@
   "no_trips_subtitle": "Commencez à planifier votre premier voyage international avec Midzoe",
   "plan_trip_cta": "Planifier un Voyage",
   "recent_services_title": "Récemment Utilisés",
-  "explore_now": "Explorer les Services"
+  "explore_now": "Explorer les Services",
+  "trip_form": {
+    "new_title": "Nouveau voyage",
+    "edit_title": "Modifier le voyage",
+    "title": "Titre du voyage",
+    "destination": "Destination",
+    "start": "Date de départ",
+    "end": "Date de retour",
+    "status": "Statut",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "add": "Créer le voyage",
+    "close": "Fermer",
+    "dates_error": "La date de retour doit être postérieure à la date de départ.",
+    "delete_title": "Supprimer ce voyage ?",
+    "delete_text": "Le voyage et ses services seront supprimés. Cette action est définitive.",
+    "delete_failed": "La suppression a échoué. Réessayez plus tard."
+  },
+  "open_trip_space": "Mon espace voyage (étapes, services, checklist)"
 }

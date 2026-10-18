@@ -20,5 +20,25 @@
   "enter_language": "Neue Sprache eingeben",
   "enter_interest": "Neues Interesse eingeben",
   "saved": "Profil erfolgreich aktualisiert.",
-  "save_error": "Ihr Profil konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+  "save_error": "Ihr Profil konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+  "security": {
+    "title": "Kontosicherheit",
+    "password_title": "Passwort ändern",
+    "current": "Aktuelles Passwort",
+    "new": "Neues Passwort",
+    "new_hint": "Mindestens 6 Zeichen",
+    "change_password": "Passwort ändern",
+    "password_changed": "Passwort geändert.",
+    "password_wrong": "Aktuelles Passwort ist falsch.",
+    "password_short": "Das neue Passwort muss mindestens 6 Zeichen haben.",
+    "email_title": "E-Mail-Adresse ändern",
+    "new_email": "Neue E-Mail-Adresse",
+    "confirm_password": "Passwort (Bestätigung)",
+    "change_email": "Adresse ändern",
+    "email_changed": "Adresse geändert: Geben Sie bei der nächsten Anmeldung den an die neue Adresse gesendeten Code ein.",
+    "email_taken": "Diese Adresse wird bereits von einem anderen Konto verwendet.",
+    "email_invalid": "Ungültige E-Mail-Adresse.",
+    "error": "Vorgang nicht möglich. Bitte später erneut versuchen.",
+    "email_note": "Um Ihre Adresse zu ändern, nutzen Sie den Bereich „Kontosicherheit“."
+  }
 }
