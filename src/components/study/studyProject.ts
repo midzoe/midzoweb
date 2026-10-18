@@ -246,6 +246,47 @@ export interface VocationalOffer {
 
 export interface ShortlistedUniversity { id: number; name: string; city: string }
 export interface ShortlistedOffer { id: number; employer: string; city: string }
+export interface ChosenPackage { slug: string; name: string; family: string; priceFromCents: number; currency: string }
+
+/** Palier de la grille commerciale, tel que servi par `/packages/showcase`. */
+export interface ShowcasePackage {
+  id: number;
+  name: string;
+  slug: string | null;
+  family: string | null;
+  service_label: string | null;
+  price_from_cents: number;
+  currency: string;
+  features: string[];
+  order?: number;
+}
+
+/**
+ * Palier Study conseillé selon le nombre de services choisis, d'après les libellés de la
+ * plaquette : 1 service, 2 services, 3 à 4 services, 5 services, puis « Premium+ ».
+ */
+export function recommendedStudyPackage(tiers: ShowcasePackage[], serviceCount: number): ShowcasePackage | null {
+  if (!tiers.length || serviceCount === 0) return null;
+  const index = serviceCount <= 1 ? 0 : serviceCount === 2 ? 1 : serviceCount <= 4 ? 2 : serviceCount === 5 ? 3 : 4;
+  return tiers[Math.min(index, tiers.length - 1)];
+}
+
+export function formatPackagePrice(cents: number, currency = 'EUR'): string {
+  try {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(cents / 100);
+  } catch {
+    return `${Math.round(cents / 100)} ${currency}`;
+  }
+}
+
+export function toChosenPackage(p: ShowcasePackage): ChosenPackage {
+  return { slug: p.slug ?? String(p.id), name: p.name, family: p.family ?? '', priceFromCents: p.price_from_cents, currency: p.currency || 'EUR' };
+}
+
+export function packageLabel(p: ChosenPackage): string {
+  const family = p.family === 'study' ? 'Study ' : '';
+  return `${family}${p.name} (à partir de ${formatPackagePrice(p.priceFromCents, p.currency)})`;
+}
 
 export interface StudyProject {
   version: 1;
@@ -272,6 +313,8 @@ export interface StudyProject {
   shortlist: ShortlistedUniversity[];
   /** Offres d'Ausbildung retenues (niveau « Formation professionnelle »). */
   offerShortlist: ShortlistedOffer[];
+  /** Package commercial retenu (grille `/packages/showcase`), prix « à partir de » au moment du choix. */
+  package?: ChosenPackage | null;
   notes: string;
   tripId?: number;
   savedAt?: string;
@@ -318,6 +361,7 @@ export function normalizeProject(raw: any): StudyProject {
     services: arr(raw.services),
     shortlist: Array.isArray(raw.shortlist) ? raw.shortlist.filter((s: any) => s && typeof s.id === 'number') : [],
     offerShortlist: Array.isArray(raw.offerShortlist) ? raw.offerShortlist.filter((s: any) => s && typeof s.id === 'number') : [],
+    package: raw.package && typeof raw.package.slug === 'string' && typeof raw.package.priceFromCents === 'number' ? raw.package : null,
   };
 }
 
@@ -510,6 +554,7 @@ export function projectSummary(project: StudyProject, countryLabel?: string): st
     `Services demandés : ${project.services.map(serviceLabel).join(', ') || '—'}`,
     `Universités présélectionnées : ${project.shortlist.map(u => `${u.name} (${u.city})`).join(' ; ') || '—'}`,
     `Offres Ausbildung retenues : ${project.offerShortlist.map(o => `${o.employer} (${o.city})`).join(' ; ') || '—'}`,
+    `Package souhaité : ${project.package ? packageLabel(project.package) : 'pas encore choisi'}`,
   ];
   if (project.notes.trim()) lines.push('', `Notes : ${project.notes.trim()}`);
   return lines.join('\n');

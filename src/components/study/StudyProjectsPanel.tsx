@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   SavedStudyProject, StudyProject, STUDY_SERVICES,
-  deleteAccountProject, domainLabels, levelLabel, projectTitle,
+  deleteAccountProject, domainLabels, levelLabel, packageLabel, projectTitle,
 } from './studyProject';
 
 // Dashboard : projets d'études enregistrés dans le compte, et brouillon resté sur
@@ -140,6 +140,9 @@ const StudyProjectsPanel: React.FC<Props> = ({ isLoggedIn, projects, loading, er
                 {project.services.length === 0 && <span className="text-xs text-gray-400">Aucun service choisi</span>}
               </div>
 
+              <p className="text-xs text-gray-600 mt-2" data-testid="project-package">
+                Package : {project.package ? packageLabel(project.package) : <span className="text-gray-400">pas encore choisi</span>}
+              </p>
               {project.offerShortlist.length > 0 && (
                 <p className="text-xs text-gray-600 mt-2">
                   Offres Ausbildung : {project.offerShortlist.map(o => `${o.employer} (${o.city})`).join(' ; ')}

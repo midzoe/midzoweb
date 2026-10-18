@@ -51,10 +51,12 @@ const Contact: React.FC = () => {
     setErrorMsg('');
     try {
       const selected = subjects.find((s) => s.id === formData.category);
+      // Demande venue de la grille des packages : l'objet le dit, l'admin la repère sans ouvrir le message.
+      const pkg = new URLSearchParams(window.location.search).get('package');
       await apiService.sendContact({
         name: formData.name,
         email: formData.email,
-        subject: selected?.name,
+        subject: pkg ? `Demande de package — ${pkg}` : selected?.name,
         category: formData.category || undefined,
         subcategory: formData.subcategory || undefined,
         message: formData.message,

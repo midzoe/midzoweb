@@ -194,8 +194,19 @@ const Packages: React.FC = () => {
 
   const priceOf = (p: ShowcasePackage) => formatPrice(p.price_from_cents, p.currency, i18n.language);
 
-  /** CTA : la demande passe par le formulaire de contact, pré-rempli avec le package choisi. */
-  const chooseHref = (p: ShowcasePackage) => `/contact?package=${encodeURIComponent(p.name)}`;
+  /**
+   * CTA : un palier Study ouvre le projet d'études avec ce package présélectionné (il y
+   * prend son sens : services, pays, demande). Les autres familles passent par le
+   * formulaire de contact, pré-rempli avec la famille, le palier et le prix — « Premium »
+   * seul ne disait pas de quelle grille il s'agissait.
+   */
+  const chooseHref = (p: ShowcasePackage) => {
+    if (p.family === 'study' && p.slug) return `/study?package=${encodeURIComponent(p.slug)}`;
+    const label = p.family && p.family !== 'consultation'
+      ? `${t(`family_${p.family}`)} ${p.name} — ${priceOf(p)}`
+      : `${p.name} — ${priceOf(p)}`;
+    return `/contact?package=${encodeURIComponent(label)}`;
+  };
 
   return (
     <div className="min-h-screen bg-cream">
@@ -270,7 +281,7 @@ const Packages: React.FC = () => {
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <h2 className="text-center font-display text-2xl font-semibold text-stone-900 sm:text-3xl">
           {t(`family_${family}_title`)}
         </h2>
@@ -460,7 +471,7 @@ const Packages: React.FC = () => {
             {t('custom_cta')}
           </Link>
         </section>
-      </main>
+      </div>
 
       {/* ── Bandeau de confiance ──────────────────────────────────────────── */}
       <footer className="border-t border-stone-200/70 bg-white">

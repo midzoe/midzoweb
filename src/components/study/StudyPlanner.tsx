@@ -5,7 +5,8 @@ import { apiService } from '../../services/api';
 import { AFRICAN_COUNTRIES, CountryOption } from '../../data/africanCountries';
 import {
   DOMAINS, FORMATS, LEVELS, STUDY_SERVICES, TEACHING_LANGUAGES,
-  StudyProject, University, UniversityMatch, VocationalOffer,
+  ShowcasePackage, StudyProject, University, UniversityMatch, VocationalOffer,
+  formatPackagePrice, packageLabel, recommendedStudyPackage, toChosenPackage,
   cityKey, cityMatches, clearDraft, emptyProject, fold, levelLabel, loadAccountProject,
   loadDraft, matchUniversities, projectSummary, projectTitle, saveDraft, saveProjectToAccount,
 } from './studyProject';
@@ -168,6 +169,7 @@ const StudyPlanner: React.FC = () => {
   const [orientation, setOrientation] = useState<OrientationResource[]>([]);
   const [visa, setVisa] = useState<any>(null);
   const [offers, setOffers] = useState<VocationalOffer[]>([]);
+  const [showcase, setShowcase] = useState<ShowcasePackage[]>([]);
 
   const update = (patch: Partial<StudyProject>) => {
     setProject(prev => ({ ...prev, ...patch }));
@@ -222,6 +224,7 @@ const StudyPlanner: React.FC = () => {
   useEffect(() => {
     apiService.getStudyCountries().then(r => setStudyCountries(r?.data ?? [])).catch(() => setStudyCountries([]));
     apiService.getOrientation().then(r => setOrientation(r?.data ?? [])).catch(() => setOrientation([]));
+    apiService.getShowcasePackages().then(r => setShowcase(r?.data ?? r?.packages ?? [])).catch(() => setShowcase([]));
   }, []);
 
   // Données propres à la destination.
@@ -254,6 +257,15 @@ const StudyPlanner: React.FC = () => {
       .catch(() => mounted && setVisa({ error: true }));
     return () => { mounted = false; };
   }, [project.profile.nationality, project.destination]);
+
+  // Arrivée depuis la grille des packages (`/packages` → « Choisir » sur un palier Study).
+  const packageParam = searchParams.get('package');
+  useEffect(() => {
+    if (!packageParam || !showcase.length) return;
+    const tier = showcase.find(p => p.slug === packageParam);
+    if (tier && project.package?.slug !== tier.slug) update({ package: toChosenPackage(tier) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [packageParam, showcase]);
 
   // ── Dérivés ─────────────────────────────────────────────────────────────────
 
@@ -301,6 +313,13 @@ const StudyPlanner: React.FC = () => {
   // Ausbildung : offres du domaine choisi (soins infirmiers par défaut), dans les villes choisies d'abord.
   const isVocational = project.level === 'vocational';
   const offersForDomain = offers.filter(o => project.domains.length === 0 || project.domains.includes(o.domain));
+  // Grille commerciale : paliers Study (ordre de la plaquette) + consultation.
+  const studyTiers = showcase
+    .filter(p => p.family === 'study')
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.price_from_cents - b.price_from_cents);
+  const consultationTier = showcase.find(p => p.family === 'consultation') ?? null;
+  const recommended = recommendedStudyPackage(studyTiers, project.services.length);
+
   const offersInCities = project.cities.length
     ? offersForDomain.filter(o => project.cities.some(city => cityMatches(o.city, city)))
     : offersForDomain;
@@ -437,7 +456,7 @@ const StudyPlanner: React.FC = () => {
       await apiService.sendContact({
         name: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username,
         email: user.email || '',
-        subject: `Demande d'accompagnement — ${projectTitle(saved, countryLabel)}`,
+        subject: `Demande d'accompagnement — ${projectTitle(saved, countryLabel)}${saved.package ? ` — package ${saved.package.name}` : ''}`,
         category: 'study',
         message: projectSummary(saved, countryLabel),
       });
@@ -983,6 +1002,54 @@ const StudyPlanner: React.FC = () => {
               aria-label="Précisions pour le conseiller" placeholder="Précisions pour le conseiller (budget, contraintes, questions…)"
               className={`${fieldClass} mt-4`} />
           </Section>
+
+          {/* 5. Package */}
+          <Section step={5} title="Votre package" id="sp-package"
+            subtitle="Le palier dépend du nombre de services. Après votre demande, un conseiller confirme le package et vous transmet les modalités de paiement.">
+            {studyTiers.length === 0 ? (
+              <p className="text-sm text-gray-500">Chargement des packages…</p>
+            ) : (
+              <>
+                {recommended && (
+                  <p className="text-sm text-gray-700 mb-3" data-testid="package-recommendation">
+                    Pour {project.services.length} service(s), nous vous conseillons le package <strong>{recommended.name}</strong>
+                    {' '}(à partir de {formatPackagePrice(recommended.price_from_cents, recommended.currency)}).
+                  </p>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3" role="group" aria-label="Package">
+                  {[...studyTiers, ...(consultationTier ? [consultationTier] : [])].map(tier => {
+                    const active = project.package?.slug === tier.slug;
+                    const isRecommended = recommended?.slug === tier.slug;
+                    return (
+                      <button key={tier.id} type="button" aria-pressed={active}
+                        onClick={() => update({ package: active ? null : toChosenPackage(tier) })}
+                        className={`flex flex-col justify-start text-left p-4 rounded-xl border-2 transition-colors ${active ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'}`}>
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-gray-900">{tier.name}</span>
+                          {isRecommended && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary text-white">Conseillé</span>}
+                        </span>
+                        <span className="block text-sm text-primary font-bold mt-1">
+                          à partir de {formatPackagePrice(tier.price_from_cents, tier.currency)}
+                        </span>
+                        {tier.service_label && <span className="block text-xs text-gray-500 mt-0.5">{tier.service_label}</span>}
+                        {!!tier.features?.length && (
+                          <ul className="mt-2 space-y-0.5 text-xs text-gray-600">
+                            {tier.features.slice(0, 3).map(f => <li key={f}>• {f}</li>)}
+                          </ul>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {project.package && recommended && project.package.slug !== recommended.slug && project.package.family === 'study' && (
+                  <p className="mt-3 text-xs text-amber-700">
+                    Le package {project.package.name} ne correspond pas au nombre de services choisis ({project.services.length}) : le conseiller ajustera avec vous.
+                  </p>
+                )}
+                <Link to="/packages" className="inline-block mt-3 text-sm text-secondary hover:text-primary underline">Comparer tous les packages →</Link>
+              </>
+            )}
+          </Section>
         </div>
 
         {/* Récapitulatif + actions */}
@@ -1005,6 +1072,9 @@ const StudyPlanner: React.FC = () => {
               </dd></div>
               <div><dt className="text-gray-500">Présélection ({project.shortlist.length})</dt><dd className="font-medium text-gray-900">
                 {project.shortlist.map(s => s.name).join(' ; ') || '—'}
+              </dd></div>
+              <div><dt className="text-gray-500">Package</dt><dd className="font-medium text-gray-900" data-testid="summary-package">
+                {project.package ? packageLabel(project.package) : '—'}
               </dd></div>
               {project.offerShortlist.length > 0 && (
                 <div><dt className="text-gray-500">Offres Ausbildung ({project.offerShortlist.length})</dt><dd className="font-medium text-gray-900">
