@@ -99,7 +99,7 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold mb-6">Tourism</h4>
             <ul className="space-y-3 text-sm">
               <li><Link to="/tourism" className="text-gray-400 hover:text-white transition">Experiences</Link></li>
-              <li><Link to="/services/tourist-sites" className="text-gray-400 hover:text-white transition">Trip Builder</Link></li>
+              <li><Link to="/tourism/plan" className="text-gray-400 hover:text-white transition">Trip Builder</Link></li>
               <li><Link to="/community" className="text-gray-400 hover:text-white transition">Community</Link></li>
               <li><Link to="/tourism" className="text-gray-400 hover:text-white transition">Guides</Link></li>
               <li><Link to="/contact" className="text-gray-400 hover:text-white transition">Deals</Link></li>

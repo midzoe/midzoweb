@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useState } from 'react';
+import { usePricing } from '../pricing/usePricing';
+import { formatEuros } from '../pricing/pricingEngine';
 // import { useTranslation } from 'react-i18next';
 
 const DestinationGuide = () => {
@@ -10,6 +12,7 @@ const DestinationGuide = () => {
   // Guide data for different destinations
   const guides: Record<string, any> = {
     botswana: {
+      country: 'Botswana',
       title: 'Botswana — The Jewel of Africa',
       subtitle: 'Pristine wilderness, authentic safaris, and unforgettable encounters',
       hero: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
@@ -67,11 +70,6 @@ const DestinationGuide = () => {
           included: '✈️ Transfer to airport'
         }
       ],
-      pricing: [
-        { package: 'Essential Safari', duration: '5 days/4 nights', price: '$1,899', includes: 'Lodge accommodation, 4 game drives, meals, guides' },
-        { package: 'Premium Safari', duration: '7 days/6 nights', price: '$2,899', includes: 'Luxury lodge, unlimited game drives, cultural experience, flights' },
-        { package: 'Exclusive Luxury', duration: '10 days/9 nights', price: '$4,999', includes: 'Multiple lodges, private guides, helicopter tours, champagne dinners' }
-      ],
       whatToExpect: [
         {
           icon: '🌅',
@@ -93,28 +91,33 @@ const DestinationGuide = () => {
           title: 'Authentic Accommodation',
           desc: 'Luxury bush camps offer comfort while keeping you immersed in nature.'
         }
-      ],
-      reviews: [
-        {
-          author: 'Ahmed K.',
-          text: 'The most magical week of my life. Saw a leopard hunt. Guides were incredible.',
-          rating: 5
-        },
-        {
-          author: 'Sophie L.',
-          text: 'Worth every penny. Botswana exceeded all expectations. Coming back next year!',
-          rating: 5
-        },
-        {
-          author: 'James W.',
-          text: 'Photography opportunities were endless. Best safari experience ever.',
-          rating: 5
-        }
       ]
     }
   };
 
-  const guide = guides[destination] || guides.botswana;
+  const guide = guides[destination.toLowerCase()];
+  const { pricing } = usePricing();
+  const tourismTiers = (pricing?.packages ?? []).filter(p => p.family === 'tourism');
+
+  // Une destination sans guide affichait jusqu'ici le guide du Botswana sous son propre titre.
+  if (!guide) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-lg text-center bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
+          <h1 className="text-2xl font-bold text-gray-900">Guide pas encore disponible</h1>
+          <p className="text-gray-600 mt-3">
+            Nous n'avons pas encore de guide détaillé pour cette destination. Composez votre voyage : un conseiller
+            MIDZOE vous prépare un programme sur mesure.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 mt-6">
+            <Link to="/tourism/plan" className="px-6 py-3 bg-orange-600 text-white font-bold rounded-lg">Composer mon voyage</Link>
+            <Link to="/tourism" className="px-6 py-3 border-2 border-orange-600 text-orange-600 font-bold rounded-lg">Toutes les destinations</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const planHref = `/tourism/plan?country=${encodeURIComponent(guide.country)}`;
 
   return (
     <div className="min-h-screen bg-white">
@@ -164,7 +167,7 @@ const DestinationGuide = () => {
                 Peak season offers the best wildlife viewing, cooler temperatures, and optimal photography conditions.
               </p>
               <Link
-                to="/trip-builder"
+                to={planHref}
                 className="block text-center px-6 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition-colors"
               >
                 Plan Your Visit
@@ -176,7 +179,7 @@ const DestinationGuide = () => {
         {/* Tabs */}
         <div className="mb-16">
           <div className="flex border-b border-gray-200 mb-8 gap-8 overflow-x-auto">
-            {['itinerary', 'pricing', 'expect', 'reviews'].map((tab) => (
+            {['itinerary', 'pricing', 'expect'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -189,7 +192,6 @@ const DestinationGuide = () => {
                 {tab === 'itinerary' && '📋 Itinerary'}
                 {tab === 'pricing' && '💰 Pricing'}
                 {tab === 'expect' && '✓ What to Expect'}
-                {tab === 'reviews' && '⭐ Reviews'}
               </button>
             ))}
           </div>
@@ -215,20 +217,25 @@ const DestinationGuide = () => {
             </div>
           )}
 
-          {/* Pricing */}
+          {/* Pricing : grille tarifaire réelle (services à la carte ou packages Tourism) */}
           {activeTab === 'pricing' && (
-            <div className="grid md:grid-cols-3 gap-6">
-              {guide.pricing.map((pkg: any, i: number) => (
-                <div key={i} className="border-2 border-gray-200 rounded-xl p-8 hover:border-orange-600 transition-colors">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.package}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{pkg.duration}</p>
-                  <p className="text-3xl font-black text-orange-600 mb-6">{pkg.price}</p>
-                  <p className="text-sm text-gray-700 mb-6">{pkg.includes}</p>
-                  <button className="w-full py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition-colors">
-                    Book Now
-                  </button>
-                </div>
-              ))}
+            <div>
+              <p className="text-gray-700 mb-6 max-w-3xl">
+                Le prix dépend des services que vous choisissez (guide, hébergement, itinéraire, accueil à l'aéroport…).
+                Composez votre voyage pour obtenir le prix exact : nous comparons le prix à la carte et nos packages Tourism.
+              </p>
+              <div className="grid md:grid-cols-4 gap-4">
+                {tourismTiers.map(t => (
+                  <div key={t.id} className="border-2 border-gray-200 rounded-xl p-6">
+                    <h3 className="text-lg font-bold text-gray-900">{t.name}</h3>
+                    <p className="text-sm text-gray-600 mb-3">{t.service_label}</p>
+                    <p className="text-2xl font-black text-orange-600">{formatEuros(t.price_from_cents, t.currency)}</p>
+                  </div>
+                ))}
+              </div>
+              <Link to={planHref} className="inline-block mt-6 px-6 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700">
+                Calculer le prix de mon voyage
+              </Link>
             </div>
           )}
 
@@ -245,22 +252,6 @@ const DestinationGuide = () => {
             </div>
           )}
 
-          {/* Reviews */}
-          {activeTab === 'reviews' && (
-            <div className="space-y-6">
-              {guide.reviews.map((review: any, i: number) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-8 border-l-4 border-yellow-400">
-                  <div className="flex items-center gap-2 mb-3">
-                    {[...Array(review.rating)].map((_, j) => (
-                      <span key={j} className="text-yellow-400 text-xl">★</span>
-                    ))}
-                  </div>
-                  <p className="text-gray-700 mb-3">"{review.text}"</p>
-                  <p className="font-semibold text-gray-900">— {review.author}</p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Final CTA */}
@@ -271,7 +262,7 @@ const DestinationGuide = () => {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              to="/trip-builder"
+              to={planHref}
               className="px-8 py-4 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
             >
               Build Your Custom Trip

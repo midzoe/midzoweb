@@ -33,10 +33,12 @@ const Contact: React.FC = () => {
   // avec le package retenu, pour que la demande parte avec son objet réel. Le texte reste
   // entièrement modifiable — c'est une amorce, pas un message imposé.
   useEffect(() => {
-    const pkg = new URLSearchParams(window.location.search).get('package');
-    if (!pkg) return;
+    const params = new URLSearchParams(window.location.search);
+    const pkg = params.get('package');
+    const service = params.get('service');
+    if (!pkg && !service) return;
     setFormData((prev) =>
-      prev.message ? prev : { ...prev, message: t('package_prefill', { package: pkg }) }
+      prev.message ? prev : { ...prev, message: pkg ? t('package_prefill', { package: pkg }) : t('service_prefill', { service }) }
     );
   }, [t]);
 
@@ -52,11 +54,13 @@ const Contact: React.FC = () => {
     try {
       const selected = subjects.find((s) => s.id === formData.category);
       // Demande venue de la grille des packages : l'objet le dit, l'admin la repère sans ouvrir le message.
-      const pkg = new URLSearchParams(window.location.search).get('package');
+      const params = new URLSearchParams(window.location.search);
+      const pkg = params.get('package');
+      const service = params.get('service');
       await apiService.sendContact({
         name: formData.name,
         email: formData.email,
-        subject: pkg ? `Demande de package — ${pkg}` : selected?.name,
+        subject: pkg ? `Demande de package — ${pkg}` : service ? `Demande de service — ${service}` : selected?.name,
         category: formData.category || undefined,
         subcategory: formData.subcategory || undefined,
         message: formData.message,

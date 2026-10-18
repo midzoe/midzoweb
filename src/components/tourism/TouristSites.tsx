@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Sites touristiques servis par le backend (TouristSite).
 interface TouristSite {
@@ -137,9 +138,9 @@ const TouristSites: React.FC = () => {
                       </p>
                     )}
                   </div>
-                  <button className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
+                  <ActionButton href={(site as any).link} service={`Site touristique — ${site.name}`} className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
                     Book Tickets
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

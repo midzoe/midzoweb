@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Prestataires de légalisation ET de reconnaissance, servis par le backend
 // (ServiceProvider, serviceType = "legalization" | "recognition").
@@ -233,9 +234,9 @@ const DocumentServices: React.FC = () => {
                       </ul>
                     </div>
                   </div>
-                  <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                  <ActionButton href={(service as any).link} service={`Légalisation de documents — ${service.provider}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
                     Get Started
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

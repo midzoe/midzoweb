@@ -33,5 +33,6 @@
     "address": "Adresse",
     "hours": "Horaires"
   },
-  "package_prefill": "Bonjour,\n\nJe suis intéressé(e) par le package « {{package}} ». Pouvez-vous me recontacter pour en discuter ?\n\nMerci."
+  "package_prefill": "Bonjour,\n\nJe suis intéressé(e) par le package « {{package}} ». Pouvez-vous me recontacter pour en discuter ?\n\nMerci.",
+  "service_prefill": "Bonjour,\n\nJe souhaite être accompagné(e) pour : « {{service}} ». Pouvez-vous me recontacter ?\n\nMerci."
 }

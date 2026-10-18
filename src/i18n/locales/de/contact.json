@@ -33,5 +33,6 @@
     "address": "Adresse",
     "hours": "Öffnungszeiten"
   },
-  "package_prefill": "Guten Tag,\n\nich interessiere mich für das Paket « {{package}} ». Könnten Sie mich dazu kontaktieren?\n\nVielen Dank."
+  "package_prefill": "Guten Tag,\n\nich interessiere mich für das Paket « {{package}} ». Könnten Sie mich dazu kontaktieren?\n\nVielen Dank.",
+  "service_prefill": "Guten Tag,\n\nich möchte Unterstützung bei: « {{service}} ». Könnten Sie mich kontaktieren?\n\nVielen Dank."
 }

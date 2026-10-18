@@ -14,7 +14,10 @@ import TripForm from './TripForm';
 import TripWizard from './TripWizard';
 import NotificationsPanel from './notifications/NotificationsPanel';
 import StudyProjectsPanel from './study/StudyProjectsPanel';
-import { SavedStudyProject, loadAccountTrips, loadDraft } from './study/studyProject';
+import { SavedStudyProject, loadDraft, parseStudyTrips, PROJECT_SERVICE_TYPE } from './study/studyProject';
+import TourismProjectsPanel from './tourism/TourismProjectsPanel';
+import { SavedTourismProject, loadTourismDraft, parseTourismTrips, TOURISM_RECORD_TYPE } from './tourism/tourismProject';
+import { loadTripDetails, recordOf } from './projects/tripRecords';
 import { apiService } from '../services/api';
 
 interface Trip {
@@ -71,6 +74,8 @@ const Dashboard: React.FC = () => {
   const [tripsLoading, setTripsLoading]       = useState(false);
   const [tripsError, setTripsError]           = useState('');
   const [studyDraft]                          = useState(() => loadDraft());
+  const [tourismProjects, setTourismProjects] = useState<SavedTourismProject[]>([]);
+  const [tourismDraft]                        = useState(() => loadTourismDraft());
 
   // Trips et projets d'études viennent du compte : ils survivent au rechargement
   // et à la reconnexion (ils vivaient auparavant dans l'état local de la page).
@@ -79,8 +84,10 @@ const Dashboard: React.FC = () => {
     setTripsLoading(true);
     setTripsError('');
     try {
-      const { projects, otherTrips } = await loadAccountTrips();
-      setStudyProjects(projects);
+      const details = await loadTripDetails();
+      setStudyProjects(parseStudyTrips(details));
+      setTourismProjects(parseTourismTrips(details));
+      const otherTrips = details.filter(t => !recordOf(t, PROJECT_SERVICE_TYPE) && !recordOf(t, TOURISM_RECORD_TYPE));
       setTrips(otherTrips.map(toTrip));
     } catch {
       setTripsError('Impossible de charger vos projets. Réessayez plus tard.');
@@ -197,6 +204,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           <StudyProjectsPanel isLoggedIn={false} projects={[]} loading={false} error="" draft={studyDraft} onChanged={() => {}} />
+          <TourismProjectsPanel isLoggedIn={false} projects={[]} loading={false} draft={tourismDraft} onChanged={() => {}} />
         </div>
       </div>
     );
@@ -346,6 +354,14 @@ const Dashboard: React.FC = () => {
               loading={tripsLoading}
               error={tripsError}
               draft={studyDraft}
+              onChanged={loadTrips}
+            />
+
+            <TourismProjectsPanel
+              isLoggedIn
+              projects={tourismProjects}
+              loading={tripsLoading}
+              draft={tourismDraft}
               onChanged={loadTrips}
             />
 

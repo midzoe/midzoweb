@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Formations servies par le backend (Training).
 interface Training {
@@ -237,9 +238,9 @@ const TrainingFinder: React.FC = () => {
                       </ul>
                     </div>
                   </div>
-                  <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                  <ActionButton href={training.link} service={`Formation — ${training.provider}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
                     Enroll Now
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

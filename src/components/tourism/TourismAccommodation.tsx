@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Hébergements touristiques servis par le backend (TourismAccommodation, tarif à la nuit).
 // Le logement étudiant au mois reste sur son propre modèle (story 5.6).
@@ -164,9 +165,9 @@ const TourismAccommodation: React.FC = () => {
                       </p>
                     )}
                   </div>
-                  <button className="mt-4 w-full bg-gold-500 hover:bg-gold-600 text-slate-900 py-2 px-4 rounded-lg font-semibold transition-colors duration-200">
+                  <ActionButton href={(accommodation as any).link} service={`Hébergement — ${accommodation.name}`} className="mt-4 w-full bg-gold-500 hover:bg-gold-600 text-slate-900 py-2 px-4 rounded-lg font-semibold transition-colors duration-200">
                     Book Now
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

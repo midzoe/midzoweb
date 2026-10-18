@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiService } from '../services/api';
 import Newsletter from './Newsletter';
@@ -449,9 +449,9 @@ const Profile: React.FC = () => {
                 <p className="text-white/90 text-sm mb-3">
                   Accédez aux alertes visa automatiques, aux recommandations personnalisées et à un suivi dédié de vos voyages.
                 </p>
-                <button className="px-4 py-2 bg-white text-orange-600 font-semibold rounded-lg text-sm hover:bg-white/90">
+                <Link to="/packages" className="inline-block px-4 py-2 bg-white text-orange-600 font-semibold rounded-lg text-sm hover:bg-white/90">
                   Découvrir Premium
-                </button>
+                </Link>
               </div>
             </div>
           </div>

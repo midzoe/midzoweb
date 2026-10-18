@@ -279,9 +279,10 @@ const SafariAfrica = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-gold-600">{dest.price}</span>
+                  {/* Prix non publiés : aucun tarif de safari n'est validé dans la grille MIDZOE. */}
+                  <span className="text-lg font-semibold text-gold-600">Prix sur devis</span>
                   <Link
-                    to="/contact"
+                    to={`/contact?service=${encodeURIComponent(`Safari — ${dest.country}`)}`}
                     className="px-6 py-2.5 bg-gold-500 hover:bg-gold-600 text-slate-900 rounded-lg font-semibold text-sm transition-colors duration-200"
                   >
                     {t.cta}

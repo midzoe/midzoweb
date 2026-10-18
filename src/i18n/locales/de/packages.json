@@ -6,7 +6,6 @@
   "chip_support": "24/7 Support",
   "chip_experts": "Lokale Expert:innen",
   "chip_secure": "Sicher & vertrauenswürdig",
-
   "family_study": "Studium",
   "family_study_title": "Studienpakete — bauen Sie Ihre Zukunft",
   "family_tourism": "Tourismus",
@@ -14,7 +13,6 @@
   "family_mix": "Mix",
   "family_mix_title": "Mix-Pakete — Studium & Reisen kombiniert",
   "family_mix_subtitle": "Das Beste aus beiden Welten in einer einzigen Reise.",
-
   "included_services": "Die abgedeckten Leistungen",
   "tier_level": "Stufe {{current}} von {{total}}",
   "price_from": "ab",
@@ -23,13 +21,11 @@
   "choose": "Auswählen",
   "no_packages": "Derzeit ist kein Paket veröffentlicht.",
   "load_error": "Die Pakete konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
-
   "consultation_eyebrow": "Unentschlossen?",
   "consultation_title": "Buchen Sie eine persönliche Beratung",
   "consultation_text": "Unsere Expert:innen finden mit Ihnen das Paket, das zu Ihren Bedürfnissen und Ihrem Budget passt.",
   "consultation_cta": "Beratung buchen",
   "consultation_note": "Jetzt zu zahlen",
-
   "trust_security": "Vertrauen & Sicherheit",
   "trust_security_text": "Geprüfte Partner und ein sicherer Ablauf — für Ihre Ruhe.",
   "trust_support": "24/7 Support",
@@ -40,11 +36,9 @@
   "trust_flexible_text": "Pakete, die auf Ihre Bedürfnisse und Ihr Budget zugeschnitten sind.",
   "trust_mission": "Ihr Erfolg, unsere Mission",
   "trust_mission_text": "Wir setzen alles daran, Ihre Erfahrung unvergesslich zu machen.",
-
   "custom_title": "Nichts passt genau?",
   "custom_text": "Stellen Sie Ihr Paket Leistung für Leistung zusammen und sehen Sie den Preis in Echtzeit.",
   "custom_cta": "Eigenes Paket zusammenstellen",
-
   "study_1_title": "Legalisierung & Anerkennung von Dokumenten",
   "study_1_text": "Bewertung, Legalisierung, Übersetzung und Anerkennung Ihrer Zeugnisse und akademischen Unterlagen.",
   "study_2_title": "Universitätssuche & Einschreibung",
@@ -55,7 +49,6 @@
   "study_4_text": "Unterkunftssuche, Kontoeröffnung und finanzielle Begleitung.",
   "study_5_title": "Visum & Ankunft",
   "study_5_text": "Visumbegleitung, Flugbuchung, Abholung am Flughafen und Orientierung vor Ort.",
-
   "tourism_1_title": "Unterkunft",
   "tourism_1_text": "Sorgfältig ausgewählte Hotels, Apartments oder Villen — passend zu Budget und Stil.",
   "tourism_2_title": "Flugbuchung",
@@ -65,5 +58,19 @@
   "tourism_4_title": "Lokale Guides & Betreuung",
   "tourism_4_text": "Lokale Guides, 24/7-Betreuung und Unterstützung vor Ort.",
   "tourism_5_title": "Lokale Sprache (Option)",
-  "tourism_5_text": "Kurse in der Landessprache, kulturelles Eintauchen und echter Austausch."
+  "tourism_5_text": "Kurse in der Landessprache, kulturelles Eintauchen und echter Austausch.",
+  "calc_title": "Ihren genauen Preis berechnen",
+  "calc_text": "Wählen Sie Ihre Leistungen: Wir vergleichen Einzelpreis und Pakete und empfehlen das günstigste Angebot.",
+  "calc_study": "Mein Studienprojekt planen",
+  "calc_tourism": "Meine Reise planen",
+  "unit_title": "Einzelpreise der Leistungen",
+  "unit_text": "Jede Leistung ist einzeln buchbar. Pakete bündeln mehrere Leistungen günstiger.",
+  "unit_study": "Studienleistungen",
+  "unit_tourism": "Tourismusleistungen",
+  "unit_total": "Summe bei Einzelbuchung",
+  "payment_title": "Zahlungsoptionen",
+  "payment_text": "Der Rabatt hängt von der Anzahl der Raten ab. Beispiel mit {{example}} ({{price}}):",
+  "payment_once": "Einmalzahlung",
+  "payment_n": "{{n}} Monatsraten",
+  "payment_discount": "{{pct}} % Rabatt"
 }

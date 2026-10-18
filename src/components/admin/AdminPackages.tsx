@@ -64,18 +64,24 @@ interface Row {
   order: number;
   categories: string[];
   base_price_cents: number;
+  min_services?: number | null;
+  max_services?: number | null;
+  value_cap_cents?: number | null;
 }
 
 type FormState = {
   name: string; family: string; slug: string; tagline: string; serviceLabel: string;
   description: string; priceFrom: string; billingPeriod: string; currency: string;
   features: string[]; badge: string; isHighlighted: boolean; isActive: boolean; order: string;
+  /** Couverture du palier (grille tarifaire) : vide = sans limite. */
+  minServices: string; maxServices: string; valueCap: string;
 };
 
 const EMPTY_FORM: FormState = {
   name: '', family: 'study', slug: '', tagline: '', serviceLabel: '', description: '',
   priceFrom: '', billingPeriod: 'once', currency: 'EUR', features: [], badge: '',
   isHighlighted: false, isActive: true, order: '',
+  minServices: '', maxServices: '', valueCap: '',
 };
 
 /** Centimes → euros affichables dans un champ (jamais de « 150.00 » quand le prix est rond). */
@@ -182,6 +188,9 @@ const AdminPackages: React.FC = () => {
       isHighlighted: r.is_highlighted,
       isActive: r.is_active,
       order: String(r.order ?? ''),
+      minServices: r.min_services != null ? String(r.min_services) : '',
+      maxServices: r.max_services != null ? String(r.max_services) : '',
+      valueCap: r.value_cap_cents != null ? centsToInput(r.value_cap_cents) : '',
     });
     setFeatureDraft('');
     setSlugTouched(true);
@@ -230,6 +239,10 @@ const AdminPackages: React.FC = () => {
         is_highlighted: form.isHighlighted,
         is_active: form.isActive,
         order: form.order.trim() === '' ? 0 : parseInt(form.order, 10),
+        // Vide = sans limite (FULL, consultation) : null efface la valeur.
+        min_services: form.minServices.trim() === '' ? null : parseInt(form.minServices, 10),
+        max_services: form.maxServices.trim() === '' ? null : parseInt(form.maxServices, 10),
+        value_cap_cents: form.valueCap.trim() === '' ? null : Math.round(Number(form.valueCap.replace(',', '.')) * 100),
       };
       if (editingId !== null) {
         await apiService.adminUpdatePackage(editingId, payload);
@@ -579,6 +592,25 @@ const AdminPackages: React.FC = () => {
                 {BILLING.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
               </Select>
             </Field>
+          </div>
+
+          <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-400 mb-3">Couverture (calcul du prix)</p>
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="Services min.">
+                <TextInput type="number" min={0} value={form.minServices} onChange={e => setForm({ ...form, minServices: e.target.value })} placeholder="2" />
+              </Field>
+              <Field label="Services max.">
+                <TextInput type="number" min={0} value={form.maxServices} onChange={e => setForm({ ...form, maxServices: e.target.value })} placeholder="4" />
+              </Field>
+              <Field label="Valeur couverte (€)">
+                <TextInput type="number" min={0} value={form.valueCap} onChange={e => setForm({ ...form, valueCap: e.target.value })} placeholder="400" />
+              </Field>
+            </div>
+            <p className="mt-2 text-xs text-stone-400">
+              Un palier est proposé quand la sélection ne dépasse ni le nombre maximal de services ni la valeur couverte,
+              et qu'il coûte moins cher qu'à la carte. Laisser vide = sans limite (FULL, consultation).
+            </p>
           </div>
 
           <Field label="Avantages affichés sur la carte">

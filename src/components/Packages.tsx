@@ -9,6 +9,8 @@ import {
   CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
+import { usePricing } from '../pricing/usePricing';
+import { formatEuros, paymentPlan } from '../pricing/pricingEngine';
 import { useCategories } from '../hooks/useCategories';
 
 /**
@@ -193,6 +195,8 @@ const Packages: React.FC = () => {
   const theme = THEME[family];
 
   const priceOf = (p: ShowcasePackage) => formatPrice(p.price_from_cents, p.currency, i18n.language);
+  const { pricing } = usePricing();
+  const paymentExample = packages.find(p => p.slug === 'mix-xxl') ?? packages.find(p => p.family !== 'consultation');
 
   /**
    * CTA : un palier Study ouvre le projet d'études avec ce package présélectionné (il y
@@ -201,7 +205,9 @@ const Packages: React.FC = () => {
    * seul ne disait pas de quelle grille il s'agissait.
    */
   const chooseHref = (p: ShowcasePackage) => {
-    if (p.family === 'study' && p.slug) return `/study?package=${encodeURIComponent(p.slug)}`;
+    // Study et Mix : projet d'études (le Mix y ajoute des services tourisme) ; Tourism : voyage.
+    if ((p.family === 'study' || p.family === 'mix') && p.slug) return `/study?package=${encodeURIComponent(p.slug)}`;
+    if (p.family === 'tourism' && p.slug) return `/tourism/plan?package=${encodeURIComponent(p.slug)}`;
     const label = p.family && p.family !== 'consultation'
       ? `${t(`family_${p.family}`)} ${p.name} — ${priceOf(p)}`
       : `${p.name} — ${priceOf(p)}`;
@@ -457,20 +463,81 @@ const Packages: React.FC = () => {
           </section>
         )}
 
-        {/* ── Package sur mesure : renvoi vers le constructeur à la carte ─── */}
-        <section className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-stone-200/80 bg-white p-8 text-center shadow-card sm:flex-row sm:justify-between sm:text-left">
+        {/* ── Calcul du prix exact : les deux parcours ────────────────────── */}
+        <section className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-stone-200/80 bg-white p-8 text-center shadow-card lg:flex-row lg:justify-between lg:text-left">
           <div>
-            <h2 className="font-display text-xl font-semibold text-stone-900">{t('custom_title')}</h2>
-            <p className="mt-1 text-sm text-stone-600">{t('custom_text')}</p>
+            <h2 className="font-display text-xl font-semibold text-stone-900">{t('calc_title')}</h2>
+            <p className="mt-1 text-sm text-stone-600">{t('calc_text')}</p>
           </div>
-          <Link
-            to="/premium"
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl border-2 border-primary px-5 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
-          >
-            <SparklesIcon className="h-4 w-4" />
-            {t('custom_cta')}
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row shrink-0">
+            <Link to="/study" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark">
+              <AcademicCapIcon className="h-4 w-4" /> {t('calc_study')}
+            </Link>
+            <Link to="/tourism/plan" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold-600 px-5 py-3 text-sm font-semibold text-white hover:bg-gold-700">
+              <SunIcon className="h-4 w-4" /> {t('calc_tourism')}
+            </Link>
+          </div>
         </section>
+
+        {/* ── Prix des services à l'unité ─────────────────────────────────── */}
+        {pricing && pricing.services.length > 0 && (
+          <section className="mt-12" data-testid="unit-prices">
+            <h2 className="font-display text-2xl font-semibold text-stone-900">{t('unit_title')}</h2>
+            <p className="mt-1 text-sm text-stone-600">{t('unit_text')}</p>
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {(['study', 'tourism'] as const).map(fam => {
+                const list = pricing.services.filter(sv => sv.family === fam);
+                return (
+                  <div key={fam} className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-card">
+                    <h3 className={`px-5 py-3 text-sm font-semibold text-white ${fam === 'study' ? 'bg-primary' : 'bg-gold-600'}`}>
+                      {t(fam === 'study' ? 'unit_study' : 'unit_tourism')}
+                    </h3>
+                    <table className="w-full text-sm">
+                      <tbody>
+                        {list.map(sv => (
+                          <tr key={sv.code} className="border-b border-stone-100">
+                            <td className="px-4 py-2 text-stone-400 w-12">{sv.code}</td>
+                            <td className="px-2 py-2 text-stone-700">{sv.name}</td>
+                            <td className="px-4 py-2 text-right font-semibold tabular-nums text-stone-900 whitespace-nowrap">{formatEuros(sv.price_cents, sv.currency)}</td>
+                          </tr>
+                        ))}
+                        <tr className="bg-stone-50 font-semibold">
+                          <td className="px-4 py-2" colSpan={2}>{t('unit_total')}</td>
+                          <td className="px-4 py-2 text-right tabular-nums">{formatEuros(list.reduce((n, sv) => n + sv.price_cents, 0))}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ── Options de paiement ─────────────────────────────────────────── */}
+        {pricing && pricing.payment_options.length > 0 && paymentExample && (
+          <section className="mt-12" data-testid="payment-options">
+            <h2 className="font-display text-2xl font-semibold text-stone-900">{t('payment_title')}</h2>
+            <p className="mt-1 text-sm text-stone-600">
+              {t('payment_text', { example: paymentExample.name, price: formatEuros(paymentExample.price_from_cents, paymentExample.currency) })}
+            </p>
+            <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {pricing.payment_options.map(opt => {
+                const plan = paymentPlan(paymentExample.price_from_cents, opt);
+                return (
+                  <div key={opt.installments} className="rounded-2xl border border-stone-200 bg-white p-5 text-center shadow-card">
+                    <p className="text-sm font-semibold text-stone-800">{opt.installments === 1 ? t('payment_once') : t('payment_n', { n: opt.installments })}</p>
+                    <p className="mt-1 text-xs font-semibold text-emerald-700">{t('payment_discount', { pct: opt.discount_pct })}</p>
+                    <p className="mt-3 font-display text-2xl font-semibold tabular-nums text-stone-900">
+                      {opt.installments === 1 ? formatEuros(plan.totalCents) : `${opt.installments} × ${formatEuros(plan.perInstallmentCents)}`}
+                    </p>
+                    {opt.installments > 1 && <p className="text-xs text-stone-500">≈ {formatEuros(plan.totalCents)}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* ── Bandeau de confiance ──────────────────────────────────────────── */}

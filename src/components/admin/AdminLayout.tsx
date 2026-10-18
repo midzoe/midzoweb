@@ -100,6 +100,7 @@ const navGroups: {
       { href: '/admin/banks', label: 'Banques', icon: BanknotesIcon },
       { href: '/admin/services', label: 'Catalogue services', icon: Squares2X2Icon },
       { href: '/admin/packages', label: 'Packages', icon: CubeIcon },
+      { href: '/admin/price-grid', label: 'Grille tarifaire', icon: CurrencyEuroIcon },
       { href: '/admin/pricing', label: 'Tarifs (devis)', icon: CurrencyEuroIcon },
       { href: '/admin/countries', label: 'Pays (fiches)', icon: GlobeAltIcon },
       { href: '/admin/settings', label: 'Paramètres', icon: Cog6ToothIcon },

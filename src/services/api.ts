@@ -192,6 +192,25 @@ class ApiService {
    * Grille commerciale publique (page /packages) : les paliers Study / Tourism / Mix
    * et la consultation, déjà regroupés par famille et triés par le backend.
    */
+  /** Grille tarifaire : prix des services, paliers avec couverture, options de paiement. */
+  async getPricing() {
+    return this.request<any>('/pricing');
+  }
+
+  // Admin : prix unitaires de la grille tarifaire.
+  async adminGetPricedServices() {
+    return this.request<any>('/admin/priced-services');
+  }
+  async adminCreatePricedService(data: object) {
+    return this.request<any>('/admin/priced-services', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdatePricedService(id: number, data: object) {
+    return this.request<any>(`/admin/priced-services/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeletePricedService(id: number) {
+    return this.request<any>(`/admin/priced-services/${id}`, { method: 'DELETE' });
+  }
+
   async getShowcasePackages() {
     return this.request<any>('/packages/showcase');
   }
@@ -643,6 +662,10 @@ class ApiService {
   }
 
   // ─── Epic 6 — Tourisme (public) ─────────────────────────────
+  /** Pays de tourisme publiés (fiche : saison, budget, visa, attractions…). */
+  async getTourismCountries() {
+    return this.request<any>('/tourism-countries');
+  }
   async getTourismPrograms(subcategory?: string) {
     const qs = subcategory ? `?subcategory=${encodeURIComponent(subcategory)}` : '';
     return this.request<any>(`/tourism/programs${qs}`);

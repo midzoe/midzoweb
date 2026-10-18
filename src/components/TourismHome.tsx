@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useNews, NewsItem } from '../hooks/useNews';
+import { usePricing } from '../pricing/usePricing';
+import { formatEuros } from '../pricing/pricingEngine';
 import { useCategories, catalogText } from '../hooks/useCategories';
 import {
   CalendarIcon,
@@ -17,19 +19,16 @@ import {
 const TourismHome = () => {
   const { i18n } = useTranslation();
   const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
-  const [liveCount, setLiveCount] = useState(487);
   const [showQuiz, setShowQuiz] = useState(false);
   // Pas de filtre `scope` : la section affiche l'ensemble des actualités, comme avant.
   const { news: newsItems, loading: newsLoading } = useNews();
   const { categories: catalogCategories, serviceDetails } = useCategories();
   const tServices = useMemo(() => i18n.getFixedT(null, 'services'), [i18n, i18n.language]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveCount(prev => prev + Math.floor(Math.random() * 3));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  // Paliers Tourism de la grille tarifaire (à la place d'offres « limitées » inventées).
+  const { pricing } = usePricing();
+  const tourismTiers = (pricing?.packages ?? []).filter(p => p.family === 'tourism');
+  const tourismServicesValue = (pricing?.services ?? []).filter(sv => sv.family === 'tourism').reduce((n, sv) => n + sv.price_cents, 0);
 
   const getTitle = (item: NewsItem) =>
     lang === 'fr' ? item.titleFr : lang === 'de' ? item.titleDe : item.title;
@@ -57,57 +56,6 @@ const TourismHome = () => {
         link: detail.learnMoreLink,
       }));
   }, [catalogCategories, serviceDetails, tServices]);
-
-  const deals = [
-    {
-      title: 'World Cup 2026 — VIP Package',
-      price: '$3,299',
-      original: '$4,200',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      countdown: '12 jours'
-    },
-    {
-      title: 'Botswana Safari — 7 days',
-      price: '$1,899',
-      original: '$2,400',
-      image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      countdown: '5 jours'
-    },
-    {
-      title: 'Paris Marathon + City Tour',
-      price: '$899',
-      original: '$1,199',
-      image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-      countdown: '20 jours'
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: 'Marie D.',
-      location: 'Paris, France',
-      trip: 'World Cup 2026 — USA',
-      text: 'Je n\'oublierai jamais ce moment. Midzoe a organisé chaque détail parfaitement. Transport, hôtel, billets — sans stress!',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
-      rating: 5
-    },
-    {
-      name: 'Ahmed K.',
-      location: 'Cairo, Egypt',
-      trip: 'Botswana Safari',
-      text: 'Les guides locaux étaient incroyables. J\'ai vu des choses que je pensais impossible. Worth every penny!',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
-      rating: 5
-    },
-    {
-      name: 'Fatima S.',
-      location: 'Dakar, Senegal',
-      trip: 'Sports Tourism — Marathon Monaco',
-      text: 'J\'ai toujours voulu faire Monaco. Midzoe l\'a rendu possible et mémorable. Recommandé!',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
-      rating: 5
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -148,9 +96,8 @@ const TourismHome = () => {
             Le monde vous attend. Des événements épiques aux safaris sauvages. Vivez des expériences qui transforment la vie.
           </p>
 
-          {/* Live counter — Social Proof */}
           <div className="mb-10 inline-block bg-emerald-500/15 border border-emerald-400/40 rounded-full px-6 py-3 backdrop-blur-sm">
-            <span className="text-emerald-200 font-semibold">🔥 {liveCount} voyageurs réservent cette semaine</span>
+            <span className="text-emerald-200 font-semibold">Prix transparents : services à l'unité ou packages, calculés en ligne</span>
           </div>
 
           <div className="flex flex-wrap justify-center gap-4">
@@ -214,7 +161,7 @@ const TourismHome = () => {
 
             <div className="mt-8 p-4 bg-slate-50 border border-slate-200 rounded-lg">
               <p className="text-sm text-slate-700"><strong>Conseil:</strong> Pas sûr? Utilisez notre Trip Builder pour customiser 100% votre voyage.</p>
-              <Link to="/trip-builder" className="inline-block mt-3 px-6 py-2 bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors duration-200">
+              <Link to="/tourism/plan" className="inline-block mt-3 px-6 py-2 bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors duration-200">
                 Aller au Trip Builder
               </Link>
             </div>
@@ -269,80 +216,43 @@ const TourismHome = () => {
         </div>
       </div>
 
-      {/* EXCLUSIVE DEALS — Limited Time */}
-      <div className="py-24 bg-gradient-to-br from-gold-50 to-slate-50 border-y border-gold-200">
+      {/* PACKAGES TOURISM — grille tarifaire réelle */}
+      <div className="py-24 bg-gradient-to-br from-gold-50 to-slate-50 border-y border-gold-200" data-testid="tourism-tiers">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <span className="inline-block bg-gold-600 text-white px-4 py-2 rounded-lg font-semibold mb-4 text-sm tracking-wide">
-              ✨ OFFRES LIMITÉES
-            </span>
-            <h2 className="text-4xl font-bold text-slate-900">Deals Exclusives Cette Semaine</h2>
+            <h2 className="text-4xl font-bold text-slate-900">Nos packages Tourism</h2>
+            <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
+              Choisissez vos services : guide, restaurants, vols, événements, hébergement, itinéraire, guide local, accueil à l'aéroport…
+              {tourismServicesValue > 0 && ` Pris séparément, les 10 services valent ${formatEuros(tourismServicesValue)}.`}
+            </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {deals.map((deal, i) => (
-              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 group">
-                <div className="relative h-48 overflow-hidden">
-                  <img src={deal.image} alt={deal.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <div className="absolute top-4 right-4 bg-gold-600 text-white px-4 py-2 rounded-lg font-semibold text-sm">
-                    -{Math.round((1 - parseInt(deal.price.replace('$', '')) / parseInt(deal.original.replace('$', ''))) * 100)}%
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-slate-900 mb-3 line-clamp-2">{deal.title}</h3>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-bold text-gold-600">{deal.price}</span>
-                    <span className="text-sm text-slate-500 line-through">{deal.original}</span>
-                  </div>
-                  <div className="mb-4 inline-block bg-slate-100 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold">
-                    ⏰ Expire dans {deal.countdown}
-                  </div>
-                  <button className="w-full py-3 bg-gold-500 hover:bg-gold-600 text-slate-900 font-semibold rounded-lg transition-colors duration-200">
-                    Réserver Maintenant
-                  </button>
-                </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {tourismTiers.map(tier => (
+              <div key={tier.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-slate-100 p-6 flex flex-col">
+                <h3 className="font-semibold text-slate-900 text-lg">{tier.name}</h3>
+                <p className="text-sm text-slate-500 mb-4">{tier.service_label}</p>
+                <span className="text-3xl font-bold text-gold-600">{formatEuros(tier.price_from_cents, tier.currency)}</span>
+                <ul className="mt-4 space-y-1 text-sm text-slate-600 flex-1">
+                  {(tier.features ?? []).map(f => <li key={f}>• {f}</li>)}
+                </ul>
+                <Link
+                  to={`/tourism/plan?package=${encodeURIComponent(tier.slug ?? '')}`}
+                  className="mt-6 block text-center w-full py-3 bg-gold-500 hover:bg-gold-600 text-slate-900 font-semibold rounded-lg transition-colors duration-200"
+                >
+                  Composer ce voyage
+                </Link>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-12">
-            <p className="text-slate-600 mb-4 font-light">Plus d'offres apparaissent chaque semaine...</p>
             <Link
-              to="/trip-builder"
+              to="/tourism/plan"
               className="inline-block px-8 py-4 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors duration-200"
             >
               Construire Mon Voyage Personnalisé
             </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* TESTIMONIALS — Social Proof */}
-      <div className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center text-slate-900 mb-16 tracking-tight">
-            Ce que disent nos voyageurs
-          </h2>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            {testimonials.map((testi, i) => (
-              <div key={i} className="bg-slate-50 rounded-lg p-8 border border-slate-100 hover:shadow-md transition-shadow duration-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <img src={testi.image} alt={testi.name} className="w-12 h-12 rounded-full object-cover border border-slate-200" />
-                  <div>
-                    <h3 className="font-semibold text-slate-900">{testi.name}</h3>
-                    <p className="text-xs text-slate-600">{testi.location}</p>
-                  </div>
-                </div>
-                <div className="flex gap-1 mb-3">
-                  {[...Array(testi.rating)].map((_, j) => (
-                    <span key={j} className="text-gold-400">★</span>
-                  ))}
-                </div>
-                <p className="text-slate-700 italic mb-4 font-light">"{testi.text}"</p>
-                <p className="text-xs text-gold-600 font-semibold">{testi.trip}</p>
-              </div>
-            ))}
           </div>
         </div>
       </div>

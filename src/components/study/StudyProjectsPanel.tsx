@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   SavedStudyProject, StudyProject, STUDY_SERVICES,
-  deleteAccountProject, domainLabels, levelLabel, packageLabel, projectTitle,
+  deleteAccountProject, domainLabels, levelLabel, projectTitle,
 } from './studyProject';
+import { snapshotLabel } from '../../pricing/priceChoice';
 
 // Dashboard : projets d'études enregistrés dans le compte, et brouillon resté sur
 // l'appareil (parcours sans compte, ou projet pas encore enregistré).
@@ -141,7 +142,7 @@ const StudyProjectsPanel: React.FC<Props> = ({ isLoggedIn, projects, loading, er
               </div>
 
               <p className="text-xs text-gray-600 mt-2" data-testid="project-package">
-                Package : {project.package ? packageLabel(project.package) : <span className="text-gray-400">pas encore choisi</span>}
+                Offre : {project.price.snapshot ? snapshotLabel(project.price.snapshot) : <span className="text-gray-400">à définir</span>}
               </p>
               {project.offerShortlist.length > 0 && (
                 <p className="text-xs text-gray-600 mt-2">

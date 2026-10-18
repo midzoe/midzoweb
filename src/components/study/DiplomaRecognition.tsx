@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Organismes de reconnaissance de diplôme servis par le backend
 // (ServiceProvider, serviceType = "recognition").
@@ -183,9 +184,9 @@ const DiplomaRecognition: React.FC = () => {
                       {service.successRate}
                     </p>
                   </div>
-                  <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                  <ActionButton href={(service as any).link} service={`Reconnaissance de diplôme — ${service.provider}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
                     Start Process
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../hooks/useCountries';
 import { useApiList } from '../hooks/useApiList';
 import { apiService } from '../services/api';
+import ActionButton from './common/ActionButton';
 
 // Vols servis par le backend (Flight, audience = "general").
 interface Flight {
@@ -226,7 +227,9 @@ const FlightBooking: React.FC = () => {
             </div>
           </div>
 
-          <button className="mt-6 w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors">
+          {/* Les filtres s'appliquent en direct : le bouton amène aux résultats. */}
+          <button type="button" onClick={() => document.getElementById('flight-results')?.scrollIntoView({ behavior: 'smooth' })}
+            className="mt-6 w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors">
             Search Flights
           </button>
         </div>
@@ -246,7 +249,7 @@ const FlightBooking: React.FC = () => {
 
         {/* Results */}
         {!loading && (
-        <div className="space-y-6">
+        <div className="space-y-6" id="flight-results">
           {filteredFlights.length > 0 ? (
             filteredFlights.map(flight => (
               <div key={flight.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -313,9 +316,9 @@ const FlightBooking: React.FC = () => {
                       <div className="text-sm text-gray-600">
                         <span className="font-medium">Baggage:</span> {flight.baggage}
                       </div>
-                      <button className="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary/90 transition-colors">
+                      <ActionButton href={(flight as any).link} service={`Vol — ${flight.airline}`} className="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary/90 transition-colors">
                         Book Now
-                      </button>
+                      </ActionButton>
                     </div>
                   </div>
                 </div>

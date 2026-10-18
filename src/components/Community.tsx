@@ -18,6 +18,25 @@ const Community = () => {
   // const { i18n } = useTranslation();
   // const lang = i18n.language.startsWith('fr') ? 'fr' : i18n.language.startsWith('de') ? 'de' : 'en';
   const [liked, setLiked] = useState<number[]>([]);
+  const [copied, setCopied] = useState<number | null>(null);
+
+  // Partage : feuille de partage du téléphone si disponible, sinon lien copié.
+  const storyUrl = (id: number) => `${window.location.origin}/community#story-${id}`;
+  const copyLink = async (id: number) => {
+    try {
+      await navigator.clipboard.writeText(storyUrl(id));
+      setCopied(id);
+      setTimeout(() => setCopied(c => (c === id ? null : c)), 2000);
+    } catch {
+      window.prompt('Copiez ce lien :', storyUrl(id));
+    }
+  };
+  const share = async (id: number, title: string) => {
+    if (navigator.share) {
+      try { await navigator.share({ title, url: storyUrl(id) }); return; } catch { /* partage annulé */ }
+    }
+    await copyLink(id);
+  };
 
   const stories: Story[] = [
     {
@@ -119,6 +138,7 @@ const Community = () => {
           {stories.map((story) => (
             <div
               key={story.id}
+              id={`story-${story.id}`}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
             >
               {/* Image */}
@@ -172,12 +192,12 @@ const Community = () => {
                       : story.likes}
                   </button>
 
-                  <button className="text-gray-600 hover:text-gray-900 font-semibold">
+                  <button type="button" onClick={() => share(story.id, story.trip)} className="text-gray-600 hover:text-gray-900 font-semibold">
                     💬 Share
                   </button>
 
-                  <button className="text-gray-600 hover:text-gray-900">
-                    🔗
+                  <button type="button" onClick={() => copyLink(story.id)} aria-label="Copier le lien" className="text-gray-600 hover:text-gray-900">
+                    {copied === story.id ? '✓ Lien copié' : '🔗'}
                   </button>
                 </div>
               </div>
@@ -193,7 +213,7 @@ const Community = () => {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              to="/trip-builder"
+              to="/tourism/plan"
               className="px-8 py-4 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition-colors"
             >
               Build Your Trip 🚀

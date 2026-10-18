@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Restaurants servis par le backend (Restaurant).
 interface Restaurant {
@@ -132,9 +133,9 @@ const TourismRestaurants: React.FC = () => {
                       </p>
                     )}
                   </div>
-                  <button className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
+                  <ActionButton href={(restaurant as any).link} service={`Restaurant — ${restaurant.name}`} className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
                     Reserve Table
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

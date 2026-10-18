@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Offres d'emploi servies par le backend (Job).
 interface Job {
@@ -194,12 +195,9 @@ const JobsFinder: React.FC = () => {
                   </div>
 
                   <div className="mt-6 flex justify-end space-x-4">
-                    <button className="px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary/10 transition-colors">
-                      Save Job
-                    </button>
-                    <button className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                    <ActionButton href={job.applyUrl} service={`Candidature — ${job.title} (${job.company})`} className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
                       Apply Now
-                    </button>
+                    </ActionButton>
                   </div>
                 </div>
               </div>

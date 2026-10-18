@@ -41,6 +41,7 @@ import AdminTourismAccommodations from './components/admin/AdminTourismAccommoda
 import AdminJobs from './components/admin/AdminJobs';
 import AdminTrainings from './components/admin/AdminTrainings';
 import AdminVocationalTrainings from './components/admin/AdminVocationalTrainings';
+import AdminPricedServices from './components/admin/AdminPricedServices';
 import ForgotPassword from './components/ForgotPassword';
 import AdminServiceProviders from './components/admin/AdminServiceProviders';
 import OrientationResources from './components/Orientation';
@@ -69,6 +70,7 @@ import CountryDetail from './components/CountryDetail';
 // Study Components
 import UniversityFinder from './components/study/UniversityFinder';
 import StudyPlanner from './components/study/StudyPlanner';
+import TourismPlanner from './components/tourism/TourismPlanner';
 import DocumentServices from './components/study/DocumentLegalization';
 import StudentVisa from './components/study/StudentVisa';
 import StudentAccommodation from './components/study/StudentAccommodation';
@@ -117,7 +119,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
 }
 
 /** Pages où l'on remplit quelque chose : la popup d'inscription n'y apparaît pas. */
-const TASK_PAGES = /^\/(study|login|register|forgot-password|dashboard|profile|my-trips|premium|admin|contact)(\/|$)/;
+const TASK_PAGES = /^\/(study|tourism\/plan|login|register|forgot-password|dashboard|profile|my-trips|premium|admin|contact)(\/|$)/;
 
 /** Popup « lead magnet » : visiteurs non connectés, hors pages de tâche. */
 function LeadCapture() {
@@ -160,6 +162,7 @@ function AppContent() {
             <Route path="/admin/accommodations" element={<AdminLayout><AdminAccommodations /></AdminLayout>} />
             <Route path="/admin/packages" element={<AdminLayout><AdminPackages /></AdminLayout>} />
             <Route path="/admin/pricing" element={<AdminLayout><AdminPricing /></AdminLayout>} />
+            <Route path="/admin/price-grid" element={<AdminLayout><AdminPricedServices /></AdminLayout>} />
             <Route path="/admin/services" element={<AdminLayout><AdminServices /></AdminLayout>} />
             <Route path="/admin/contact-messages" element={<AdminLayout><AdminContactMessages /></AdminLayout>} />
             <Route path="/admin/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
@@ -181,6 +184,7 @@ function AppContent() {
             {/* ─── Public Routes ─────────────────────────────── */}
             <Route path="/" element={<><Hero /><NewsSlider /></>} />
             <Route path="/tourism" element={<TourismHome />} />
+            <Route path="/tourism/plan" element={<TourismPlanner />} />
             <Route path="/community" element={<Community />} />
             <Route path="/destination/:destination" element={<DestinationGuide />} />
             <Route path="/actualites/:id" element={<NewsArticle />} />

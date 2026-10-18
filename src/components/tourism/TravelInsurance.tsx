@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Assurances voyage servies par le backend (InsurancePlan, audience = "travel").
 interface Insurance {
@@ -113,9 +114,9 @@ const TravelInsurance: React.FC = () => {
                       {insurance.coverage}
                     </p>
                   </div>
-                  <button className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
+                  <ActionButton href={(insurance as any).link} service={`Assurance voyage — ${insurance.provider}`} className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
                     Get Quote
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Prestataires de visa travail servis par le backend
 // (ServiceProvider, serviceType = "work_visa").
@@ -194,9 +195,9 @@ const WorkVisa: React.FC = () => {
                     </div>
                   </div>
 
-                  <button className="mt-6 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                  <ActionButton href={(service as any).link} service={`Visa de travail — ${service.provider}`} className="mt-6 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
                     Start Application
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Vols étudiants servis par le backend (Flight, audience = "student").
 // Les filtres pays/type sont appliqués côté serveur.
@@ -147,9 +148,9 @@ const StudentFlights: React.FC = () => {
                       {flight.baggage}
                     </p>
                   </div>
-                  <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                  <ActionButton href={(flight as any).link} service={`Vol étudiant — ${flight.airline}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
                     Book Now
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             ))

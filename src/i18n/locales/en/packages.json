@@ -6,7 +6,6 @@
   "chip_support": "24/7 support",
   "chip_experts": "Local experts",
   "chip_secure": "Secure & trusted",
-
   "family_study": "Study",
   "family_study_title": "Study packages — build your future",
   "family_tourism": "Tourism",
@@ -14,7 +13,6 @@
   "family_mix": "Mix",
   "family_mix_title": "Mix packages — study & tourism combined",
   "family_mix_subtitle": "The best of both worlds in a single, seamless journey.",
-
   "included_services": "What's covered",
   "tier_level": "Level {{current}} of {{total}}",
   "price_from": "from",
@@ -23,13 +21,11 @@
   "choose": "Choose",
   "no_packages": "No package has been published yet.",
   "load_error": "Could not load the packages. Please try again.",
-
   "consultation_eyebrow": "Not sure?",
   "consultation_title": "Book a personalized consultation",
   "consultation_text": "Our experts help you find the package tailored to your needs and your budget.",
   "consultation_cta": "Book my consultation",
   "consultation_note": "To be paid now",
-
   "trust_security": "Trust & security",
   "trust_security_text": "Verified partners and a secure process, for your peace of mind.",
   "trust_support": "24/7 support",
@@ -40,11 +36,9 @@
   "trust_flexible_text": "Packages designed for your needs and your budget.",
   "trust_mission": "Your success, our mission",
   "trust_mission_text": "We are committed to making your experience unforgettable.",
-
   "custom_title": "None of these fits exactly?",
   "custom_text": "Build your own package service by service and get your price live.",
   "custom_cta": "Build my custom package",
-
   "study_1_title": "Document legalization & recognition",
   "study_1_text": "Evaluation, legalization, translation and recognition of your diplomas and academic documents.",
   "study_2_title": "University finder & enrollment",
@@ -55,7 +49,6 @@
   "study_4_text": "Find accommodation and open a bank account, with financial guidance.",
   "study_5_title": "Visa & arrival support",
   "study_5_text": "Visa guidance, flight booking, airport pickup and local orientation.",
-
   "tourism_1_title": "Accommodation",
   "tourism_1_text": "Carefully selected hotels, apartments or villas to match your budget and style.",
   "tourism_2_title": "Flight booking",
@@ -65,5 +58,19 @@
   "tourism_4_title": "Local guide & assistance",
   "tourism_4_text": "Local guides, 24/7 assistance and on-site support during your stay.",
   "tourism_5_title": "Learn the local language (option)",
-  "tourism_5_text": "Local language courses, cultural immersion and authentic exchanges."
+  "tourism_5_text": "Local language courses, cultural immersion and authentic exchanges.",
+  "calc_title": "Get your exact price",
+  "calc_text": "Pick your services: we compare the à la carte price with our packages and recommend the cheapest.",
+  "calc_study": "Build my study project",
+  "calc_tourism": "Build my trip",
+  "unit_title": "Individual service prices",
+  "unit_text": "Each service can be taken on its own. Packages bundle several services for less.",
+  "unit_study": "Study services",
+  "unit_tourism": "Tourism services",
+  "unit_total": "Total if purchased individually",
+  "payment_title": "Payment options",
+  "payment_text": "The discount depends on the number of instalments. Example with {{example}} ({{price}}):",
+  "payment_once": "One payment",
+  "payment_n": "{{n}} monthly payments",
+  "payment_discount": "{{pct}}% off"
 }

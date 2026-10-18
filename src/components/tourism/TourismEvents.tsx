@@ -395,9 +395,10 @@ const TourismEvents = () => {
                   </ul>
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                  <span className="text-2xl font-bold text-primary">{event.price}</span>
+                  {/* Prix non publiés : aucun tarif d'événement n'est validé dans la grille MIDZOE. */}
+                  <span className="text-lg font-semibold text-primary">Prix sur devis</span>
                   <Link
-                    to="/contact"
+                    to={`/contact?service=${encodeURIComponent(event.event)}`}
                     className={`px-6 py-3 rounded-lg font-semibold transition-colors duration-200 ${
                       event.status === 'available'
                         ? 'bg-primary hover:bg-primary/90 text-white'

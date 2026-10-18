@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
+import ActionButton from '../common/ActionButton';
 
 // Banques et comptes étudiants servis par le backend (Bank + BankAccountType).
 interface BankAccountType {
@@ -263,9 +264,9 @@ const BankAccount: React.FC = () => {
                           </div>
                         </div>
 
-                        <button className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
+                        <ActionButton href={(account as any).link} service={`Compte bancaire — ${account.name}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
                           Open Account
-                        </button>
+                        </ActionButton>
                       </div>
                     ))}
                   </div>

@@ -5,12 +5,16 @@ import { apiService } from '../../services/api';
 import { AFRICAN_COUNTRIES, CountryOption } from '../../data/africanCountries';
 import {
   DOMAINS, FORMATS, LEVELS, STUDY_SERVICES, TEACHING_LANGUAGES,
-  ShowcasePackage, StudyProject, University, UniversityMatch, VocationalOffer,
-  formatPackagePrice, packageLabel, recommendedStudyPackage, toChosenPackage,
+  StudyProject, University, UniversityMatch, VocationalOffer, projectCodes,
   cityKey, cityMatches, clearDraft, emptyProject, fold, levelLabel, loadAccountProject,
   loadDraft, matchUniversities, projectSummary, projectTitle, saveDraft, saveProjectToAccount,
 } from './studyProject';
 import { COUNTRY_GUIDES, levelGuide } from './studyGuides';
+import { Chip, InfoCard, LinkList, Section, externalHref, fieldClass, toggle } from '../projects/plannerUi';
+import { usePricing } from '../../pricing/usePricing';
+import PricingStep from '../../pricing/PricingStep';
+import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
+import { formatEuros, quoteSelection } from '../../pricing/pricingEngine';
 
 // Parcours « MIDZOE Study » : profil → projet → ce que dit le catalogue → services
 // → enregistrement (brouillon local sans compte, trip avec compte) → demande.
@@ -78,65 +82,6 @@ const DESTINATION_LANGUAGE: Record<string, string> = {
   Canada: 'Anglais', China: 'Chinois',
 };
 
-const toggle = (list: string[], value: string) =>
-  list.includes(value) ? list.filter(v => v !== value) : [...list, value];
-
-const externalHref = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://${url}`);
-
-// ── Petits composants de mise en page ─────────────────────────────────────────
-
-const Section: React.FC<{ step: number; title: string; subtitle?: string; id?: string; children: React.ReactNode }> = ({
-  step, title, subtitle, id, children,
-}) => (
-  <section id={id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-    <div className="flex items-start gap-4 mb-6">
-      <span className="flex-shrink-0 w-9 h-9 rounded-full bg-primary text-white font-bold flex items-center justify-center">
-        {step}
-      </span>
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-        {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-      </div>
-    </div>
-    {children}
-  </section>
-);
-
-const Chip: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-pressed={active}
-    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-      active ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
-    }`}
-  >
-    {children}
-  </button>
-);
-
-const InfoCard: React.FC<{ title: string; children: React.ReactNode; tone?: 'default' | 'warning' }> = ({ title, children, tone = 'default' }) => (
-  <div className={`rounded-xl border p-5 ${tone === 'warning' ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
-    <h3 className="font-semibold text-gray-900 mb-3">{title}</h3>
-    <div className="text-sm text-gray-700 space-y-2">{children}</div>
-  </div>
-);
-
-const LinkList: React.FC<{ links: { label: string; url: string }[] }> = ({ links }) =>
-  links.length ? (
-    <ul className="space-y-1">
-      {links.map(l => (
-        <li key={l.url}>
-          <a href={l.url} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary underline">
-            {l.label} ↗
-          </a>
-        </li>
-      ))}
-    </ul>
-  ) : null;
-
-const fieldClass = 'w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary';
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const StudyPlanner: React.FC = () => {
@@ -169,7 +114,8 @@ const StudyPlanner: React.FC = () => {
   const [orientation, setOrientation] = useState<OrientationResource[]>([]);
   const [visa, setVisa] = useState<any>(null);
   const [offers, setOffers] = useState<VocationalOffer[]>([]);
-  const [showcase, setShowcase] = useState<ShowcasePackage[]>([]);
+  const { pricing, error: pricingError } = usePricing();
+  const [showTourism, setShowTourism] = useState(false);
 
   const update = (patch: Partial<StudyProject>) => {
     setProject(prev => ({ ...prev, ...patch }));
@@ -224,7 +170,6 @@ const StudyPlanner: React.FC = () => {
   useEffect(() => {
     apiService.getStudyCountries().then(r => setStudyCountries(r?.data ?? [])).catch(() => setStudyCountries([]));
     apiService.getOrientation().then(r => setOrientation(r?.data ?? [])).catch(() => setOrientation([]));
-    apiService.getShowcasePackages().then(r => setShowcase(r?.data ?? r?.packages ?? [])).catch(() => setShowcase([]));
   }, []);
 
   // Données propres à la destination.
@@ -258,14 +203,27 @@ const StudyPlanner: React.FC = () => {
     return () => { mounted = false; };
   }, [project.profile.nationality, project.destination]);
 
-  // Arrivée depuis la grille des packages (`/packages` → « Choisir » sur un palier Study).
-  const packageParam = searchParams.get('package');
+  // Arrivée depuis la grille (`/packages` → « Choisir ») : le palier demandé est retenu dès
+  // qu'il couvre la sélection ; un palier Mix ouvre l'ajout de services tourisme.
+  const requestedSlug = searchParams.get('package');
+  const codes = projectCodes(project);
+  const codesKey = codes.join(',');
   useEffect(() => {
-    if (!packageParam || !showcase.length) return;
-    const tier = showcase.find(p => p.slug === packageParam);
-    if (tier && project.package?.slug !== tier.slug) update({ package: toChosenPackage(tier) });
+    if (requestedSlug?.startsWith('mix-')) setShowTourism(true);
+  }, [requestedSlug]);
+  useEffect(() => {
+    if (!requestedSlug || !pricing || project.price.offerId) return;
+    const offer = quoteSelection(codes, pricing).offers.find(o => o.lines.some(l => l.slug === requestedSlug));
+    if (offer) update({ price: { ...project.price, offerId: offer.id } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [packageParam, showcase]);
+  }, [requestedSlug, pricing, codesKey]);
+
+  /** Montants de l'offre retenue (ou conseillée), recalculés à chaque changement. */
+  const liveSnapshot = pricing ? computeSnapshot(codes, pricing, project.price) : null;
+  const currentProject = project;
+  const priceOf = (code: string) => pricing?.services.find(sv => sv.code === code)?.price_cents ?? null;
+  const withSnapshot = (p: StudyProject): StudyProject =>
+    ({ ...p, price: { ...p.price, snapshot: pricing ? computeSnapshot(projectCodes(p), pricing, p.price) : p.price.snapshot } });
 
   // ── Dérivés ─────────────────────────────────────────────────────────────────
 
@@ -313,13 +271,6 @@ const StudyPlanner: React.FC = () => {
   // Ausbildung : offres du domaine choisi (soins infirmiers par défaut), dans les villes choisies d'abord.
   const isVocational = project.level === 'vocational';
   const offersForDomain = offers.filter(o => project.domains.length === 0 || project.domains.includes(o.domain));
-  // Grille commerciale : paliers Study (ordre de la plaquette) + consultation.
-  const studyTiers = showcase
-    .filter(p => p.family === 'study')
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.price_from_cents - b.price_from_cents);
-  const consultationTier = showcase.find(p => p.family === 'consultation') ?? null;
-  const recommended = recommendedStudyPackage(studyTiers, project.services.length);
-
   const offersInCities = project.cities.length
     ? offersForDomain.filter(o => project.cities.some(city => cityMatches(o.city, city)))
     : offersForDomain;
@@ -402,10 +353,12 @@ const StudyPlanner: React.FC = () => {
   };
 
   const save = async (): Promise<StudyProject | null> => {
+    const projectState = currentProject;
     if (!canSave) {
       setFeedback({ tone: 'error', text: `Complétez d'abord ${missing.join(' et ')}.` });
       return null;
     }
+    const project = withSnapshot(projectState);
     if (!user) {
       const stored = saveDraft(project);
       setDirty(false);
@@ -456,7 +409,7 @@ const StudyPlanner: React.FC = () => {
       await apiService.sendContact({
         name: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username,
         email: user.email || '',
-        subject: `Demande d'accompagnement — ${projectTitle(saved, countryLabel)}${saved.package ? ` — package ${saved.package.name}` : ''}`,
+        subject: `Demande d'accompagnement — ${projectTitle(saved, countryLabel)}${saved.price.snapshot ? ` — ${saved.price.snapshot.offerLabel}` : ''}`,
         category: 'study',
         message: projectSummary(saved, countryLabel),
       });
@@ -990,65 +943,58 @@ const StudyPlanner: React.FC = () => {
                   <label key={s.id} className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${active ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'}`}>
                     <input type="checkbox" checked={active} onChange={() => update({ services: toggle(project.services, s.id) })}
                       className="mt-1 rounded text-primary focus:ring-primary" />
-                    <span>
-                      <span className="block font-semibold text-gray-900">{s.label}</span>
-                      <span className="block text-xs text-gray-500">{s.description}</span>
+                    <span className="flex-1">
+                      <span className="flex items-baseline justify-between gap-2">
+                        <span className="font-semibold text-gray-900">{s.label}</span>
+                        {priceOf(s.code) != null && <span className="text-sm font-semibold text-primary whitespace-nowrap">{formatEuros(priceOf(s.code)!)}</span>}
+                      </span>
+                      <span className="block text-xs text-gray-500">{s.code} · {s.description}</span>
                     </span>
                   </label>
                 );
               })}
+            </div>
+
+            {/* Mix : services tourisme ajoutés au projet d'études */}
+            <div className="mt-4 rounded-xl border border-gray-200">
+              <button type="button" onClick={() => setShowTourism(!showTourism)} aria-expanded={showTourism}
+                className="w-full flex items-center justify-between px-4 py-3 text-left">
+                <span>
+                  <span className="font-semibold text-gray-900">Ajouter un séjour touristique (Mix)</span>
+                  <span className="block text-xs text-gray-500">
+                    {project.tourismServices.length
+                      ? `${project.tourismServices.length} service(s) tourisme ajouté(s) — les packages Mix sont proposés`
+                      : 'Découvrir le pays avant ou après la rentrée : les packages Mix combinent études et tourisme.'}
+                  </span>
+                </span>
+                <span className="text-gray-400">{showTourism ? '−' : '+'}</span>
+              </button>
+              {showTourism && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 px-4 pb-4" role="group" aria-label="Services tourisme">
+                  {(pricing?.services ?? []).filter(t => t.family === 'tourism').map(t => {
+                    const active = project.tourismServices.includes(t.code);
+                    return (
+                      <label key={t.code} className={`flex items-start gap-2 p-3 rounded-lg border cursor-pointer text-sm ${active ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
+                        <input type="checkbox" checked={active} onChange={() => update({ tourismServices: toggle(project.tourismServices, t.code) })}
+                          className="mt-0.5 rounded text-primary focus:ring-primary" />
+                        <span className="flex-1">{t.name}</span>
+                        <span className="text-primary font-semibold whitespace-nowrap">{formatEuros(t.price_cents)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <textarea value={project.notes} onChange={e => update({ notes: e.target.value })} rows={3}
               aria-label="Précisions pour le conseiller" placeholder="Précisions pour le conseiller (budget, contraintes, questions…)"
               className={`${fieldClass} mt-4`} />
           </Section>
 
-          {/* 5. Package */}
-          <Section step={5} title="Votre package" id="sp-package"
-            subtitle="Le palier dépend du nombre de services. Après votre demande, un conseiller confirme le package et vous transmet les modalités de paiement.">
-            {studyTiers.length === 0 ? (
-              <p className="text-sm text-gray-500">Chargement des packages…</p>
-            ) : (
-              <>
-                {recommended && (
-                  <p className="text-sm text-gray-700 mb-3" data-testid="package-recommendation">
-                    Pour {project.services.length} service(s), nous vous conseillons le package <strong>{recommended.name}</strong>
-                    {' '}(à partir de {formatPackagePrice(recommended.price_from_cents, recommended.currency)}).
-                  </p>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3" role="group" aria-label="Package">
-                  {[...studyTiers, ...(consultationTier ? [consultationTier] : [])].map(tier => {
-                    const active = project.package?.slug === tier.slug;
-                    const isRecommended = recommended?.slug === tier.slug;
-                    return (
-                      <button key={tier.id} type="button" aria-pressed={active}
-                        onClick={() => update({ package: active ? null : toChosenPackage(tier) })}
-                        className={`flex flex-col justify-start text-left p-4 rounded-xl border-2 transition-colors ${active ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'}`}>
-                        <span className="flex items-center justify-between gap-2">
-                          <span className="font-semibold text-gray-900">{tier.name}</span>
-                          {isRecommended && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary text-white">Conseillé</span>}
-                        </span>
-                        <span className="block text-sm text-primary font-bold mt-1">
-                          à partir de {formatPackagePrice(tier.price_from_cents, tier.currency)}
-                        </span>
-                        {tier.service_label && <span className="block text-xs text-gray-500 mt-0.5">{tier.service_label}</span>}
-                        {!!tier.features?.length && (
-                          <ul className="mt-2 space-y-0.5 text-xs text-gray-600">
-                            {tier.features.slice(0, 3).map(f => <li key={f}>• {f}</li>)}
-                          </ul>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                {project.package && recommended && project.package.slug !== recommended.slug && project.package.family === 'study' && (
-                  <p className="mt-3 text-xs text-amber-700">
-                    Le package {project.package.name} ne correspond pas au nombre de services choisis ({project.services.length}) : le conseiller ajustera avec vous.
-                  </p>
-                )}
-                <Link to="/packages" className="inline-block mt-3 text-sm text-secondary hover:text-primary underline">Comparer tous les packages →</Link>
-              </>
-            )}
+          {/* 5. Prix et package */}
+          <Section step={5} title="Prix et package" id="sp-package"
+            subtitle="Nous comparons le prix à la carte et nos packages, et vous conseillons l'offre la moins chère.">
+            <PricingStep pricing={pricing} pricingError={pricingError} codes={codes} choice={project.price}
+              onChange={price => update({ price })} requestedSlug={requestedSlug} />
           </Section>
         </div>
 
@@ -1073,8 +1019,8 @@ const StudyPlanner: React.FC = () => {
               <div><dt className="text-gray-500">Présélection ({project.shortlist.length})</dt><dd className="font-medium text-gray-900">
                 {project.shortlist.map(s => s.name).join(' ; ') || '—'}
               </dd></div>
-              <div><dt className="text-gray-500">Package</dt><dd className="font-medium text-gray-900" data-testid="summary-package">
-                {project.package ? packageLabel(project.package) : '—'}
+              <div><dt className="text-gray-500">Offre et prix</dt><dd className="font-medium text-gray-900" data-testid="summary-package">
+                {liveSnapshot ? snapshotLabel(liveSnapshot) : '—'}
               </dd></div>
               {project.offerShortlist.length > 0 && (
                 <div><dt className="text-gray-500">Offres Ausbildung ({project.offerShortlist.length})</dt><dd className="font-medium text-gray-900">

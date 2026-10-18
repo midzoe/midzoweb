@@ -1,4 +1,6 @@
 import { apiService } from '../../services/api';
+import { loadTripRecord, recordOf, saveTripRecord, serviceStatusOf } from '../projects/tripRecords';
+import { emptyPriceChoice, normalizePriceChoice, PriceChoice, snapshotLabel } from '../../pricing/priceChoice';
 
 /**
  * Parcours « MIDZOE Study » : un projet d'études (pays > niveau > domaine > villes),
@@ -53,22 +55,32 @@ export const DOMAINS: DomainOption[] = [
 
 export interface ServiceOption {
   id: string;
+  /** Code de la grille tarifaire (S1..S11, T1..T10) : le prix vient de `/api/pricing`. */
+  code: string;
   label: string;
   description: string;
 }
 
-/** Services proposés dans le parcours Study (libellés repris des scénarios de test). */
+/** Les 11 services Study de la grille tarifaire (libellés repris des scénarios de test). */
 export const STUDY_SERVICES: ServiceOption[] = [
-  { id: 'university_finder', label: 'University Finder', description: 'Recherche et présélection des universités' },
-  { id: 'admission', label: 'Admission / Candidature', description: 'Dossier de candidature (Application) et suivi' },
-  { id: 'visa', label: 'Visa étudiant', description: 'Constitution du dossier et rendez-vous consulaire' },
-  { id: 'housing', label: 'Logement (Housing)', description: 'Résidence étudiante ou colocation' },
-  { id: 'recognition', label: 'Reconnaissance du diplôme', description: 'Équivalence / Recognition du diplôme' },
-  { id: 'language_course', label: 'Cours de langue', description: 'Language Course et certification (B1, B2…)' },
-  { id: 'airport_pickup', label: "Accueil à l'aéroport", description: 'Airport Pickup à l’arrivée' },
-  { id: 'bank', label: 'Compte bancaire', description: 'Compte bloqué / compte courant étudiant' },
-  { id: 'insurance', label: 'Assurance', description: 'Assurance santé étudiante' },
+  { id: 'university_finder', code: 'S9', label: 'University Finder', description: 'Recherche d’université / de programme' },
+  { id: 'admission', code: 'S10', label: 'Admission / Candidature', description: 'Candidature et inscription à l’université' },
+  { id: 'visa', code: 'S11', label: 'Visa étudiant', description: 'Assistance à la demande de visa' },
+  { id: 'housing', code: 'S5', label: 'Logement (Housing)', description: 'Recherche de logement' },
+  { id: 'recognition', code: 'S8', label: 'Reconnaissance du diplôme', description: 'Équivalence / Recognition du diplôme' },
+  { id: 'legalisation', code: 'S6', label: 'Légalisation de documents', description: 'Légalisation / Apostille' },
+  { id: 'language_course', code: 'S4', label: 'Cours de langue', description: 'Inscription à un cours de langue' },
+  { id: 'language_center', code: 'S2', label: 'Centre de langue', description: 'Recherche de centre de langue' },
+  { id: 'airport_pickup', code: 'S7', label: "Accueil à l'aéroport", description: 'Accueil + transfert vers le logement' },
+  { id: 'bank', code: 'S3', label: 'Compte bancaire', description: 'Aide à l’ouverture de compte' },
+  { id: 'flight', code: 'S1', label: 'Vol', description: 'Recherche et réservation de vol' },
 ];
+
+/** Codes tarifaires d'un projet : services études + services tourisme ajoutés (Mix). */
+export function projectCodes(project: Pick<StudyProject, 'services' | 'tourismServices'>): string[] {
+  const study = STUDY_SERVICES.filter(s => project.services.includes(s.id)).map(s => s.code);
+  return [...study, ...project.tourismServices];
+}
 
 export const FORMATS = ['Présentiel', 'Hybride', 'Temps partiel', 'Formation continue'];
 
@@ -246,48 +258,6 @@ export interface VocationalOffer {
 
 export interface ShortlistedUniversity { id: number; name: string; city: string }
 export interface ShortlistedOffer { id: number; employer: string; city: string }
-export interface ChosenPackage { slug: string; name: string; family: string; priceFromCents: number; currency: string }
-
-/** Palier de la grille commerciale, tel que servi par `/packages/showcase`. */
-export interface ShowcasePackage {
-  id: number;
-  name: string;
-  slug: string | null;
-  family: string | null;
-  service_label: string | null;
-  price_from_cents: number;
-  currency: string;
-  features: string[];
-  order?: number;
-}
-
-/**
- * Palier Study conseillé selon le nombre de services choisis, d'après les libellés de la
- * plaquette : 1 service, 2 services, 3 à 4 services, 5 services, puis « Premium+ ».
- */
-export function recommendedStudyPackage(tiers: ShowcasePackage[], serviceCount: number): ShowcasePackage | null {
-  if (!tiers.length || serviceCount === 0) return null;
-  const index = serviceCount <= 1 ? 0 : serviceCount === 2 ? 1 : serviceCount <= 4 ? 2 : serviceCount === 5 ? 3 : 4;
-  return tiers[Math.min(index, tiers.length - 1)];
-}
-
-export function formatPackagePrice(cents: number, currency = 'EUR'): string {
-  try {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(cents / 100);
-  } catch {
-    return `${Math.round(cents / 100)} ${currency}`;
-  }
-}
-
-export function toChosenPackage(p: ShowcasePackage): ChosenPackage {
-  return { slug: p.slug ?? String(p.id), name: p.name, family: p.family ?? '', priceFromCents: p.price_from_cents, currency: p.currency || 'EUR' };
-}
-
-export function packageLabel(p: ChosenPackage): string {
-  const family = p.family === 'study' ? 'Study ' : '';
-  return `${family}${p.name} (à partir de ${formatPackagePrice(p.priceFromCents, p.currency)})`;
-}
-
 export interface StudyProject {
   version: 1;
   profile: {
@@ -313,8 +283,10 @@ export interface StudyProject {
   shortlist: ShortlistedUniversity[];
   /** Offres d'Ausbildung retenues (niveau « Formation professionnelle »). */
   offerShortlist: ShortlistedOffer[];
-  /** Package commercial retenu (grille `/packages/showcase`), prix « à partir de » au moment du choix. */
-  package?: ChosenPackage | null;
+  /** Services tourisme ajoutés au projet (codes T1..T10) : ouvre les paliers Mix. */
+  tourismServices: string[];
+  /** Offre et mode de paiement retenus, avec l'instantané des montants. */
+  price: PriceChoice;
   notes: string;
   tripId?: number;
   savedAt?: string;
@@ -336,6 +308,8 @@ export function emptyProject(): StudyProject {
     services: [],
     shortlist: [],
     offerShortlist: [],
+    tourismServices: [],
+    price: emptyPriceChoice(),
     notes: '',
   };
 }
@@ -358,10 +332,12 @@ export function normalizeProject(raw: any): StudyProject {
     },
     domains: arr(raw.domains),
     cities: arr(raw.cities),
-    services: arr(raw.services),
+    // Un service retiré du catalogue (ex. « insurance ») ne doit plus compter dans le prix.
+    services: arr(raw.services).filter((id: string) => STUDY_SERVICES.some(s => s.id === id)),
+    tourismServices: arr(raw.tourismServices).filter((c: string) => /^T\d+$/.test(c)),
+    price: normalizePriceChoice(raw.price),
     shortlist: Array.isArray(raw.shortlist) ? raw.shortlist.filter((s: any) => s && typeof s.id === 'number') : [],
     offerShortlist: Array.isArray(raw.offerShortlist) ? raw.offerShortlist.filter((s: any) => s && typeof s.id === 'number') : [],
-    package: raw.package && typeof raw.package.slug === 'string' && typeof raw.package.priceFromCents === 'number' ? raw.package : null,
   };
 }
 
@@ -420,8 +396,6 @@ export function clearDraft(): void {
 export const PROJECT_SERVICE_TYPE = 'study_project';
 const SERVICE_TYPE_PREFIX = 'study:';
 
-interface ApiTripService { id: number; type: string; label: string; status: string; data?: any }
-
 export interface SavedStudyProject {
   tripId: number;
   title: string;
@@ -430,102 +404,40 @@ export interface SavedStudyProject {
   serviceStatus: Record<string, string>;
 }
 
-/**
- * Crée ou met à jour le trip qui porte le projet. Le backend ne sait pas supprimer
- * un service de trip : un service retiré passe au statut `cancelled`, et repasse
- * à `pending` s'il est choisi de nouveau.
- */
 export async function saveProjectToAccount(project: StudyProject, countryLabel?: string): Promise<StudyProject> {
-  const title = projectTitle(project, countryLabel);
-  const startDate = project.startMonth ? `${project.startMonth}-01` : undefined;
-
-  let tripId = project.tripId;
-  let existing: ApiTripService[] = [];
-
-  if (tripId) {
-    try {
-      const res = await apiService.getTrip(tripId);
-      existing = res?.data?.services ?? [];
-      await apiService.updateTrip(tripId, { title, startDate });
-    } catch (err: any) {
-      // Trip supprimé entre-temps : on en recrée un plutôt que d'échouer.
-      if (err?.status !== 404) throw err;
-      tripId = undefined;
-      existing = [];
-    }
-  }
-
-  if (!tripId) {
-    const destinations = project.cities.length
+  return saveTripRecord<StudyProject>({
+    recordType: PROJECT_SERVICE_TYPE,
+    servicePrefix: SERVICE_TYPE_PREFIX,
+    catalogue: STUDY_SERVICES,
+    selected: project.services,
+    project,
+    title: projectTitle(project, countryLabel),
+    startDate: project.startMonth ? `${project.startMonth}-01` : undefined,
+    destinations: project.cities.length
       ? project.cities.map((city, order) => ({ country: project.destination, city, order }))
-      : [{ country: project.destination, order: 0 }];
-    const created = await apiService.createTrip({ title, status: 'planning', startDate, destinations });
-    tripId = created?.data?.id as number;
-    if (!tripId) throw new Error('Trip creation failed');
-  }
-
-  const saved: StudyProject = { ...project, tripId, savedAt: new Date().toISOString() };
-
-  const record = existing.find(s => s.type === PROJECT_SERVICE_TYPE);
-  if (record) {
-    await apiService.updateTripService(record.id, { label: title, data: saved });
-  } else {
-    await apiService.addTripService(tripId, { type: PROJECT_SERVICE_TYPE, label: title, data: saved });
-  }
-
-  for (const service of STUDY_SERVICES) {
-    const selected = project.services.includes(service.id);
-    const current = existing.find(s => s.type === `${SERVICE_TYPE_PREFIX}${service.id}`);
-    if (current) {
-      const next = selected ? (current.status === 'cancelled' ? 'pending' : current.status) : 'cancelled';
-      if (next !== current.status) await apiService.updateTripService(current.id, { status: next });
-    } else if (selected) {
-      await apiService.addTripService(tripId, {
-        type: `${SERVICE_TYPE_PREFIX}${service.id}`,
-        label: service.label,
-        data: { country: project.destination },
-      });
-    }
-  }
-
-  return saved;
+      : [{ country: project.destination, order: 0 }],
+  });
 }
 
-/**
- * Trips du compte, séparés en projets d'études (trips portant un service
- * `study_project`) et autres voyages. La liste `/trips` n'inclut pas les
- * services : il faut le détail de chaque trip pour les distinguer.
- */
-export async function loadAccountTrips(): Promise<{ projects: SavedStudyProject[]; otherTrips: any[] }> {
-  const list = await apiService.getTrips();
-  const trips: any[] = list?.data ?? [];
-  const details = await Promise.all(
-    trips.map(t => apiService.getTrip(t.id).then(r => r?.data ?? t).catch(() => t)),
-  );
-  const projects: SavedStudyProject[] = [];
-  const otherTrips: any[] = [];
-  details.forEach((trip: any) => {
-    const services: ApiTripService[] = trip.services ?? [];
-    const record = services.find(s => s.type === PROJECT_SERVICE_TYPE);
-    if (!record) { otherTrips.push(trip); return; }
-    const serviceStatus: Record<string, string> = {};
-    services
-      .filter(s => s.type.startsWith(SERVICE_TYPE_PREFIX))
-      .forEach(s => { serviceStatus[s.type.slice(SERVICE_TYPE_PREFIX.length)] = s.status; });
-    projects.push({
-      tripId: trip.id,
-      title: trip.title,
-      project: { ...normalizeProject(record.data), tripId: trip.id },
-      serviceStatus,
-    });
-  });
-  return { projects, otherTrips };
+/** Projets d'études parmi les trips détaillés du compte (voir `loadTripDetails`). */
+export function parseStudyTrips(trips: any[]): SavedStudyProject[] {
+  return trips
+    .map((trip): SavedStudyProject | null => {
+      const record = recordOf(trip, PROJECT_SERVICE_TYPE);
+      if (!record) return null;
+      return {
+        tripId: trip.id,
+        title: trip.title,
+        project: { ...normalizeProject(record.data), tripId: trip.id },
+        serviceStatus: serviceStatusOf(trip, SERVICE_TYPE_PREFIX),
+      };
+    })
+    .filter((p): p is SavedStudyProject => !!p);
 }
 
 export async function loadAccountProject(tripId: number): Promise<StudyProject | null> {
-  const res = await apiService.getTrip(tripId);
-  const record = (res?.data?.services ?? []).find((s: ApiTripService) => s.type === PROJECT_SERVICE_TYPE);
-  return record ? { ...normalizeProject(record.data), tripId } : null;
+  const data = await loadTripRecord(tripId, PROJECT_SERVICE_TYPE);
+  return data ? { ...normalizeProject(data), tripId } : null;
 }
 
 export async function deleteAccountProject(tripId: number): Promise<void> {
@@ -554,7 +466,8 @@ export function projectSummary(project: StudyProject, countryLabel?: string): st
     `Services demandés : ${project.services.map(serviceLabel).join(', ') || '—'}`,
     `Universités présélectionnées : ${project.shortlist.map(u => `${u.name} (${u.city})`).join(' ; ') || '—'}`,
     `Offres Ausbildung retenues : ${project.offerShortlist.map(o => `${o.employer} (${o.city})`).join(' ; ') || '—'}`,
-    `Package souhaité : ${project.package ? packageLabel(project.package) : 'pas encore choisi'}`,
+    `Services tourisme (Mix) : ${project.tourismServices.join(', ') || '—'}`,
+    `Offre et paiement : ${project.price.snapshot ? snapshotLabel(project.price.snapshot) : 'à définir avec le conseiller'}`,
   ];
   if (project.notes.trim()) lines.push('', `Notes : ${project.notes.trim()}`);
   return lines.join('\n');
