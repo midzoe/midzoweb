@@ -4,6 +4,53 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Champs de formulaire. Une grande partie du site écrit `border-gray-300 rounded-md focus:ring-…`
+ * comme si le plugin @tailwindcss/forms était installé — il ne l'est pas : le preflight remet la
+ * bordure à 0, et ces champs s'affichaient sans cadre ni marge (texte collé au bord, champ
+ * invisible). On rend ici le cadre attendu, uniquement pour les champs qui portent cette classe.
+ * Poids d'une simple balise (`input:where(…)`) : passe devant la remise à zéro du preflight
+ * (`input { padding: 0 }`), mais toute classe utilitaire posée sur le champ (pl-9, py-1, border-0…)
+ * garde la priorité.
+ */
+@layer base {
+  input:where(:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"])):where([class~="border-gray-300"]),
+  select:where([class~="border-gray-300"]),
+  textarea:where([class~="border-gray-300"]) {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #d1d5db;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+    line-height: 1.4rem;
+    color: #111827;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  select:where([class~="border-gray-300"]) {
+    padding-right: 2.25rem;
+  }
+  input:where([class~="border-gray-300"])::placeholder,
+  textarea:where([class~="border-gray-300"])::placeholder {
+    color: #9ca3af;
+  }
+  input:where([class~="border-gray-300"]):focus,
+  select:where([class~="border-gray-300"]):focus,
+  textarea:where([class~="border-gray-300"]):focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: #44a46b;
+    box-shadow: 0 0 0 3px rgba(68, 164, 107, 0.2);
+  }
+  input:where([class~="border-gray-300"]):disabled,
+  select:where([class~="border-gray-300"]):disabled,
+  textarea:where([class~="border-gray-300"]):disabled {
+    background-color: #f9fafb;
+    color: #6b7280;
+  }
+}
+
 /* Scrollbars fines et modernes (admin) */
 .scrollbar-slim {
   scrollbar-width: thin;

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   SavedStudyProject, StudyProject, STUDY_SERVICES,
-  deleteAccountProject, domainLabels, levelLabel, projectTitle,
+  deleteAccountProject, domainLabels, levelLabel, projectTitle, syncedDestinations,
 } from './studyProject';
 import { snapshotLabel } from '../../pricing/priceChoice';
 
@@ -26,7 +26,7 @@ const ProjectFacts: React.FC<{ project: StudyProject }> = ({ project }) => (
     {[
       levelLabel(project.level),
       [...domainLabels(project.domains), project.fieldQuery].filter(Boolean).join(', '),
-      project.cities.join(', '),
+      syncedDestinations(project).flatMap(d => d.cities).join(', '),
       project.startMonth && `rentrée ${project.startMonth}`,
     ].filter(Boolean).join(' · ') || 'Projet à compléter'}
   </p>

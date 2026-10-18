@@ -8,6 +8,8 @@ import {
   StudyProject, University, UniversityMatch, VocationalOffer, projectCodes,
   cityKey, cityMatches, clearDraft, emptyProject, fold, levelLabel, loadAccountProject,
   loadDraft, matchUniversities, projectSummary, projectTitle, saveDraft, saveProjectToAccount,
+  DIPLOMAS, ALL_DIPLOMAS, PROFILE_LANGUAGES, LANGUAGE_LEVELS, SpokenLanguage, languagesText,
+  destinationsLabel, syncedDestinations,
 } from './studyProject';
 import { COUNTRY_GUIDES, levelGuide } from './studyGuides';
 import { Chip, InfoCard, LinkList, Section, externalHref, fieldClass, toggle } from '../projects/plannerUi';
@@ -93,8 +95,11 @@ const StudyPlanner: React.FC = () => {
     const draft = loadDraft();
     const country = searchParams.get('country');
     if (searchParams.get('project')) return emptyProject();
-    if (draft) return country && !draft.destination ? { ...draft, destination: country } : draft;
-    return { ...emptyProject(), destination: country || '' };
+    const withCountry = (p: StudyProject): StudyProject => (!country || p.destinations.some(d => d.country === country)
+      ? p
+      : { ...p, destination: country, cities: [], destinations: [...syncedDestinations(p), { country, label: country, cities: [] }] });
+    if (draft) return draft.destination ? draft : withCountry(draft);
+    return withCountry(emptyProject());
   });
   const [loadingProject, setLoadingProject] = useState(!!searchParams.get('project'));
   const [dirty, setDirty] = useState(false);
@@ -327,12 +332,36 @@ const StudyPlanner: React.FC = () => {
     });
   };
 
+  // Plusieurs pays : chaque pays garde ses villes ; `destination` est celui affiché dans les résultats.
+  const toggleCountry = (name: string, label: string) => {
+    const list = syncedDestinations(project);
+    if (list.some(d => d.country === name)) {
+      const rest = list.filter(d => d.country !== name);
+      const next = project.destination === name ? rest[0] : rest.find(d => d.country === project.destination);
+      update({ destinations: rest, destination: next?.country ?? '', destinationLabel: next?.label, cities: next?.cities ?? [] });
+    } else {
+      update({ destinations: [...list, { country: name, label, cities: [] }], destination: name, destinationLabel: label, cities: [] });
+    }
+    setIgnoreCities(false);
+  };
+  const showCountry = (name: string) => {
+    if (name === project.destination) return;
+    const list = syncedDestinations(project);
+    const next = list.find(d => d.country === name);
+    if (!next) return;
+    update({ destinations: list, destination: name, destinationLabel: next.label, cities: next.cities });
+    setIgnoreCities(false);
+  };
+
+  const setLanguages = (languages: SpokenLanguage[]) =>
+    updateProfile({ languages, languageLevel: languagesText(languages) });
+
   const toggleShortlist = (u: University) => {
     const exists = project.shortlist.some(s => s.id === u.id);
     update({
       shortlist: exists
         ? project.shortlist.filter(s => s.id !== u.id)
-        : [...project.shortlist, { id: u.id, name: u.name, city: u.city }],
+        : [...project.shortlist, { id: u.id, name: u.name, city: u.city, country: countryLabel }],
       services: exists || project.services.includes('university_finder')
         ? project.services
         : [...project.services, 'university_finder'],
@@ -525,14 +554,41 @@ const StudyPlanner: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="sp-diploma" className="block text-sm font-medium text-gray-700 mb-1">Diplôme actuel</label>
-                <input id="sp-diploma" value={project.profile.diploma} onChange={e => updateProfile({ diploma: e.target.value })}
-                  placeholder="Ex. Bac scientifique, Licence en biologie, WASSCE" className={fieldClass} />
+                <label htmlFor="sp-diploma" className="block text-sm font-medium text-gray-700 mb-1">Diplôme le plus élevé</label>
+                <select id="sp-diploma" value={project.profile.diploma} onChange={e => updateProfile({ diploma: e.target.value })} className={fieldClass}>
+                  <option value="">— Choisir —</option>
+                  {DIPLOMAS.map(g => (
+                    <optgroup key={g.group} label={g.group}>{g.options.map(o => <option key={o} value={o}>{o}</option>)}</optgroup>
+                  ))}
+                  {project.profile.diploma && !ALL_DIPLOMAS.includes(project.profile.diploma) && (
+                    <option value={project.profile.diploma}>{project.profile.diploma} (ancienne saisie)</option>
+                  )}
+                </select>
               </div>
-              <div>
-                <label htmlFor="sp-language" className="block text-sm font-medium text-gray-700 mb-1">Langues et niveau</label>
-                <input id="sp-language" value={project.profile.languageLevel} onChange={e => updateProfile({ languageLevel: e.target.value })}
-                  placeholder="Ex. Anglais C1, Allemand A2" className={fieldClass} />
+              <div className="md:col-span-2">
+                <p className="block text-sm font-medium text-gray-700 mb-1">Langues parlées et niveau</p>
+                <div className="space-y-2" role="group" aria-label="Langues parlées">
+                  {project.profile.languages.map((l, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                      <select aria-label={`Langue ${i + 1}`} value={l.language} className={fieldClass}
+                        onChange={e => setLanguages(project.profile.languages.map((x, j) => (j === i ? { ...x, language: e.target.value } : x)))}>
+                        <option value="">— Langue —</option>
+                        {PROFILE_LANGUAGES.filter(name => name === l.language || !project.profile.languages.some(x => x.language === name))
+                          .map(name => <option key={name} value={name}>{name}</option>)}
+                        {l.language && !PROFILE_LANGUAGES.includes(l.language) && <option value={l.language}>{l.language}</option>}
+                      </select>
+                      <select aria-label={`Niveau en langue ${i + 1}`} value={l.level} className={fieldClass}
+                        onChange={e => setLanguages(project.profile.languages.map((x, j) => (j === i ? { ...x, level: e.target.value } : x)))}>
+                        {LANGUAGE_LEVELS.map(lv => <option key={lv.value} value={lv.value}>{lv.label}</option>)}
+                      </select>
+                      <button type="button" aria-label={`Retirer la langue ${i + 1}`} title="Retirer"
+                        onClick={() => setLanguages(project.profile.languages.filter((_, j) => j !== i))}
+                        className="h-10 w-10 rounded-lg border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200">×</button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => setLanguages([...project.profile.languages, { language: '', level: 'B1' }])}
+                    className="text-sm font-medium text-primary hover:underline">+ Ajouter une langue</button>
+                </div>
               </div>
             </div>
           </Section>
@@ -541,14 +597,15 @@ const StudyPlanner: React.FC = () => {
           <Section step={2} title="Votre projet" subtitle="Pays > niveau > domaine, puis les villes qui vous intéressent.">
             <div className="space-y-6">
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Pays de destination</p>
+                <p className="block text-sm font-medium text-gray-700 mb-1">Pays de destination</p>
+                <p className="text-xs text-gray-500 mb-2">Vous pouvez en choisir plusieurs : comparez-les dans les résultats.</p>
                 {studyCountries.length === 0 ? (
                   <p className="text-sm text-gray-500">Chargement des pays d'études…</p>
                 ) : (
                   <div className="flex flex-wrap gap-2" role="group" aria-label="Pays de destination">
                     {studyCountries.map(c => (
-                      <Chip key={c.id} active={project.destination === c.name}
-                        onClick={() => { update({ destination: c.name, destinationLabel: c.nameFr || c.name, cities: [], shortlist: [] }); setIgnoreCities(false); }}>
+                      <Chip key={c.id} active={project.destinations.some(d => d.country === c.name)}
+                        onClick={() => toggleCountry(c.name, c.nameFr || c.name)}>
                         {c.flag} {c.nameFr || c.name}
                       </Chip>
                     ))}
@@ -659,6 +716,19 @@ const StudyPlanner: React.FC = () => {
           {/* 3. Catalogue */}
           <Section step={3} id="sp-results" title="Ce que propose le catalogue"
             subtitle={project.destination ? `Pour ${countryLabel}${level ? ` · ${level.label}` : ''}` : 'Choisissez un pays pour afficher les résultats.'}>
+            {project.destinations.length > 1 && (
+              <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label="Résultats pour">
+                <span className="text-sm text-gray-500 mr-1">Résultats pour :</span>
+                {project.destinations.map(d => (
+                  <button key={d.country} type="button" role="tab" aria-selected={d.country === project.destination}
+                    onClick={() => showCountry(d.country)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                      d.country === project.destination ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:border-primary'}`}>
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
             {!project.destination ? (
               <p className="text-gray-500 text-sm">Sélectionnez un pays de destination à l'étape 2.</p>
             ) : loadingCatalog ? (
@@ -1036,12 +1106,15 @@ const StudyPlanner: React.FC = () => {
               <span data-testid="project-status" className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}>{status.label}</span>
             </div>
             <dl className="text-sm space-y-2">
-              <div><dt className="text-gray-500">Destination</dt><dd className="font-medium text-gray-900">{countryLabel || '—'}</dd></div>
+              <div><dt className="text-gray-500">Destination{project.destinations.length > 1 ? 's' : ''}</dt><dd className="font-medium text-gray-900" data-testid="summary-destinations">{destinationsLabel(project, countryLabel) || '—'}</dd></div>
               <div><dt className="text-gray-500">Niveau</dt><dd className="font-medium text-gray-900">{levelLabel(project.level) || '—'}</dd></div>
               <div><dt className="text-gray-500">Domaine</dt><dd className="font-medium text-gray-900">
                 {[...DOMAINS.filter(d => project.domains.includes(d.id)).map(d => d.label), project.fieldQuery].filter(Boolean).join(', ') || '—'}
               </dd></div>
-              <div><dt className="text-gray-500">Villes</dt><dd className="font-medium text-gray-900">{project.cities.join(', ') || '—'}</dd></div>
+              <div><dt className="text-gray-500">Villes</dt><dd className="font-medium text-gray-900">
+                {syncedDestinations(project).filter(d => d.cities.length)
+                  .map(d => `${d.cities.join(', ')}${project.destinations.length > 1 ? ` (${d.label})` : ''}`).join(' ; ') || '—'}
+              </dd></div>
               <div><dt className="text-gray-500">Rentrée</dt><dd className="font-medium text-gray-900">{project.startMonth || '—'}</dd></div>
               <div><dt className="text-gray-500">Services ({project.services.length})</dt><dd className="font-medium text-gray-900">
                 {STUDY_SERVICES.filter(s => project.services.includes(s.id)).map(s => s.label).join(', ') || '—'}

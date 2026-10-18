@@ -84,6 +84,68 @@ export function projectCodes(project: Pick<StudyProject, 'services' | 'tourismSe
 
 export const FORMATS = ['Présentiel', 'Hybride', 'Temps partiel', 'Formation continue'];
 
+/** Diplôme le plus élevé obtenu : liste fermée (une saisie libre n'était pas exploitable). */
+export const DIPLOMAS: { group: string; options: string[] }[] = [
+  { group: 'Fin d’études secondaires', options: [
+    'Baccalauréat scientifique (C, D, E, S)',
+    'Baccalauréat littéraire (A, L)',
+    'Baccalauréat économique / gestion (B, G, ES)',
+    'Baccalauréat technique ou professionnel (F, T, Pro)',
+    'WASSCE / WAEC (Ghana, Nigeria…)',
+    'GCE A-Level / High School Diploma',
+    'BEPC / Brevet (sans baccalauréat)',
+  ] },
+  { group: 'Enseignement supérieur', options: [
+    'BTS / DUT / HND (Bac + 2)',
+    'Licence / Bachelor (Bac + 3)',
+    'Master / Maîtrise (Bac + 4-5)',
+    'Diplôme d’ingénieur',
+    'Doctorat / PhD',
+  ] },
+  { group: 'Formation professionnelle', options: [
+    'CAP / BEP / CQP',
+    'Diplôme d’infirmier ou de santé',
+    'Autre diplôme professionnel',
+  ] },
+];
+export const ALL_DIPLOMAS = DIPLOMAS.flatMap(g => g.options);
+
+/** Langues parlées (profil) et niveaux du Cadre européen. */
+export const PROFILE_LANGUAGES = [
+  'Français', 'Anglais', 'Allemand', 'Espagnol', 'Italien', 'Portugais', 'Néerlandais', 'Suédois',
+  'Chinois (mandarin)', 'Arabe', 'Russe', 'Turc', 'Swahili', 'Haoussa', 'Yoruba', 'Igbo', 'Wolof',
+  'Lingala', 'Bambara', 'Éwé', 'Fon', 'Twi', 'Amharique',
+];
+export const LANGUAGE_LEVELS = [
+  { value: 'A1', label: 'A1 — débutant' },
+  { value: 'A2', label: 'A2 — élémentaire' },
+  { value: 'B1', label: 'B1 — intermédiaire' },
+  { value: 'B2', label: 'B2 — intermédiaire avancé' },
+  { value: 'C1', label: 'C1 — avancé' },
+  { value: 'C2', label: 'C2 — maîtrise' },
+  { value: 'Natif', label: 'Langue maternelle' },
+];
+
+export interface SpokenLanguage { language: string; level: string }
+
+/** « Anglais C1, Allemand A2 » : forme texte gardée pour le résumé envoyé au conseiller. */
+export function languagesText(list: SpokenLanguage[]): string {
+  return list.filter(l => l.language).map(l => `${l.language} ${l.level}`.trim()).join(', ');
+}
+
+/** Ancienne saisie libre → lignes langue + niveau quand c'est reconnaissable. */
+function parseLanguages(text: string): SpokenLanguage[] {
+  const out: SpokenLanguage[] = [];
+  for (const part of (text || '').split(/[,;/]+/)) {
+    const m = part.trim().match(/^(.+?)\s+(A1|A2|B1|B2|C1|C2|natif|native)$/i);
+    const name = (m ? m[1] : part).trim();
+    if (!name) continue;
+    const known = PROFILE_LANGUAGES.find(l => l.toLowerCase() === name.toLowerCase());
+    out.push({ language: known ?? name, level: m ? (/nati/i.test(m[2]) ? 'Natif' : m[2].toUpperCase()) : 'B1' });
+  }
+  return out;
+}
+
 export const TEACHING_LANGUAGES = ['Français', 'Anglais', 'Allemand'];
 
 // ── Texte : comparaison sans accents ni casse ────────────────────────────────
@@ -256,7 +318,10 @@ export interface VocationalOffer {
 
 // ── Projet ───────────────────────────────────────────────────────────────────
 
-export interface ShortlistedUniversity { id: number; name: string; city: string }
+export interface ShortlistedUniversity { id: number; name: string; city: string; country?: string }
+
+/** Un pays choisi et ses villes (le projet peut viser plusieurs pays). */
+export interface ProjectDestination { country: string; label: string; cities: string[] }
 export interface ShortlistedOffer { id: number; employer: string; city: string }
 export interface StudyProject {
   version: 1;
@@ -264,8 +329,14 @@ export interface StudyProject {
     nationality: string;
     residence: string;
     diploma: string;
+    /** Langues parlées avec leur niveau (liste fermée). */
+    languages: SpokenLanguage[];
+    /** Forme texte des langues (résumé, anciens projets). */
     languageLevel: string;
   };
+  /** Tous les pays visés, avec leurs villes. */
+  destinations: ProjectDestination[];
+  /** Pays affiché dans les résultats (l'un de `destinations`) ; ses villes sont dans `cities`. */
   destination: string;
   /** Nom affiché du pays (« Allemagne »), conservé pour les écrans sans catalogue chargé. */
   destinationLabel?: string;
@@ -297,7 +368,8 @@ export interface StudyProject {
 export function emptyProject(): StudyProject {
   return {
     version: 1,
-    profile: { nationality: '', residence: '', diploma: '', languageLevel: '' },
+    profile: { nationality: '', residence: '', diploma: '', languages: [], languageLevel: '' },
+    destinations: [],
     destination: '',
     level: '',
     domains: [],
@@ -319,11 +391,28 @@ export function normalizeProject(raw: any): StudyProject {
   const base = emptyProject();
   if (!raw || typeof raw !== 'object') return base;
   const arr = (v: any) => (Array.isArray(v) ? v.filter(x => typeof x === 'string') : []);
+  const profile = { ...base.profile, ...(raw.profile || {}) };
+  profile.languages = Array.isArray(raw.profile?.languages)
+    ? raw.profile.languages.filter((l: any) => l && typeof l.language === 'string').map((l: any) => ({ language: l.language, level: String(l.level || 'B1') }))
+    : parseLanguages(profile.languageLevel);
+  profile.languageLevel = languagesText(profile.languages) || profile.languageLevel || '';
+  // Anciens projets : un seul pays (`destination` + `cities`).
+  const destination = typeof raw.destination === 'string' ? raw.destination : '';
+  let destinations: ProjectDestination[] = Array.isArray(raw.destinations)
+    ? raw.destinations
+        .filter((d: any) => d && typeof d.country === 'string' && d.country)
+        .map((d: any) => ({ country: d.country, label: typeof d.label === 'string' && d.label ? d.label : d.country, cities: arr(d.cities) }))
+    : [];
+  if (destination && !destinations.some(d => d.country === destination)) {
+    destinations = [...destinations, { country: destination, label: raw.destinationLabel || destination, cities: arr(raw.cities) }];
+  }
   return {
     ...base,
     ...raw,
     version: 1,
-    profile: { ...base.profile, ...(raw.profile || {}) },
+    profile,
+    destinations,
+    destination: destination || destinations[0]?.country || '',
     preferences: {
       ...base.preferences,
       ...(raw.preferences || {}),
@@ -353,10 +442,20 @@ export function serviceLabel(id: string): string {
   return STUDY_SERVICES.find(s => s.id === id)?.label ?? id;
 }
 
+/** Pays visés, villes du pays affiché comprises (`cities` est la copie de travail). */
+export function syncedDestinations(project: StudyProject): ProjectDestination[] {
+  return project.destinations.map(d => (d.country === project.destination ? { ...d, cities: project.cities } : d));
+}
+
+export function destinationsLabel(project: StudyProject, countryLabel?: string): string {
+  if (project.destinations.length > 1) return project.destinations.map(d => d.label).join(', ');
+  return countryLabel || project.destinationLabel || project.destinations[0]?.label || project.destination || '';
+}
+
 export function projectTitle(project: StudyProject, countryLabel?: string): string {
   const field = project.fieldQuery.trim() || domainLabels(project.domains)[0] || '';
   const parts = [levelLabel(project.level), field].filter(Boolean).join(' · ');
-  const country = countryLabel || project.destinationLabel || project.destination || 'destination à choisir';
+  const country = destinationsLabel(project, countryLabel) || 'destination à choisir';
   return `Études — ${country}${parts ? ` — ${parts}` : ''}`;
 }
 
@@ -413,10 +512,16 @@ export async function saveProjectToAccount(project: StudyProject, countryLabel?:
     project,
     title: projectTitle(project, countryLabel),
     startDate: project.startMonth ? `${project.startMonth}-01` : undefined,
-    destinations: project.cities.length
-      ? project.cities.map((city, order) => ({ country: project.destination, city, order }))
-      : [{ country: project.destination, order: 0 }],
+    destinations: tripDestinations(project),
   });
+}
+
+/** Étapes du trip : chaque pays visé, avec ses villes. */
+function tripDestinations(project: StudyProject) {
+  const list = syncedDestinations(project);
+  const stops = (list.length ? list : [{ country: project.destination, label: project.destination, cities: project.cities }])
+    .flatMap(d => (d.cities.length ? d.cities.map(city => ({ country: d.country, city })) : [{ country: d.country, city: undefined as string | undefined }]));
+  return stops.map((s, order) => ({ ...s, order }));
 }
 
 /** Projets d'études parmi les trips détaillés du compte (voir `loadTripDetails`). */
@@ -452,19 +557,19 @@ export function projectSummary(project: StudyProject, countryLabel?: string): st
     `Nationalité : ${project.profile.nationality || '—'}`,
     `Pays de résidence : ${project.profile.residence || '—'}`,
     `Diplôme actuel : ${project.profile.diploma || '—'}`,
-    `Niveau de langue : ${project.profile.languageLevel || '—'}`,
+    `Langues : ${languagesText(project.profile.languages) || project.profile.languageLevel || '—'}`,
     '',
-    `Destination : ${countryLabel || project.destination || '—'}`,
+    `Destination${project.destinations.length > 1 ? 's' : ''} : ${destinationsLabel(project, countryLabel) || '—'}`,
     `Niveau visé : ${levelLabel(project.level) || '—'}`,
     `Domaine : ${[...domainLabels(project.domains), project.fieldQuery].filter(Boolean).join(', ') || '—'}`,
-    `Villes : ${project.cities.join(', ') || '—'}`,
+    `Villes : ${syncedDestinations(project).filter(d => d.cities.length).map(d => `${d.cities.join(', ')}${project.destinations.length > 1 ? ` (${d.label})` : ''}`).join(' ; ') || '—'}`,
     `Rentrée souhaitée : ${project.startMonth || '—'}`,
     `Langue d'enseignement : ${project.preferences.teachingLanguages.join(', ') || 'indifférent'}`,
     `Format : ${project.preferences.formats.join(', ') || 'indifférent'}`,
     `Universités publiques uniquement : ${project.preferences.publicOnly ? 'oui' : 'non'}`,
     '',
     `Services demandés : ${project.services.map(serviceLabel).join(', ') || '—'}`,
-    `Universités présélectionnées : ${project.shortlist.map(u => `${u.name} (${u.city})`).join(' ; ') || '—'}`,
+    `Universités présélectionnées : ${project.shortlist.map(u => `${u.name} (${[u.city, u.country].filter(Boolean).join(', ')})`).join(' ; ') || '—'}`,
     `Offres Ausbildung retenues : ${project.offerShortlist.map(o => `${o.employer} (${o.city})`).join(' ; ') || '—'}`,
     `Services tourisme (Mix) : ${project.tourismServices.join(', ') || '—'}`,
     `Offre et paiement : ${project.price.snapshot ? snapshotLabel(project.price.snapshot) : 'à définir avec le conseiller'}`,
