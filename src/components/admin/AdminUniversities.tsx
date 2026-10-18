@@ -30,6 +30,8 @@ interface UniversityRow {
   // Story 5.13 : profil d'admission.
   minimumGrade?: string | null;
   admissionRequirements?: string | null;
+  // Statut : true = public, false = privé, null = non renseigné.
+  isPublic?: boolean | null;
   programs?: Program[];
 }
 
@@ -38,12 +40,14 @@ type UniversityForm = {
   applicationUrl: string; specialty: string;
   requiredLanguage: string; requiredLanguageLevel: string;
   minimumGrade: string; admissionRequirements: string;
+  /** '' = non renseigné ; le backend convertit 'true' / 'false' en booléen. */
+  isPublic: '' | 'true' | 'false';
 };
 
 const emptyForm: UniversityForm = {
   name: '', city: '', country: '', website: '',
   applicationUrl: '', specialty: '', requiredLanguage: '', requiredLanguageLevel: '',
-  minimumGrade: '', admissionRequirements: '',
+  minimumGrade: '', admissionRequirements: '', isPublic: '',
 };
 
 const toForm = (u: UniversityRow): UniversityForm => ({
@@ -52,6 +56,7 @@ const toForm = (u: UniversityRow): UniversityForm => ({
   specialty: u.specialty ?? '',
   requiredLanguage: u.requiredLanguage ?? '', requiredLanguageLevel: u.requiredLanguageLevel ?? '',
   minimumGrade: u.minimumGrade ?? '', admissionRequirements: u.admissionRequirements ?? '',
+  isPublic: u.isPublic === true ? 'true' : u.isPublic === false ? 'false' : '',
 });
 
 /** Une université a des conditions dès que la langue **et** le niveau sont posés. */
@@ -651,9 +656,18 @@ const AdminUniversities: React.FC = () => {
               <datalist id="admin-univ-countries">{countryOptions.map(c => <option key={c} value={c} />)}</datalist>
               <datalist id="admin-univ-cities">{cityOptions.map(c => <option key={c} value={c} />)}</datalist>
 
-              <Field label="Spécialité">
-                <TextInput value={form.specialty} onChange={e => set('specialty', e.target.value)} placeholder="Excellence en sciences sociales" />
-              </Field>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="Spécialité">
+                  <TextInput value={form.specialty} onChange={e => set('specialty', e.target.value)} placeholder="Excellence en sciences sociales" />
+                </Field>
+                <Field label="Statut">
+                  <Select value={form.isPublic} onChange={e => set('isPublic', e.target.value as UniversityForm['isPublic'])}>
+                    <option value="">— Non renseigné —</option>
+                    <option value="true">Public</option>
+                    <option value="false">Privé</option>
+                  </Select>
+                </Field>
+              </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="Site web">

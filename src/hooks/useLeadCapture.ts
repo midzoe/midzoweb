@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 
-export const useLeadCapture = () => {
+/**
+ * `enabled` = la page courante peut être interrompue. Sur une page de tâche (parcours
+ * Study, connexion, dashboard…) la popup recouvrait le formulaire en pleine saisie :
+ * le minuteur ne tourne alors pas, et il repart à zéro sur une page éligible.
+ */
+export const useLeadCapture = (enabled = true) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasAlreadyShown, setHasAlreadyShown] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     // Check if modal has already been shown in this session
     const modalShown = localStorage.getItem('midzo_modal_shown_today');
     const lastShownTime = localStorage.getItem('midzo_last_modal_show_time');
@@ -32,7 +38,7 @@ export const useLeadCapture = () => {
     }
 
     setHasAlreadyShown(true);
-  }, []);
+  }, [enabled]);
 
   const closeModal = () => {
     setIsModalOpen(false);

@@ -61,11 +61,37 @@ class ApiService {
 
   // Auth methods
   async login(identifier: string, password: string) {
-    const response = await this.request<any>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username: identifier, password }),
-    });
-    
+    const attempt = (username: string) =>
+      this.request<any>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ username, password }),
+      });
+
+    let response: any;
+    try {
+      response = await attempt(identifier);
+    } catch (error: any) {
+      // Le backend ne cherche que par nom d'utilisateur, alors que le formulaire propose
+      // « email ou nom d'utilisateur » et que l'inscription dérive ce nom de l'email
+      // (`prenom.nom@…` → `prenom_nom`) sans le montrer. Pour un email refusé, on retente
+      // avec ce nom dérivé — en n'acceptant que le compte qui porte bien cet email.
+      const typed = identifier.trim();
+      if (error?.status !== 401 || !typed.includes('@')) throw error;
+      const toUsername = (email: string) => email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
+      // L'inscription garde la casse saisie : on essaie la saisie telle quelle, puis en minuscules.
+      const candidates = [...new Set([toUsername(typed), toUsername(typed.toLowerCase())])];
+      response = null;
+      for (const username of candidates) {
+        try {
+          response = await attempt(username);
+          break;
+        } catch (retryError: any) {
+          if (retryError?.status !== 401) throw retryError;
+        }
+      }
+      if (response?.user?.email?.toLowerCase() !== typed.toLowerCase()) throw error;
+    }
+
     if (response.success && response.token) {
       localStorage.setItem('midzo_token', response.token);
       localStorage.setItem('midzo_user', JSON.stringify(response.user));
@@ -101,6 +127,14 @@ class ApiService {
     }
 
     return response;
+  }
+
+  // Mot de passe oublié : code par email, puis nouveau mot de passe.
+  async forgotPassword(email: string) {
+    return this.request<any>('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+  }
+  async resetPassword(email: string, code: string, password: string) {
+    return this.request<any>('/auth/reset-password', { method: 'POST', body: JSON.stringify({ email, code, password }) });
   }
 
   async resendVerificationCode(email: string) {
@@ -284,6 +318,11 @@ class ApiService {
 
   async getUniversityPrograms() {
     return this.request<any>('/universities/programs');
+  }
+
+  /** Pays d'études publics (validés) : langues d'enseignement, frais, bourses, admission. */
+  async getStudyCountries() {
+    return this.request<any>('/study-countries');
   }
 
   // Extended profile update (premium fields)
@@ -1115,6 +1154,23 @@ class ApiService {
   }
   async adminDeleteJob(id: number) {
     return this.request<any>(`/admin/jobs/${id}`, { method: 'DELETE' });
+  }
+
+  // Ausbildung (parcours Study) : offres publiées, puis CRUD admin.
+  async getVocationalTrainings(params?: { country?: string; city?: string; domain?: string }) {
+    return this.request<any>(`/vocational-trainings${buildQuery(params)}`);
+  }
+  async adminGetVocationalTrainings() {
+    return this.request<any>('/admin/vocational-trainings');
+  }
+  async adminCreateVocationalTraining(data: object) {
+    return this.request<any>('/admin/vocational-trainings', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateVocationalTraining(id: number, data: object) {
+    return this.request<any>(`/admin/vocational-trainings/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteVocationalTraining(id: number) {
+    return this.request<any>(`/admin/vocational-trainings/${id}`, { method: 'DELETE' });
   }
 
   async adminGetTrainings() {

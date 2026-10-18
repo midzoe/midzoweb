@@ -1,19 +1,21 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useCategories, catalogText } from '../hooks/useCategories';
 import { format } from 'date-fns';
 import {
-  PlusCircleIcon, StarIcon, XMarkIcon,
+  PlusCircleIcon, StarIcon,
   MapPinIcon, CheckCircleIcon,
   GlobeAltIcon, UserGroupIcon,
   CheckIcon, CalendarDaysIcon, ArrowRightIcon, ClockIcon,
 } from '@heroicons/react/24/outline';
 import TripForm from './TripForm';
 import TripWizard from './TripWizard';
-import TripBuilder from './TripBuilder';
 import NotificationsPanel from './notifications/NotificationsPanel';
+import StudyProjectsPanel from './study/StudyProjectsPanel';
+import { SavedStudyProject, loadAccountTrips, loadDraft } from './study/studyProject';
+import { apiService } from '../services/api';
 
 interface Trip {
   id: string;
@@ -36,6 +38,23 @@ const TILE_PALETTE = [
   { bg: 'bg-amber-50',  color: 'text-amber-600',  border: 'border-amber-100' },
 ];
 
+/** Trip de l'API → carte du dashboard (destination = première étape). */
+const toTrip = (t: any): Trip => ({
+  id: String(t.id),
+  title: t.title,
+  destination: t.destinations?.[0]?.country ?? '',
+  startDate: t.startDate ?? '',
+  endDate: t.endDate ?? '',
+  status: t.status === 'completed' ? 'completed' : 'ongoing',
+  progress: t.status === 'completed' ? 100 : 0,
+});
+
+/** `format` lève une exception sur une date invalide : un trip sans date ne doit pas casser la page. */
+const safeFormat = (value: string, pattern: string) => {
+  const d = new Date(value);
+  return value && !isNaN(d.getTime()) ? format(d, pattern) : '—';
+};
+
 const Dashboard: React.FC = () => {
   const { t, i18n } = useTranslation('dashboard');
   // Les libellés du catalogue vivent dans le namespace `services`, pas `dashboard`.
@@ -48,7 +67,29 @@ const Dashboard: React.FC = () => {
   const [showTripWizard, setShowTripWizard]   = useState(false);
   const [selectedTrip, setSelectedTrip]       = useState<Trip | null>(null);
   const [trips, setTrips]                     = useState<Trip[]>([]);
-  const [showTripBuilder, setShowTripBuilder] = useState(false);
+  const [studyProjects, setStudyProjects]     = useState<SavedStudyProject[]>([]);
+  const [tripsLoading, setTripsLoading]       = useState(false);
+  const [tripsError, setTripsError]           = useState('');
+  const [studyDraft]                          = useState(() => loadDraft());
+
+  // Trips et projets d'études viennent du compte : ils survivent au rechargement
+  // et à la reconnexion (ils vivaient auparavant dans l'état local de la page).
+  const loadTrips = useCallback(async () => {
+    if (!user) return;
+    setTripsLoading(true);
+    setTripsError('');
+    try {
+      const { projects, otherTrips } = await loadAccountTrips();
+      setStudyProjects(projects);
+      setTrips(otherTrips.map(toTrip));
+    } catch {
+      setTripsError('Impossible de charger vos projets. Réessayez plus tard.');
+    } finally {
+      setTripsLoading(false);
+    }
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadTrips(); }, [loadTrips]);
 
   const ongoingTrips   = trips.filter(t => t.status !== 'completed');
   const completedTrips = trips.filter(t => t.status === 'completed');
@@ -58,11 +99,22 @@ const Dashboard: React.FC = () => {
     setShowTripForm(true);
   };
 
-  const handleSaveTrip = (trip: Trip) => {
-    if (selectedTrip) {
-      setTrips(trips.map(t => t.id === trip.id ? trip : t));
-    } else {
-      setTrips([...trips, { ...trip, id: Math.random().toString() }]);
+  const handleSaveTrip = async (trip: Trip) => {
+    const payload = {
+      title: trip.title,
+      status: trip.status === 'completed' ? 'completed' : 'upcoming',
+      startDate: trip.startDate || undefined,
+      endDate: trip.endDate || undefined,
+    };
+    try {
+      if (selectedTrip) {
+        await apiService.updateTrip(Number(selectedTrip.id), payload);
+      } else {
+        await apiService.createTrip({ ...payload, destinations: trip.destination ? [{ country: trip.destination }] : [] });
+      }
+      await loadTrips();
+    } catch {
+      setTripsError("L'enregistrement du voyage a échoué. Réessayez plus tard.");
     }
     setShowTripForm(false);
     setShowTripWizard(false);
@@ -124,6 +176,31 @@ const Dashboard: React.FC = () => {
     ongoing:   'bg-amber-100 text-amber-700',
     planned:   'bg-blue-100 text-blue-700',
   }[status] ?? 'bg-gray-100 text-gray-600');
+
+  // Sans compte : seul le brouillon Study de l'appareil peut être affiché.
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+            <h1 className="text-2xl font-bold text-gray-900">Mon espace MIDZOE</h1>
+            <p className="text-gray-500 mt-2">
+              Connectez-vous pour retrouver vos projets enregistrés, sur tous vos appareils.
+            </p>
+            <div className="flex justify-center gap-3 mt-6">
+              <Link to="/login?redirect=%2Fdashboard" className="px-5 py-2.5 rounded-xl border border-primary text-primary font-medium">
+                Se connecter
+              </Link>
+              <Link to="/register?redirect=%2Fdashboard" className="px-5 py-2.5 rounded-xl bg-primary text-white font-medium">
+                Créer un compte
+              </Link>
+            </div>
+          </div>
+          <StudyProjectsPanel isLoggedIn={false} projects={[]} loading={false} error="" draft={studyDraft} onChanged={() => {}} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -263,6 +340,15 @@ const Dashboard: React.FC = () => {
           {/* LEFT — Trips */}
           <div className="lg:col-span-2 space-y-5">
 
+            <StudyProjectsPanel
+              isLoggedIn
+              projects={studyProjects}
+              loading={tripsLoading}
+              error={tripsError}
+              draft={studyDraft}
+              onChanged={loadTrips}
+            />
+
             {/* Active Trips */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-5">
@@ -291,12 +377,12 @@ const Dashboard: React.FC = () => {
                       <PlusCircleIcon className="w-4 h-4" />
                       {t('plan_trip_cta')}
                     </button>
-                    <button
-                      onClick={() => setShowTripBuilder(true)}
+                    <Link
+                      to="/study"
                       className="flex items-center gap-2 bg-gradient-to-r from-primary to-secondary text-white px-5 py-2.5 rounded-xl font-medium hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm"
                     >
                       {t('plan_studies')}
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ) : (
@@ -322,7 +408,7 @@ const Dashboard: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
                         <span>
-                          {format(new Date(trip.startDate), 'MMM dd')} → {format(new Date(trip.endDate), 'MMM dd, yyyy')}
+                          {safeFormat(trip.startDate, 'MMM dd')} → {safeFormat(trip.endDate, 'MMM dd, yyyy')}
                         </span>
                         <span className="font-semibold text-primary">{trip.progress}%</span>
                       </div>
@@ -361,7 +447,7 @@ const Dashboard: React.FC = () => {
                             <CheckIcon className="w-3 h-3" />
                             {t('trip_status.completed')}
                           </span>
-                          <p className="text-xs text-gray-400 mt-1">{format(new Date(trip.endDate), 'MMM yyyy')}</p>
+                          <p className="text-xs text-gray-400 mt-1">{safeFormat(trip.endDate, 'MMM yyyy')}</p>
                         </div>
                       </div>
                     </div>
@@ -472,17 +558,6 @@ const Dashboard: React.FC = () => {
         onClose={() => setShowTripWizard(false)}
         onSave={handleSaveTrip}
       />
-      {showTripBuilder && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col">
-          <button
-            onClick={() => setShowTripBuilder(false)}
-            className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
-          >
-            <XMarkIcon className="w-6 h-6 text-gray-600" />
-          </button>
-          <TripBuilder />
-        </div>
-      )}
     </div>
   );
 };

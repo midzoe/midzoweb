@@ -77,5 +77,24 @@
     "verify_error": "Code invalide ou expiré. Veuillez réessayer.",
     "resend_code": "Renvoyer le Code",
     "resend_success": "Un nouveau code a été envoyé à votre email."
+  },
+  "password": {
+    "forgot_link": "Mot de passe oublié ?",
+    "forgot_title": "Mot de passe oublié",
+    "forgot_subtitle": "Saisissez l’email de votre compte : nous vous envoyons un code à 6 chiffres.",
+    "send_code": "Envoyer le code",
+    "code_sent": "Si un compte existe pour cet email, un code vient de lui être envoyé (valable 15 minutes).",
+    "code_label": "Code reçu par email",
+    "new_password": "Nouveau mot de passe",
+    "confirm_password": "Confirmer le mot de passe",
+    "reset_button": "Changer mon mot de passe",
+    "reset_success": "Mot de passe modifié. Vous pouvez vous connecter.",
+    "invalid_code": "Code invalide ou expiré. Demandez-en un nouveau.",
+    "password_too_short": "Au moins 6 caractères.",
+    "passwords_mismatch": "Les deux mots de passe ne correspondent pas.",
+    "back_to_login": "Retour à la connexion",
+    "generic_error": "Une erreur est survenue. Réessayez dans un instant.",
+    "not_verified": "Votre adresse email n’est pas encore vérifiée. Saisissez le code reçu par email (ou demandez-en un nouveau).",
+    "email_label": "Email du compte"
   }
 }

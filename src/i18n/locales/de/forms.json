@@ -77,5 +77,24 @@
     "verify_error": "Ungültiger oder abgelaufener Code. Bitte versuchen Sie es erneut.",
     "resend_code": "Code Erneut Senden",
     "resend_success": "Ein neuer Code wurde an Ihre E-Mail gesendet."
+  },
+  "password": {
+    "forgot_link": "Passwort vergessen?",
+    "forgot_title": "Passwort vergessen",
+    "forgot_subtitle": "Geben Sie die E-Mail Ihres Kontos ein: Wir senden Ihnen einen 6-stelligen Code.",
+    "send_code": "Code senden",
+    "code_sent": "Falls ein Konto mit dieser E-Mail existiert, wurde soeben ein Code gesendet (15 Minuten gültig).",
+    "code_label": "Per E-Mail erhaltener Code",
+    "new_password": "Neues Passwort",
+    "confirm_password": "Passwort bestätigen",
+    "reset_button": "Passwort ändern",
+    "reset_success": "Passwort geändert. Sie können sich jetzt anmelden.",
+    "invalid_code": "Ungültiger oder abgelaufener Code. Fordern Sie einen neuen an.",
+    "password_too_short": "Mindestens 6 Zeichen.",
+    "passwords_mismatch": "Die beiden Passwörter stimmen nicht überein.",
+    "back_to_login": "Zurück zur Anmeldung",
+    "generic_error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es gleich erneut.",
+    "not_verified": "Ihre E-Mail-Adresse ist noch nicht bestätigt. Geben Sie den erhaltenen Code ein (oder fordern Sie einen neuen an).",
+    "email_label": "E-Mail des Kontos"
   }
 }

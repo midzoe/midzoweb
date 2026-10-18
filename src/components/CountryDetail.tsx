@@ -79,7 +79,7 @@ const CountryDetail: React.FC = () => {
               <p className="text-xl text-white/90">{getMotto()}</p>
             </div>
             <Link
-              to="/login"
+              to={`/study?country=${encodeURIComponent(country ?? '')}`}
               className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-lg font-bold transition-colors shadow-lg"
             >
               {t('plan_journey')} →

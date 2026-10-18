@@ -24,6 +24,7 @@ const Navbar = () => {
 
   const navigation = [
     { name: t('home'), href: '/' },
+    { name: '🎓 Study', href: '/study' },
     { name: t('about'), href: '/about' },
     { name: t('services'), href: '/services' },
     { name: t('packages'), href: '/packages' },

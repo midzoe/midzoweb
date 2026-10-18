@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
+
+/** Retour après connexion : un chemin interne uniquement (pas d'URL externe ni `//hôte`). */
+const safeRedirect = (value: string | null) =>
+  value && value.startsWith('/') && !value.startsWith('//') ? value : '/dashboard';
 
 type Step = 'form' | 'verify';
 
@@ -10,6 +14,8 @@ const Register: React.FC = () => {
   const { t } = useTranslation('forms');
   const { register, verifyEmail, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
 
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
@@ -96,7 +102,7 @@ const Register: React.FC = () => {
 
     const result = await verifyEmail(email, code.trim());
     if (result.success) {
-      navigate('/dashboard');
+      navigate(safeRedirect(redirectParam));
     } else {
       setVerifyError(t('register.verify_error'));
     }
@@ -340,7 +346,7 @@ const Register: React.FC = () => {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             {t('register.have_account')}{' '}
-            <Link to="/login" className="font-medium text-primary hover:text-primary/80">
+            <Link to={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login'} className="font-medium text-primary hover:text-primary/80">
               {t('register.sign_in')}
             </Link>
           </p>

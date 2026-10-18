@@ -86,6 +86,7 @@ const navGroups: {
     items: [
       { href: '/admin/jobs', label: "Offres d'emploi", icon: BriefcaseIcon },
       { href: '/admin/trainings', label: 'Formations', icon: AcademicCapIcon },
+      { href: '/admin/vocational-trainings', label: 'Ausbildung', icon: AcademicCapIcon },
       { href: '/admin/service-providers', label: 'Démarches', icon: ClipboardDocumentCheckIcon },
     ],
   },

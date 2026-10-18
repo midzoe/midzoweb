@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import LeadMagnetModal from './components/leadMagnet/LeadMagnetModal';
 import { useLeadCapture } from './hooks/useLeadCapture';
 
@@ -40,6 +40,8 @@ import AdminRestaurants from './components/admin/AdminRestaurants';
 import AdminTourismAccommodations from './components/admin/AdminTourismAccommodations';
 import AdminJobs from './components/admin/AdminJobs';
 import AdminTrainings from './components/admin/AdminTrainings';
+import AdminVocationalTrainings from './components/admin/AdminVocationalTrainings';
+import ForgotPassword from './components/ForgotPassword';
 import AdminServiceProviders from './components/admin/AdminServiceProviders';
 import OrientationResources from './components/Orientation';
 
@@ -66,6 +68,7 @@ import CountryDetail from './components/CountryDetail';
 
 // Study Components
 import UniversityFinder from './components/study/UniversityFinder';
+import StudyPlanner from './components/study/StudyPlanner';
 import DocumentServices from './components/study/DocumentLegalization';
 import StudentVisa from './components/study/StudentVisa';
 import StudentAccommodation from './components/study/StudentAccommodation';
@@ -113,9 +116,20 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Pages où l'on remplit quelque chose : la popup d'inscription n'y apparaît pas. */
+const TASK_PAGES = /^\/(study|login|register|forgot-password|dashboard|profile|my-trips|premium|admin|contact)(\/|$)/;
+
+/** Popup « lead magnet » : visiteurs non connectés, hors pages de tâche. */
+function LeadCapture() {
+  const { pathname } = useLocation();
+  const { user } = useAuth();
+  const enabled = !user && !TASK_PAGES.test(pathname);
+  const { isModalOpen, closeModal } = useLeadCapture(enabled);
+  return <LeadMagnetModal isOpen={isModalOpen && enabled} onClose={closeModal} />;
+}
+
 function AppContent() {
   const { i18n } = useTranslation();
-  const { isModalOpen, closeModal } = useLeadCapture();
 
   useEffect(() => {
     document.documentElement.lang = i18n.language;
@@ -123,8 +137,8 @@ function AppContent() {
 
   return (
     <>
-      <LeadMagnetModal isOpen={isModalOpen} onClose={closeModal} />
       <Router>
+        <LeadCapture />
         <PublicLayout>
           <Routes>
             {/* ─── Admin Routes ──────────────────────────────── */}
@@ -161,6 +175,7 @@ function AppContent() {
             <Route path="/admin/tourism-accommodations" element={<AdminLayout><AdminTourismAccommodations /></AdminLayout>} />
             <Route path="/admin/jobs" element={<AdminLayout><AdminJobs /></AdminLayout>} />
             <Route path="/admin/trainings" element={<AdminLayout><AdminTrainings /></AdminLayout>} />
+            <Route path="/admin/vocational-trainings" element={<AdminLayout><AdminVocationalTrainings /></AdminLayout>} />
             <Route path="/admin/service-providers" element={<AdminLayout><AdminServiceProviders /></AdminLayout>} />
 
             {/* ─── Public Routes ─────────────────────────────── */}
@@ -180,6 +195,7 @@ function AppContent() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/my-trips" element={<MyTripsSpace />} />
             <Route path="/profile" element={<Profile />} />
@@ -190,6 +206,7 @@ function AppContent() {
             <Route path="/insurance" element={<Insurance />} />
 
             {/* Study Routes */}
+            <Route path="/study" element={<StudyPlanner />} />
             <Route path="/services/university-finder" element={<UniversityFinder />} />
             <Route path="/services/document-legalization" element={<DocumentServices />} />
             <Route path="/services/student-visa" element={<StudentVisa />} />
