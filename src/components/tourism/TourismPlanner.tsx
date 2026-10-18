@@ -6,6 +6,7 @@ import { AFRICAN_COUNTRIES } from '../../data/africanCountries';
 import { Chip, InfoCard, Section, externalHref, fieldClass, toggle } from '../projects/plannerUi';
 import { usePricing } from '../../pricing/usePricing';
 import PricingStep from '../../pricing/PricingStep';
+import { goToCheckout } from '../../pricing/checkout';
 import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
 import { formatEuros, quoteSelection } from '../../pricing/pricingEngine';
 import {
@@ -44,6 +45,7 @@ const TourismPlanner: React.FC = () => {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [cityInput, setCityInput] = useState('');
 
@@ -256,6 +258,34 @@ const TourismPlanner: React.FC = () => {
       setFeedback({ tone: 'error', text: "L'envoi de la demande a échoué. Votre voyage est enregistré ; réessayez dans un instant." });
     } finally {
       setSending(false);
+    }
+  };
+
+  // Paiement en ligne : le projet est d'abord enregistré, puis le serveur recalcule le prix de
+  // l'offre choisie (aucun montant n'est envoyé) et ouvre Stripe Checkout.
+  const pay = async () => {
+    if (!user) {
+      setFeedback({ tone: 'info', text: 'Pour payer en ligne, connectez-vous ou créez un compte : votre voyage est conservé.' });
+      return;
+    }
+    setPaying(true);
+    const saved = await save();
+    if (!saved) { setPaying(false); return; }
+    const codesToPay = saved.services;
+    if (!codesToPay.length && saved.price.offerId !== 'consultation') {
+      setFeedback({ tone: 'error', text: 'Choisissez au moins un service (ou la consultation) avant de payer.' });
+      setPaying(false);
+      return;
+    }
+    const error = await goToCheckout({
+      codes: codesToPay,
+      offerId: saved.price.snapshot?.offerId ?? saved.price.offerId,
+      installments: saved.price.installments,
+      tripId: saved.tripId,
+    });
+    if (error) {
+      setFeedback({ tone: 'error', text: error });
+      setPaying(false);
     }
   };
 
@@ -518,13 +548,17 @@ const TourismPlanner: React.FC = () => {
             {!canSave && <p className="mt-4 text-xs text-gray-500">À compléter : {dateError || missing.join(', ')}.</p>}
 
             <div className="mt-4 space-y-2">
-              <button type="button" onClick={save} disabled={saving || sending} data-testid="save-project"
+              <button type="button" onClick={save} disabled={saving || sending || paying} data-testid="save-project"
                 className="w-full py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-50">
                 {saving ? 'Enregistrement…' : user ? 'Enregistrer mon voyage' : 'Enregistrer mes choix'}
               </button>
-              <button type="button" onClick={sendRequest} disabled={saving || sending} data-testid="send-request"
+              <button type="button" onClick={sendRequest} disabled={saving || sending || paying} data-testid="send-request"
                 className="w-full py-3 rounded-xl border-2 border-orange-500 text-orange-600 font-semibold hover:bg-orange-50 disabled:opacity-50">
                 {sending ? 'Envoi…' : project.requestSentAt ? 'Renvoyer ma demande' : 'Demander ce voyage'}
+              </button>
+              <button type="button" onClick={pay} disabled={saving || sending || paying} data-testid="pay-online"
+                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-50">
+                {paying ? 'Ouverture du paiement…' : 'Payer en ligne (carte bancaire)'}
               </button>
               <Link to="/dashboard" className="block text-center w-full py-2 text-sm text-secondary hover:text-primary underline">Ouvrir mon dashboard</Link>
             </div>

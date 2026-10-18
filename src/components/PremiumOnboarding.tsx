@@ -2,20 +2,7 @@ import React, { useState } from 'react';
 import { XMarkIcon, StarIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
-
-const ALL_COUNTRIES = [
-  'Afghanistan', 'Algeria', 'Angola', 'Argentina', 'Australia', 'Austria', 'Belgium',
-  'Benin', 'Botswana', 'Brazil', 'Burkina Faso', 'Burundi', 'Cameroon', 'Canada',
-  'Chad', 'China', "Côte d'Ivoire", 'DR Congo', 'Egypt', 'Ethiopia', 'France',
-  'Gabon', 'Germany', 'Ghana', 'Guinea', 'India', 'Indonesia', 'Italy', 'Japan',
-  'Kenya', 'Madagascar', 'Malawi', 'Malaysia', 'Mali', 'Mauritania', 'Mauritius',
-  'Morocco', 'Mozambique', 'Namibia', 'Netherlands', 'New Zealand', 'Niger', 'Nigeria',
-  'Norway', 'Pakistan', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda',
-  'Saudi Arabia', 'Senegal', 'Sierra Leone', 'Singapore', 'Somalia', 'South Africa',
-  'South Korea', 'Spain', 'Sudan', 'Sweden', 'Switzerland', 'Tanzania', 'Thailand',
-  'Togo', 'Tunisia', 'Turkey', 'Uganda', 'Ukraine', 'United Arab Emirates',
-  'United Kingdom', 'United States', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe',
-].sort();
+import { ALL_COUNTRIES } from '../data/countryNames';
 
 const ALL_LANGUAGES = [
   'Arabic', 'Chinese (Mandarin)', 'Dutch', 'English', 'Finnish', 'French', 'German',

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
-import { LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../context/AuthContext';
+import { LockClosedIcon, EnvelopeIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 type Feedback = { tone: 'success' | 'error'; text: string } | null;
 
@@ -25,6 +27,25 @@ const AccountSecurity: React.FC<{ email: string }> = ({ email }) => {
   const [emailPassword, setEmailPassword] = useState('');
   const [emailFeedback, setEmailFeedback] = useState<Feedback>(null);
   const [busy, setBusy] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteFeedback, setDeleteFeedback] = useState<Feedback>(null);
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Droit à l'effacement (RGPD) : mot de passe + confirmation, puis déconnexion.
+  const deleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!window.confirm(t('security.delete_confirm'))) return;
+    setBusy(true);
+    try {
+      await apiService.deleteMyAccount(deletePassword);
+      logout();
+      navigate('/?account=deleted', { replace: true });
+    } catch (err: any) {
+      setDeleteFeedback({ tone: 'error', text: /invalid password/i.test(err?.message ?? '') ? t('security.password_wrong') : t('security.error') });
+      setBusy(false);
+    }
+  };
 
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +112,20 @@ const AccountSecurity: React.FC<{ email: string }> = ({ email }) => {
           </button>
         </form>
       </div>
+
+      {user?.role === 'user' && (
+        <form onSubmit={deleteAccount} className="mt-8 pt-6 border-t border-gray-100 space-y-3" aria-labelledby="delete-account">
+          <h3 id="delete-account" className="font-medium text-red-700 flex items-center gap-2"><TrashIcon className="h-4 w-4" />{t('security.delete_title')}</h3>
+          <p className="text-sm text-gray-600">{t('security.delete_text')}</p>
+          <label className="block text-sm text-gray-700 max-w-sm">{t('security.confirm_password')}
+            <input type="password" autoComplete="current-password" required value={deletePassword} onChange={e => setDeletePassword(e.target.value)} className={inputClass} />
+          </label>
+          <Message feedback={deleteFeedback} />
+          <button type="submit" disabled={busy} className="px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">
+            {t('security.delete_button')}
+          </button>
+        </form>
+      )}
     </section>
   );
 };

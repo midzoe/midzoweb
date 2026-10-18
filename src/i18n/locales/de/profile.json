@@ -39,6 +39,10 @@
     "email_taken": "Diese Adresse wird bereits von einem anderen Konto verwendet.",
     "email_invalid": "Ungültige E-Mail-Adresse.",
     "error": "Vorgang nicht möglich. Bitte später erneut versuchen.",
-    "email_note": "Um Ihre Adresse zu ändern, nutzen Sie den Bereich „Kontosicherheit“."
+    "email_note": "Um Ihre Adresse zu ändern, nutzen Sie den Bereich „Kontosicherheit“.",
+    "delete_title": "Mein Konto löschen",
+    "delete_text": "Ihr Konto, Ihre Projekte, Reisen, Benachrichtigungen und Ihre Akte werden endgültig gelöscht. Bereits geleistete Zahlungen bleiben gemäß unseren Bedingungen geschuldet.",
+    "delete_button": "Mein Konto endgültig löschen",
+    "delete_confirm": "Ihr Konto und alle Ihre Daten endgültig löschen? Dies kann nicht rückgängig gemacht werden."
   }
 }

@@ -14,7 +14,8 @@ const buttonClass =
 const ForgotPassword: React.FC = () => {
   const { t } = useTranslation('forms');
   const [searchParams] = useSearchParams();
-  const [step, setStep] = useState<'email' | 'reset' | 'done'>('email');
+  // ?step=code : lien d'invitation (le code a déjà été envoyé), on ouvre directement la saisie du code.
+  const [step, setStep] = useState<'email' | 'reset' | 'done'>(searchParams.get('step') === 'code' && searchParams.get('email') ? 'reset' : 'email');
   const [email, setEmail] = useState(searchParams.get('email') ?? '');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');

@@ -72,5 +72,8 @@
   "payment_text": "La remise dépend du nombre d’échéances. Exemple sur {{example}} ({{price}}) :",
   "payment_once": "En 1 fois",
   "payment_n": "En {{n}} fois",
-  "payment_discount": "{{pct}} % de remise"
+  "payment_discount": "{{pct}} % de remise",
+  "consultation_pay": "Payer la consultation en ligne",
+  "consultation_pay_login": "Se connecter pour payer en ligne",
+  "pay_opening": "Ouverture du paiement…"
 }

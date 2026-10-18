@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 
@@ -19,26 +19,19 @@ const fieldClass = 'w-full border-gray-300 rounded-md shadow-sm focus:ring-prima
 
 const TripForm: React.FC<TripFormProps> = ({ isOpen, onClose, existingTrip, onSave, onDelete }) => {
   const { t } = useTranslation('dashboard');
-  const [formData, setFormData] = useState(EMPTY);
+  // Monté à chaque ouverture (clé côté Dashboard) : l'état part toujours du voyage ouvert, ou
+  // vide pour « Nouveau voyage » — jamais des valeurs du voyage modifié juste avant.
+  const [formData, setFormData] = useState(() => existingTrip
+    ? {
+        title: existingTrip.title ?? '',
+        destination: existingTrip.destination ?? '',
+        startDate: toDateInput(existingTrip.startDate),
+        endDate: toDateInput(existingTrip.endDate),
+        status: existingTrip.status === 'completed' ? 'completed' : 'ongoing',
+      }
+    : EMPTY);
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  // Le formulaire reste monté entre deux ouvertures : on le réinitialise à chaque ouverture,
-  // sinon « Nouveau voyage » reprenait le voyage modifié juste avant (et créait un doublon).
-  useEffect(() => {
-    if (!isOpen) return;
-    setError('');
-    setShowDeleteConfirm(false);
-    setFormData(existingTrip
-      ? {
-          title: existingTrip.title ?? '',
-          destination: existingTrip.destination ?? '',
-          startDate: toDateInput(existingTrip.startDate),
-          endDate: toDateInput(existingTrip.endDate),
-          status: existingTrip.status === 'completed' ? 'completed' : 'ongoing',
-        }
-      : EMPTY);
-  }, [isOpen, existingTrip]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

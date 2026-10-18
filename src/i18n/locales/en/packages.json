@@ -72,5 +72,8 @@
   "payment_text": "The discount depends on the number of instalments. Example with {{example}} ({{price}}):",
   "payment_once": "One payment",
   "payment_n": "{{n}} monthly payments",
-  "payment_discount": "{{pct}}% off"
+  "payment_discount": "{{pct}}% off",
+  "consultation_pay": "Pay the consultation online",
+  "consultation_pay_login": "Sign in to pay online",
+  "pay_opening": "Opening payment…"
 }

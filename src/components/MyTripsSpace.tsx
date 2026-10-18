@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 // Epic 7 UI (7.7 dashboard, 7.8 assistant multi-destination, 7.9 checklist « prêt avant départ »).
 // Espace voyage autonome branché sur les endpoints /trips (vérifiés E2E 17/17).
 interface Destination { id?: number; country: string; city?: string; order?: number }
-interface TripService { id: number; type: string; label: string; status: string }
+interface TripService { id: number; type: string; label: string; status: string; note?: string | null; documentUrl?: string | null }
 interface ChecklistItem { id: number; label: string; category?: string; isDone: boolean }
 interface Trip {
   id: number;
@@ -15,6 +15,7 @@ interface Trip {
   startDate?: string;
   endDate?: string;
   destinations: Destination[];
+  createdByAdminId?: number | null;
   services?: TripService[];
   checklistItems?: ChecklistItem[];
 }
@@ -188,6 +189,7 @@ const TripSpace: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">{selected.title}</h2>
+                {selected.createdByAdminId && <p className="text-xs text-emerald-700 mt-1">Préparé par votre conseiller MIDZOE</p>}
                 {projectKind(selected) && (
                   <p className="text-xs text-gray-500 mt-1">
                     {projectKind(selected)} — à modifier depuis votre <Link to="/dashboard" className="text-primary underline">dashboard</Link>.
@@ -213,6 +215,9 @@ const TripSpace: React.FC = () => {
                   <label key={svc.id} className="flex items-center gap-3 text-sm">
                     <input type="checkbox" checked={svc.status === 'done'} onChange={() => toggleService(svc)} />
                     <span className={svc.status === 'done' ? 'line-through text-gray-400' : ''}>{svc.label}</span>
+                    {svc.status === 'in_progress' && <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">en cours</span>}
+                    {svc.note && <span className="text-xs text-gray-600 italic" data-testid="service-note">— {svc.note}</span>}
+                    {svc.documentUrl && <a href={svc.documentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">document</a>}
                   </label>
                 ))}
               </div>

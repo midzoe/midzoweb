@@ -14,6 +14,8 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
   const [status, setStatus] = useState('open');
   const [notes, setNotes] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
+  const [clientMessage, setClientMessage] = useState('');
+  const [nextStep, setNextStep] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -26,6 +28,8 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
         setStatus(res?.data?.case?.status || 'open');
         setNotes(res?.data?.case?.notes || '');
         setAssignedTo(res?.data?.case?.assignedTo || '');
+        setClientMessage(res?.data?.case?.clientMessage || '');
+        setNextStep(res?.data?.case?.nextStep || '');
       })
       .catch(() => setMsg('Impossible de charger le dossier.'))
       .finally(() => alive && setLoading(false));
@@ -35,8 +39,8 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
   const save = async () => {
     setSaving(true); setMsg('');
     try {
-      await apiService.adminUpdatePremiumCase(userId, { status, notes, assignedTo });
-      setMsg('Dossier enregistré.');
+      await apiService.adminUpdatePremiumCase(userId, { status, notes, assignedTo, clientMessage, nextStep });
+      setMsg('Dossier enregistré — le client est prévenu des changements qui le concernent.');
     } catch { setMsg('Échec de l’enregistrement.'); }
     finally { setSaving(false); }
   };
@@ -77,7 +81,16 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
             <TextInput value={assignedTo} onChange={e => setAssignedTo(e.target.value)} placeholder="Nom du conseiller MIDZOE" />
           </Field>
 
-          <Field label="Notes de suivi">
+          <Field label="Message au client (visible dans son espace)">
+            <TextArea aria-label="Message au client" value={clientMessage} onChange={e => setClientMessage(e.target.value)} rows={3}
+              placeholder="Ex. Nous avons bien reçu vos relevés de notes. Votre candidature part cette semaine." />
+          </Field>
+
+          <Field label="Prochaine étape (visible par le client)">
+            <TextInput aria-label="Prochaine étape" value={nextStep} onChange={e => setNextStep(e.target.value)} placeholder="Ex. Rendez-vous visa le 12/11" />
+          </Field>
+
+          <Field label="Notes internes (jamais montrées au client)">
             <TextArea value={notes} onChange={e => setNotes(e.target.value)} rows={5} />
           </Field>
 

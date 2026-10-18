@@ -1,18 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowPathIcon, MagnifyingGlassIcon, BanknotesIcon, CreditCardIcon, ClockIcon,
   ArrowTopRightOnSquareIcon, ChevronRightIcon, XMarkIcon, SparklesIcon, CubeIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { apiService } from '../../services/api';
-import { PageHeader, Card, StatCard, IconButton, Badge } from './ui';
+import { PageHeader, Card, StatCard, IconButton, Badge, PrimaryButton } from './ui';
+import RecordPaymentModal from './RecordPaymentModal';
+
+const METHOD_LABELS: Record<string, string> = { stripe: 'Carte (Stripe)', transfer: 'Virement', mobile_money: 'Mobile Money', cash: 'Espèces', other: 'Autre' };
 
 /**
  * Journal des paiements (table `purchases`, story 3.4).
  *
- * **Lecture seule, par construction.** La vérité d'un paiement est chez Stripe : cet
- * écran sert à consulter, chercher et rapprocher (via `stripe_session_id`), jamais à
- * corriger un montant. Chaque ligne payée porte le `quote` figé au moment de l'achat —
+ * Un paiement carte ne se corrige pas ici : sa vérité est chez Stripe (rapprochement via
+ * `stripe_session_id`). Les paiements reçus HORS LIGNE (virement, Mobile Money, espèces)
+ * s'enregistrent depuis cet écran, et leurs échéances suivantes s'y cochent. Chaque ligne payée porte le `quote` figé au moment de l'achat —
  * c'est la facture lisible des mois plus tard, on l'affiche telle quelle.
  *
  * Les montants sont en centimes et plusieurs devises peuvent cohabiter : les totaux sont
@@ -44,6 +47,11 @@ interface PurchaseRow {
   stripe_payment_intent_id: string | null;
   created_at: string;
   paid_at: string | null;
+  offer_label?: string | null;
+  installments?: number;
+  installments_paid?: number;
+  method?: string;
+  reference?: string | null;
   package: { id: number; name: string } | null;
   user: {
     id: number; email: string; username?: string | null;
@@ -179,11 +187,15 @@ const AdminPayments: React.FC = () => {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<number | null>(null);
 
+  // Seule la dernière requête affiche sa réponse (une réponse lente ne doit pas écraser les filtres).
+  const requestSeq = useRef(0);
   const load = useCallback(async () => {
+    const seq = ++requestSeq.current;
     setLoading(true);
     setError('');
     try {
       const res = await apiService.adminGetPurchases({ page, limit: 25, status, kind, search: search.trim() });
+      if (seq !== requestSeq.current) return;
       setRows(Array.isArray(res.data) ? res.data : []);
       setStats(res.stats ?? null);
       setTotal(res.total ?? 0);
@@ -195,6 +207,16 @@ const AdminPayments: React.FC = () => {
       setLoading(false);
     }
   }, [page, status, kind, search]);
+
+  const [recording, setRecording] = useState(false);
+
+  // Paiement hors ligne en plusieurs fois : l'admin coche chaque échéance reçue.
+  const addInstallment = async (row: PurchaseRow) => {
+    try {
+      await apiService.adminUpdatePurchase(row.id, { installments_paid: (row.installments_paid ?? 0) + 1, status: 'paid' });
+      await load();
+    } catch { setError('Mise à jour de l’échéance impossible.'); }
+  };
 
   // La recherche interroge l'API : on laisse retomber la frappe.
   useEffect(() => {
@@ -225,9 +247,12 @@ const AdminPayments: React.FC = () => {
             : 'Journal des achats de packages'
         }
         actions={
-          <IconButton title="Rafraîchir" onClick={load} disabled={loading}>
-            <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </IconButton>
+          <div className="flex items-center gap-2">
+            <PrimaryButton onClick={() => setRecording(true)}>+ Enregistrer un paiement</PrimaryButton>
+            <IconButton title="Rafraîchir" onClick={load} disabled={loading}>
+              <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </IconButton>
+          </div>
         }
       />
 
@@ -358,13 +383,23 @@ const AdminPayments: React.FC = () => {
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 text-stone-700">
                           <CubeIcon className="h-4 w-4 text-stone-400" />
-                          {row.package?.name ?? (row.is_custom ? 'Sur mesure' : '—')}
+                          {row.offer_label ?? row.package?.name ?? (row.is_custom ? 'Sur mesure' : '—')}
                         </span>
+                        <p className="text-xs text-stone-400">
+                          {METHOD_LABELS[row.method ?? 'stripe'] ?? row.method}
+                          {(row.installments ?? 1) > 1 ? ` · ${row.installments_paid ?? 0}/${row.installments} échéances` : ''}
+                          {row.reference ? ` · réf. ${row.reference}` : ''}
+                        </p>
+                        {row.method && row.method !== 'stripe' && (row.installments_paid ?? 0) < (row.installments ?? 1) && (
+                          <button type="button" onClick={() => addInstallment(row)} className="text-xs text-primary underline">+1 échéance reçue</button>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-stone-600">{dateLabel(row.paid_at ?? row.created_at)}</td>
                       <td className="px-4 py-3">
                         {paid
                           ? <Badge tone="green">Payé</Badge>
+                          : row.status === 'past_due' ? <Badge tone="rose">Échéance en retard</Badge>
+                          : row.status === 'cancelled' ? <Badge tone="slate">Annulé</Badge>
                           : <Badge tone="amber">En attente</Badge>}
                       </td>
                       <td className={`px-4 py-3 text-right tabular-nums font-medium ${paid ? 'text-stone-900' : 'text-stone-400'}`}>
@@ -413,9 +448,11 @@ const AdminPayments: React.FC = () => {
 
       <p className="mt-6 flex items-start gap-2 text-xs text-stone-400">
         <ExclamationTriangleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-        Écran en lecture seule : un paiement ne se corrige pas ici. La référence fait foi
-        dans le tableau de bord Stripe, et le devis affiché est celui figé au moment de l’achat.
+        Un paiement carte ne se corrige pas ici : la référence fait foi dans le tableau de bord Stripe,
+        et le devis affiché est celui figé au moment de l’achat. Les paiements hors ligne s’enregistrent avec le bouton ci-dessus.
       </p>
+
+      {recording && <RecordPaymentModal onClose={() => setRecording(false)} onSaved={() => { setRecording(false); load(); }} />}
     </div>
   );
 };

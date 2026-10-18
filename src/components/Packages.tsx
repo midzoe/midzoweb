@@ -9,6 +9,8 @@ import {
   CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { goToCheckout } from '../pricing/checkout';
 import { usePricing } from '../pricing/usePricing';
 import { formatEuros, paymentPlan } from '../pricing/pricingEngine';
 import { useCategories } from '../hooks/useCategories';
@@ -181,6 +183,17 @@ const Packages: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  const { user } = useAuth();
+  const [payingConsultation, setPayingConsultation] = useState(false);
+  const [payError, setPayError] = useState('');
+  // Consultation : seule offre réglable directement depuis la grille (sans sélection de services).
+  const payConsultation = async () => {
+    setPayingConsultation(true);
+    setPayError('');
+    const error = await goToCheckout({ codes: [], offerId: 'consultation', installments: 1 });
+    if (error) { setPayError(error); setPayingConsultation(false); }
+  };
 
   const byFamily = useMemo(() => {
     const groups: Record<string, ShowcasePackage[]> = { study: [], tourism: [], mix: [], consultation: [] };
@@ -458,6 +471,15 @@ const Packages: React.FC = () => {
                   {t('consultation_cta')}
                   <ArrowRightIcon className="h-4 w-4" />
                 </Link>
+                {user ? (
+                  <button type="button" onClick={payConsultation} disabled={payingConsultation} data-testid="pay-consultation"
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50">
+                    {payingConsultation ? t('pay_opening') : t('consultation_pay')}
+                  </button>
+                ) : (
+                  <Link to="/login?redirect=%2Fpackages" className="mt-2 block text-center text-xs text-stone-500 underline">{t('consultation_pay_login')}</Link>
+                )}
+                {payError && <p role="alert" className="mt-2 text-xs text-red-600">{payError}</p>}
               </div>
             </div>
           </section>

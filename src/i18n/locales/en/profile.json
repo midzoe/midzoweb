@@ -39,6 +39,10 @@
     "email_taken": "This address is already used by another account.",
     "email_invalid": "Invalid email address.",
     "error": "Something went wrong. Please try again later.",
-    "email_note": "To change your address, use the “Account security” section."
+    "email_note": "To change your address, use the “Account security” section.",
+    "delete_title": "Delete my account",
+    "delete_text": "Your account, projects, trips, notifications and file are permanently deleted. Payments already made remain due under our terms.",
+    "delete_button": "Permanently delete my account",
+    "delete_confirm": "Permanently delete your account and all your data? This cannot be undone."
   }
 }

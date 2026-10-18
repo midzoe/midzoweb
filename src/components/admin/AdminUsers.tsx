@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { apiService } from '../../services/api';
 import {
   MagnifyingGlassIcon, StarIcon, TrashIcon, PencilIcon, FolderOpenIcon,
@@ -7,6 +7,10 @@ import {
   PaperAirplaneIcon, BanknotesIcon, LanguageIcon, BellAlertIcon,
 } from '@heroicons/react/24/outline';
 import PremiumCasePanel from './PremiumCasePanel';
+import ClientTripsPanel from './ClientTripsPanel';
+import RecordPaymentModal from './RecordPaymentModal';
+import NewUserModal from './NewUserModal';
+import AuditTrail from './AuditTrail';
 import { ALL_COUNTRIES } from '../../data/countryNames';
 import {
   PageHeader, TableShell, EmptyRow, IconButton, Badge, StatCard,
@@ -76,6 +80,7 @@ const caseLabel = (s: string) =>
 const firstName = (u: AdminUser) => u.firstName ?? u.first_name ?? '';
 const lastName = (u: AdminUser) => u.lastName ?? u.last_name ?? '';
 const fullName = (u: AdminUser) => [firstName(u), lastName(u)].filter(Boolean).join(' ');
+const displayName = (u: AdminUser) => fullName(u) || u.username;
 const isPremium = (u: AdminUser) => Boolean(u.isPremium ?? u.is_premium);
 const createdAt = (u: AdminUser) => u.createdAt ?? u.created_at;
 
@@ -129,7 +134,8 @@ const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  // ?search= : lien depuis « Dossiers clients » ou un message de contact.
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('search') ?? '');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [editing, setEditing] = useState<EditState | null>(null);
@@ -141,24 +147,34 @@ const AdminUsers: React.FC = () => {
   const [sort, setSort] = useState('recent');
   const [expanded, setExpanded] = useState<number | null>(null);
   const [caseUserId, setCaseUserId] = useState<number | null>(null);
+  const [tripsUser, setTripsUser] = useState<{ id: number; label: string } | null>(null);
+  const [paymentUser, setPaymentUser] = useState<{ id: number; label: string } | null>(null);
+  const [auditUser, setAuditUser] = useState<{ id: number; label: string } | null>(null);
+  const [creatingUser, setCreatingUser] = useState(false);
   const limit = 20;
+  // Chaque frappe ou filtre relance une requête : seule la dernière a le droit d'afficher sa
+  // réponse, sinon une réponse lente et périmée écrase la liste filtrée.
+  const requestSeq = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++requestSeq.current;
     setLoading(true);
     setError('');
     try {
       const res = await apiService.adminGetUsers(page, limit, search, segment, { role, verified, sort });
+      if (seq !== requestSeq.current) return;
       const list = res.data ?? res.users ?? res.results ?? res.items ?? [];
       const count = res.total ?? res.count ?? res.total_count ?? list.length ?? 0;
       setUsers(Array.isArray(list) ? list : []);
       setTotal(typeof count === 'number' ? count : 0);
       setStats(res.stats ?? null);
     } catch {
+      if (seq !== requestSeq.current) return;
       setUsers([]);
       setTotal(0);
       setStats(null);
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, [page, search, segment, role, verified, sort]);
 
@@ -231,6 +247,7 @@ const AdminUsers: React.FC = () => {
       <PageHeader
         title="Utilisateurs"
         subtitle={`${total} compte${total > 1 ? 's' : ''}${filtered ? ' correspondant aux filtres' : ''}`}
+        actions={<PrimaryButton onClick={() => setCreatingUser(true)}>+ Nouveau client</PrimaryButton>}
       />
 
       {/* KPI — lecture globale de la base, indépendante des filtres */}
@@ -481,6 +498,9 @@ const AdminUsers: React.FC = () => {
                         {isPremium(u) && (
                           <SecondaryButton onClick={() => setCaseUserId(u.id)}>Ouvrir le dossier premium</SecondaryButton>
                         )}
+                        <SecondaryButton onClick={() => setTripsUser({ id: u.id, label: displayName(u) })}>Voyages du client</SecondaryButton>
+                        <SecondaryButton onClick={() => setPaymentUser({ id: u.id, label: `${displayName(u)} — ${u.email}` })}>Enregistrer un paiement</SecondaryButton>
+                        <SecondaryButton onClick={() => setAuditUser({ id: u.id, label: displayName(u) })}>Historique</SecondaryButton>
                         <SecondaryButton onClick={() => { window.location.href = `mailto:${u.email}`; }}>Écrire un email</SecondaryButton>
                       </div>
                     </div>
@@ -564,6 +584,28 @@ const AdminUsers: React.FC = () => {
 
       {caseUserId !== null && (
         <PremiumCasePanel userId={caseUserId} onClose={() => setCaseUserId(null)} />
+      )}
+
+      {tripsUser && (
+        <Modal title={`Voyages de ${tripsUser.label}`} onClose={() => { setTripsUser(null); load(); }} maxWidth="max-w-5xl">
+          <ClientTripsPanel userId={tripsUser.id} />
+        </Modal>
+      )}
+
+      {paymentUser && (
+        <RecordPaymentModal userId={paymentUser.id} userLabel={paymentUser.label}
+          onClose={() => setPaymentUser(null)} onSaved={() => { setPaymentUser(null); load(); }} />
+      )}
+
+      {auditUser && (
+        <Modal title={`Historique — ${auditUser.label}`} onClose={() => setAuditUser(null)} maxWidth="max-w-2xl">
+          <AuditTrail userId={auditUser.id} />
+        </Modal>
+      )}
+
+      {creatingUser && (
+        <NewUserModal onClose={() => setCreatingUser(false)}
+          onCreated={email => { setCreatingUser(false); setSearch(email); setPage(1); load(); }} />
       )}
     </div>
   );

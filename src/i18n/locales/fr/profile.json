@@ -39,6 +39,10 @@
     "email_taken": "Cette adresse est déjà utilisée par un autre compte.",
     "email_invalid": "Adresse email invalide.",
     "error": "Opération impossible. Réessayez plus tard.",
-    "email_note": "Pour changer d’adresse, utilisez la section « Sécurité du compte »."
+    "email_note": "Pour changer d’adresse, utilisez la section « Sécurité du compte ».",
+    "delete_title": "Supprimer mon compte",
+    "delete_text": "Votre compte, vos projets, voyages, notifications et votre dossier sont définitivement supprimés. Les paiements déjà effectués restent dus selon nos conditions.",
+    "delete_button": "Supprimer définitivement mon compte",
+    "delete_confirm": "Supprimer définitivement votre compte et toutes vos données ? Cette action est irréversible."
   }
 }

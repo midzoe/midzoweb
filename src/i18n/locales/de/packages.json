@@ -72,5 +72,8 @@
   "payment_text": "Der Rabatt hängt von der Anzahl der Raten ab. Beispiel mit {{example}} ({{price}}):",
   "payment_once": "Einmalzahlung",
   "payment_n": "{{n}} Monatsraten",
-  "payment_discount": "{{pct}} % Rabatt"
+  "payment_discount": "{{pct}} % Rabatt",
+  "consultation_pay": "Beratung online bezahlen",
+  "consultation_pay_login": "Anmelden, um online zu bezahlen",
+  "pay_opening": "Zahlung wird geöffnet…"
 }

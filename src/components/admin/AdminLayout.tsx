@@ -45,6 +45,7 @@ const navGroups: {
     items: [
       { href: '/admin', label: 'Dashboard', icon: HomeIcon, exact: true },
       { href: '/admin/users', label: 'Utilisateurs', icon: UsersIcon },
+      { href: '/admin/client-trips', label: 'Dossiers clients', icon: BriefcaseIcon },
       { href: '/admin/payments', label: 'Paiements', icon: CreditCardIcon },
       { href: '/admin/validation', label: 'File de validation', icon: ShieldCheckIcon },
     ],

@@ -11,7 +11,8 @@ import {
   CheckIcon, CalendarDaysIcon, ArrowRightIcon, ClockIcon,
 } from '@heroicons/react/24/outline';
 import TripForm from './TripForm';
-import TripWizard from './TripWizard';
+import PremiumOnboarding from './PremiumOnboarding';
+import DossierCard from './DossierCard';
 import NotificationsPanel from './notifications/NotificationsPanel';
 import StudyProjectsPanel from './study/StudyProjectsPanel';
 import { SavedStudyProject, loadDraft, parseStudyTrips, PROJECT_SERVICE_TYPE } from './study/studyProject';
@@ -77,7 +78,8 @@ const Dashboard: React.FC = () => {
   // Pendant le chargement, `categories` est vide et les tuiles ne s'affichent pas.
   const { categories, serviceDetails } = useCategories();
   const [showTripForm, setShowTripForm]       = useState(false);
-  const [showTripWizard, setShowTripWizard]   = useState(false);
+  const [showProfileGate, setShowProfileGate] = useState(false);
+  const [gateMessage, setGateMessage]         = useState('');
   const [selectedTrip, setSelectedTrip]       = useState<Trip | null>(null);
   const [trips, setTrips]                     = useState<Trip[]>([]);
   const [studyProjects, setStudyProjects]     = useState<SavedStudyProject[]>([]);
@@ -134,8 +136,29 @@ const Dashboard: React.FC = () => {
       setTripsError("L'enregistrement du voyage a échoué. Réessayez plus tard.");
     }
     setShowTripForm(false);
-    setShowTripWizard(false);
     setSelectedTrip(null);
+  };
+
+  // Story 3.6 / 3.9 : un client premium complète nationalité, résidence et langue avant son
+  // premier voyage (alertes visa / résidence). Le backend juge la complétude.
+  const openNewTrip = async () => {
+    setSelectedTrip(null);
+    if (user?.is_premium) {
+      try {
+        const res = await apiService.getProfileCompleteness();
+        if (!res?.complete) { setGateMessage(''); setShowProfileGate(true); return; }
+      } catch { /* vérification indisponible : on ne bloque pas */ }
+    }
+    setShowTripForm(true);
+  };
+
+  const handleGateComplete = async () => {
+    try {
+      const res = await apiService.getProfileCompleteness();
+      if (!res?.complete) { setGateMessage('Il manque encore : ' + (res?.missing ?? []).join(', ') + '.'); return; }
+    } catch { /* on laisse passer */ }
+    setShowProfileGate(false);
+    setShowTripForm(true);
   };
 
   const handleDeleteTrip = async () => {
@@ -276,7 +299,7 @@ const Dashboard: React.FC = () => {
                 {t('view_profile')}
               </Link>
               <button
-                onClick={() => { setSelectedTrip(null); setShowTripForm(true); }}
+                onClick={openNewTrip}
                 className="flex items-center gap-2 bg-white text-primary px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all shadow-lg"
               >
                 <PlusCircleIcon className="w-4 h-4" />
@@ -392,7 +415,7 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-base font-semibold text-gray-900">{t('active_trips')}</h2>
                 <button
-                  onClick={() => { setSelectedTrip(null); setShowTripForm(true); }}
+                  onClick={openNewTrip}
                   className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
                 >
                   <PlusCircleIcon className="w-4 h-4" />
@@ -412,7 +435,7 @@ const Dashboard: React.FC = () => {
                   <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">{t('no_trips_subtitle')}</p>
                   <div className="flex items-center justify-center gap-3 flex-wrap">
                     <button
-                      onClick={() => { setSelectedTrip(null); setShowTripForm(true); }}
+                      onClick={openNewTrip}
                       className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-medium hover:bg-primary/90 transition-colors text-sm shadow-md shadow-primary/20"
                     >
                       <PlusCircleIcon className="w-4 h-4" />
@@ -500,6 +523,9 @@ const Dashboard: React.FC = () => {
 
           {/* RIGHT — Sidebar */}
           <div className="space-y-5">
+
+            {/* Suivi du dossier par l'équipe MIDZOE */}
+            <DossierCard />
 
             {/* Notifications (alertes visa premium — story 4.6) */}
             <NotificationsPanel />
@@ -589,17 +615,19 @@ const Dashboard: React.FC = () => {
 
       {/* MODALS */}
       <TripForm
+        key={showTripForm ? `trip-${selectedTrip?.id ?? 'new'}` : 'closed'}
         isOpen={showTripForm}
         onClose={() => { setShowTripForm(false); setSelectedTrip(null); }}
         existingTrip={selectedTrip}
         onSave={handleSaveTrip}
         onDelete={handleDeleteTrip}
       />
-      <TripWizard
-        isOpen={showTripWizard}
-        onClose={() => setShowTripWizard(false)}
-        onSave={handleSaveTrip}
-      />
+      {showProfileGate && (
+        <>
+          <PremiumOnboarding isOpen onClose={() => setShowProfileGate(false)} onComplete={handleGateComplete} />
+          {gateMessage && <p role="alert" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-red-600 text-white text-sm px-4 py-2 rounded-lg shadow">{gateMessage}</p>}
+        </>
+      )}
     </div>
   );
 };

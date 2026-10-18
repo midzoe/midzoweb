@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -51,7 +51,8 @@ import Footer from './components/Footer';
 import Hero from './components/Hero';
 import NewsSlider from './components/NewsSlider';
 import Services from './components/Services';
-import PackageBuilder from './components/PackageBuilder';
+import PaymentResult from './components/PaymentResult';
+import AdminClientTrips from './components/admin/AdminClientTrips';
 import Packages from './components/Packages';
 import About from './components/About';
 import Contact from './components/Contact';
@@ -119,7 +120,7 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
 }
 
 /** Pages où l'on remplit quelque chose : la popup d'inscription n'y apparaît pas. */
-const TASK_PAGES = /^\/(study|tourism\/plan|login|register|forgot-password|dashboard|profile|my-trips|premium|admin|contact)(\/|$)/;
+const TASK_PAGES = /^\/(study|tourism\/plan|login|register|forgot-password|dashboard|profile|my-trips|premium|payment|admin|contact)(\/|$)/;
 
 /** Popup « lead magnet » : visiteurs non connectés, hors pages de tâche. */
 function LeadCapture() {
@@ -163,6 +164,7 @@ function AppContent() {
             <Route path="/admin/packages" element={<AdminLayout><AdminPackages /></AdminLayout>} />
             <Route path="/admin/pricing" element={<AdminLayout><AdminPricing /></AdminLayout>} />
             <Route path="/admin/price-grid" element={<AdminLayout><AdminPricedServices /></AdminLayout>} />
+            <Route path="/admin/client-trips" element={<AdminLayout><AdminClientTrips /></AdminLayout>} />
             <Route path="/admin/services" element={<AdminLayout><AdminServices /></AdminLayout>} />
             <Route path="/admin/contact-messages" element={<AdminLayout><AdminContactMessages /></AdminLayout>} />
             <Route path="/admin/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
@@ -193,9 +195,11 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/orientation" element={<OrientationResources />} />
-            {/* Grille commerciale (plaquette) ; /premium reste le constructeur à la carte. */}
+            {/* Grille tarifaire ; l'ancien constructeur /premium (tarifs à 0 €) renvoie vers elle. */}
             <Route path="/packages" element={<Packages />} />
-            <Route path="/premium" element={<PackageBuilder />} />
+            <Route path="/premium" element={<Navigate to="/packages" replace />} />
+            <Route path="/payment/success" element={<PaymentResult outcome="success" />} />
+            <Route path="/payment/cancel" element={<PaymentResult outcome="cancel" />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

@@ -959,9 +959,10 @@ class ApiService {
    * consulte et rapproche via `stripe_session_id`.
    */
   async adminGetPurchases(params: {
-    page?: number; limit?: number; status?: string; kind?: string; search?: string;
+    page?: number; limit?: number; status?: string; kind?: string; search?: string; userId?: number;
   } = {}) {
     const qs = new URLSearchParams();
+    if (params.userId) qs.set('user_id', String(params.userId));
     if (params.page) qs.set('page', String(params.page));
     if (params.limit) qs.set('limit', String(params.limit));
     if (params.status) qs.set('status', params.status);
@@ -975,7 +976,7 @@ class ApiService {
   async adminGetPremiumCase(userId: number) {
     return this.request<any>(`/admin/premium-cases/${userId}`);
   }
-  async adminUpdatePremiumCase(userId: number, data: { status?: string; notes?: string; assignedTo?: string }) {
+  async adminUpdatePremiumCase(userId: number, data: { status?: string; notes?: string; assignedTo?: string; clientMessage?: string; nextStep?: string }) {
     return this.request<any>(`/admin/premium-cases/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
   }
 
@@ -1240,6 +1241,80 @@ class ApiService {
   isAdmin(): boolean {
     const user = this.getCurrentUser();
     return user?.role === 'admin' || user?.role === 'superadmin';
+  }
+
+  // ─── Paiement en ligne (grille tarifaire, Stripe Checkout) ─────
+  /** Le serveur recalcule le prix : on n'envoie que les services, l'offre et les échéances. */
+  async createPaymentCheckout(data: { codes: string[]; offer_id?: string | null; installments: number; trip_id?: number }) {
+    return this.request<any>('/payments/checkout', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async confirmPayment(sessionId: string) {
+    return this.request<any>(`/payments/confirm?session_id=${encodeURIComponent(sessionId)}`);
+  }
+
+  // ─── Espace client : suivi du dossier, suppression du compte ───
+  async getMyDossier() {
+    return this.request<any>('/me/dossier');
+  }
+  async deleteMyAccount(password: string) {
+    return this.request<any>('/auth/account', { method: 'DELETE', body: JSON.stringify({ password }) });
+  }
+
+  // ─── Admin : voyages des clients ───────────────────────────────
+  async adminGetUserTrips(userId: number) {
+    return this.request<any>(`/admin/users/${userId}/trips`);
+  }
+  async adminCreateUserTrip(userId: number, data: object) {
+    return this.request<any>(`/admin/users/${userId}/trips`, { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminListTrips(params: { search?: string; status?: string; upcoming?: boolean; page?: number } = {}) {
+    const qs = new URLSearchParams();
+    if (params.search) qs.set('search', params.search);
+    if (params.status) qs.set('status', params.status);
+    if (params.upcoming) qs.set('upcoming', '1');
+    if (params.page) qs.set('page', String(params.page));
+    return this.request<any>(`/admin/trips${qs.toString() ? `?${qs}` : ''}`);
+  }
+  async adminUpdateTrip(tripId: number, data: object) {
+    return this.request<any>(`/admin/trips/${tripId}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteTrip(tripId: number) {
+    return this.request<any>(`/admin/trips/${tripId}`, { method: 'DELETE' });
+  }
+  async adminAddTripService(tripId: number, data: object) {
+    return this.request<any>(`/admin/trips/${tripId}/services`, { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateTripService(serviceId: number, data: object) {
+    return this.request<any>(`/admin/trips/services/${serviceId}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteTripService(serviceId: number) {
+    return this.request<any>(`/admin/trips/services/${serviceId}`, { method: 'DELETE' });
+  }
+  async adminAddTripChecklist(tripId: number, label: string) {
+    return this.request<any>(`/admin/trips/${tripId}/checklist`, { method: 'POST', body: JSON.stringify({ label }) });
+  }
+  async adminUpdateTripChecklist(itemId: number, data: object) {
+    return this.request<any>(`/admin/trips/checklist/${itemId}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteTripChecklist(itemId: number) {
+    return this.request<any>(`/admin/trips/checklist/${itemId}`, { method: 'DELETE' });
+  }
+
+  // ─── Admin : comptes, paiements hors ligne, réponses, journal ──
+  async adminCreateUser(data: object) {
+    return this.request<any>('/admin/users', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminRecordPurchase(data: object) {
+    return this.request<any>('/admin/purchases', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdatePurchase(id: number, data: object) {
+    return this.request<any>(`/admin/purchases/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  }
+  async adminReplyContactMessage(id: number, body: string) {
+    return this.request<any>(`/admin/contact/messages/${id}/reply`, { method: 'POST', body: JSON.stringify({ body }) });
+  }
+  async adminGetAudit(userId?: number) {
+    return this.request<any>(`/admin/audit${userId ? `?user_id=${userId}` : ''}`);
   }
 }
 
