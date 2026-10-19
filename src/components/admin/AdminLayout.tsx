@@ -29,6 +29,8 @@ import {
   MapPinIcon,
   BuildingStorefrontIcon,
   BriefcaseIcon,
+  MapIcon,
+  StarIcon,
   ClipboardDocumentCheckIcon,
   BanknotesIcon,
   CreditCardIcon,
@@ -46,6 +48,7 @@ const navGroups: {
       { href: '/admin', label: 'Dashboard', icon: HomeIcon, exact: true },
       { href: '/admin/users', label: 'Utilisateurs', icon: UsersIcon },
       { href: '/admin/client-trips', label: 'Dossiers clients', icon: BriefcaseIcon },
+      { href: '/admin/reviews', label: 'Avis clients', icon: StarIcon },
       { href: '/admin/payments', label: 'Paiements', icon: CreditCardIcon },
       { href: '/admin/validation', label: 'File de validation', icon: ShieldCheckIcon },
     ],
@@ -73,6 +76,7 @@ const navGroups: {
   {
     label: 'Tourisme',
     items: [
+      { href: '/admin/circuits', label: 'Circuits types', icon: MapIcon },
       { href: '/admin/tourism-programs', label: 'Programmes', icon: GlobeAmericasIcon },
       { href: '/admin/tourism-countries', label: 'Pays tourisme', icon: GlobeAmericasIcon },
       { href: '/admin/tourism-events', label: 'Événements', icon: CalendarDaysIcon },

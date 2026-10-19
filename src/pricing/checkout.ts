@@ -5,13 +5,19 @@ import { apiService } from '../services/api';
  * des services, de l'offre et du nombre d'échéances : aucun montant ne part du navigateur.
  * Renvoie un message d'erreur lisible, ou redirige vers Stripe (pas de retour).
  */
-export async function goToCheckout(params: { codes: string[]; offerId?: string | null; installments: number; tripId?: number }): Promise<string | null> {
+export const TERMS_VERSION = '2026-10-19';
+
+export async function goToCheckout(params: { codes: string[]; offerId?: string | null; installments: number; tripId?: number; travelers?: number; acceptTerms: boolean }): Promise<string | null> {
+  if (!params.acceptTerms) return 'Acceptez les conditions générales de vente et la politique de remboursement pour payer.';
   try {
     const res = await apiService.createPaymentCheckout({
       codes: params.codes,
       offer_id: params.offerId ?? undefined,
       installments: params.installments,
       trip_id: params.tripId,
+      travelers: params.travelers,
+      accept_terms: true,
+      terms_version: TERMS_VERSION,
     });
     if (res?.checkout_url) {
       window.location.assign(res.checkout_url);

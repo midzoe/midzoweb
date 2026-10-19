@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
+import CurrencySelect from './CurrencySelect';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
@@ -47,7 +48,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-primary">Midzoe</span>
+              <span className="text-2xl font-bold text-primary">Midzo</span>
             </Link>
           </div>
           
@@ -62,7 +63,7 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {/* Midzoe Tourism Link */}
+            {/* Midzo Tourism Link */}
             <div className="border-l border-gray-300 pl-4 ml-2 flex items-center gap-3">
               <Link
                 to="/tourism"
@@ -78,12 +79,15 @@ const Navbar = () => {
                   <Link to="/community" className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-t-lg">
                     👥 Community Stories
                   </Link>
-                  <Link to="/destination/botswana" className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-b-lg">
-                    📖 Guides
+                  <Link to="/tourism/circuits" className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-b-lg">
+                    🧭 Circuits & guides
                   </Link>
                 </div>
               </div>
             </div>
+
+            {/* Monnaie d'affichage */}
+            <CurrencySelect />
 
             {/* Language Switcher */}
             <div className="relative group">
@@ -190,8 +194,13 @@ const Navbar = () => {
               className="block pl-3 pr-4 py-3 text-base font-bold text-white bg-gradient-to-r from-orange-400 to-orange-500"
               onClick={() => setIsOpen(false)}
             >
-              🌍 Midzoe Tourism
+              🌍 Midzo Tourism
             </Link>
+
+            {/* Mobile : monnaie d'affichage */}
+            <div className="pl-3 pr-4 py-2">
+              <CurrencySelect />
+            </div>
 
             {/* Mobile Language Switcher */}
             <div className="pl-3 pr-4 py-2">

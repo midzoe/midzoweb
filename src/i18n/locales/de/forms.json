@@ -62,11 +62,11 @@
   },
   "register": {
     "title": "Konto Erstellen",
-    "subtitle": "Treten Sie Midzoe bei, um alle unsere Services zu nutzen",
+    "subtitle": "Treten Sie Midzo bei, um alle unsere Services zu nutzen",
     "have_account": "Haben Sie bereits ein Konto?",
     "sign_in": "Anmelden",
     "no_account": "Noch kein Konto?",
-    "success": "Konto erfolgreich erstellt! Willkommen bei Midzoe.",
+    "success": "Konto erfolgreich erstellt! Willkommen bei Midzo.",
     "error_email_exists": "Ein Konto mit dieser E-Mail existiert bereits.",
     "error_generic": "Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "verify_title": "E-Mail Bestätigen",

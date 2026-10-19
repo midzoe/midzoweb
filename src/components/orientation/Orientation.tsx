@@ -29,10 +29,10 @@ const Orientation = () => {
   const labels = {
     en: {
       title: 'Orientation',
-      subtitle: 'Before you travel, study, or work abroad — get the right guidance. Midzoe\'s orientation service helps you make informed decisions about your international project.',
+      subtitle: 'Before you travel, study, or work abroad — get the right guidance. Midzo\'s orientation service helps you make informed decisions about your international project.',
       cta: 'Start',
       premium_title: 'Premium Orientation — Corporate & Training Centers',
-      premium_desc: 'For companies sending teams abroad for training, conferences, or work assignments — Midzoe handles the complete orientation: visa, accommodation location, local logistics, and on-ground support.',
+      premium_desc: 'For companies sending teams abroad for training, conferences, or work assignments — Midzo handles the complete orientation: visa, accommodation location, local logistics, and on-ground support.',
       premium_cta: 'Request Corporate Orientation',
       process_title: 'Our Process',
       step1: 'Initial Consultation',
@@ -49,10 +49,10 @@ const Orientation = () => {
     },
     fr: {
       title: 'Orientation',
-      subtitle: 'Avant de voyager, étudier ou travailler à l\'étranger — obtenez les bons conseils. Le service d\'orientation Midzoe vous aide à prendre des décisions éclairées sur votre projet international.',
+      subtitle: 'Avant de voyager, étudier ou travailler à l\'étranger — obtenez les bons conseils. Le service d\'orientation Midzo vous aide à prendre des décisions éclairées sur votre projet international.',
       cta: 'Démarrer',
       premium_title: 'Orientation Premium — Entreprises & Centres de Formation',
-      premium_desc: 'Pour les entreprises envoyant des équipes à l\'étranger pour des formations, conférences ou missions — Midzoe gère l\'orientation complète : visa, localisation hébergement, logistique locale et support terrain.',
+      premium_desc: 'Pour les entreprises envoyant des équipes à l\'étranger pour des formations, conférences ou missions — Midzo gère l\'orientation complète : visa, localisation hébergement, logistique locale et support terrain.',
       premium_cta: 'Demander l\'Orientation Corporate',
       process_title: 'Notre Processus',
       step1: 'Consultation Initiale',
@@ -69,10 +69,10 @@ const Orientation = () => {
     },
     de: {
       title: 'Orientierung',
-      subtitle: 'Bevor Sie ins Ausland reisen, studieren oder arbeiten — holen Sie sich die richtige Beratung. Midzoes Orientierungsservice hilft Ihnen, fundierte Entscheidungen über Ihr internationales Projekt zu treffen.',
+      subtitle: 'Bevor Sie ins Ausland reisen, studieren oder arbeiten — holen Sie sich die richtige Beratung. Midzos Orientierungsservice hilft Ihnen, fundierte Entscheidungen über Ihr internationales Projekt zu treffen.',
       cta: 'Starten',
       premium_title: 'Premium-Orientierung — Unternehmen & Bildungszentren',
-      premium_desc: 'Für Unternehmen, die Teams für Schulungen, Konferenzen oder Einsätze ins Ausland entsenden — Midzoe übernimmt die komplette Orientierung: Visum, Unterkunft, lokale Logistik und Betreuung vor Ort.',
+      premium_desc: 'Für Unternehmen, die Teams für Schulungen, Konferenzen oder Einsätze ins Ausland entsenden — Midzo übernimmt die komplette Orientierung: Visum, Unterkunft, lokale Logistik und Betreuung vor Ort.',
       premium_cta: 'Corporate-Orientierung anfragen',
       process_title: 'Unser Prozess',
       step1: 'Erstgespräch',
@@ -134,7 +134,7 @@ const Orientation = () => {
       <div className="bg-primary py-16">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="inline-block bg-secondary text-white px-4 py-1 rounded-full text-sm font-semibold mb-4">
-            Midzoe
+            Midzo
           </div>
           <h1 className="text-4xl font-extrabold text-white sm:text-5xl mb-4">{heroTitle}</h1>
           <p className="text-xl text-white/80 max-w-3xl mx-auto">{heroSubtitle}</p>

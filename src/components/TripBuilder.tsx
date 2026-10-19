@@ -358,7 +358,7 @@ const TripBuilder = () => {
       <div className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <Link to="/tourism" className="text-sm font-medium text-gray-600 hover:text-primary mb-4 inline-block">
-            ← Retour à Midzoe Tourism
+            ← Retour à Midzo Tourism
           </Link>
           <h1 className="text-4xl font-bold text-gray-900">{t.title}</h1>
           <p className="text-gray-600 mt-2">{t.subtitle}</p>

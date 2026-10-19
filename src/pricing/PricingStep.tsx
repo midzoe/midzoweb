@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { formatEuros, offerLabel, paymentPlan, PricingData, quoteSelection, tierCovers } from './pricingEngine';
+import { offerLabel, paymentPlan, PricingData, quoteSelection, tierCovers } from './pricingEngine';
 import { CONSULTATION_OFFER, PriceChoice } from './priceChoice';
+import { formatMoney, useCurrency } from './currency';
 
 // Étape « Prix et package » des parcours Study et Tourisme : détail à la carte, offres
 // (la moins chère est conseillée), option consultation, mode de paiement et total.
@@ -14,13 +15,16 @@ interface Props {
   onChange: (choice: PriceChoice) => void;
   /** Palier demandé depuis /packages (?package=slug) : signalé s'il ne couvre pas la sélection. */
   requestedSlug?: string | null;
+  /** Voyageurs du dossier (services voyage : N inclus, puis majoration par voyageur). */
+  travelers?: number;
 }
 
-const PricingStep: React.FC<Props> = ({ pricing, pricingError, codes, choice, onChange, requestedSlug }) => {
+const PricingStep: React.FC<Props> = ({ pricing, pricingError, codes, choice, onChange, requestedSlug, travelers = 1 }) => {
+  useCurrency();
   if (pricingError) return <p className="text-sm text-red-600">Les tarifs n'ont pas pu être chargés. Réessayez dans un instant.</p>;
   if (!pricing) return <p className="text-sm text-gray-500">Chargement des tarifs…</p>;
 
-  const quote = quoteSelection(codes, pricing);
+  const quote = quoteSelection(codes, pricing, { travelers });
   const consultation = pricing.packages.find(p => p.family === 'consultation');
   const requested = requestedSlug ? pricing.packages.find(p => p.slug === requestedSlug) : null;
 
@@ -50,21 +54,32 @@ const PricingStep: React.FC<Props> = ({ pricing, pricingError, codes, choice, on
               <tr key={s.code} className="border-b border-gray-100">
                 <td className="px-3 py-1.5 text-gray-400 w-12">{s.code}</td>
                 <td className="px-3 py-1.5 text-gray-700">{s.name}</td>
-                <td className="px-3 py-1.5 text-right text-gray-900 whitespace-nowrap">{formatEuros(s.price_cents, currency)}</td>
+                <td className="px-3 py-1.5 text-right text-gray-900 whitespace-nowrap">{formatMoney(s.price_cents, currency)}</td>
               </tr>
             ))}
             <tr className="bg-gray-50 font-semibold">
               <td className="px-3 py-2" colSpan={2}>Valeur à la carte ({quote.services.length} service{quote.services.length > 1 ? 's' : ''})</td>
-              <td className="px-3 py-2 text-right" data-testid="price-value">{formatEuros(quote.valueCents, currency)}</td>
+              <td className="px-3 py-2 text-right" data-testid="price-value">{formatMoney(quote.valueCents, currency)}</td>
             </tr>
           </tbody>
         </table>
+        {quote.services.some(sv => sv.family === 'tourism') && (
+          <p className="px-3 py-2 text-xs text-gray-500 border-t border-gray-100" data-testid="traveler-note">
+            {(() => {
+              const policy = pricing.traveler_policy ?? { included: 2, extra_pct: 25 };
+              const extra = Math.max(0, travelers - policy.included);
+              return extra > 0
+                ? `Services voyage : prix par dossier, ${policy.included} voyageurs inclus. ${travelers} voyageurs : +${extra * policy.extra_pct} % sur les services voyage (déjà compris dans les offres ci-dessous).`
+                : `Services voyage : prix par dossier, jusqu’à ${policy.included} voyageurs inclus ; +${policy.extra_pct} % par voyageur supplémentaire.`;
+            })()}
+          </p>
+        )}
       </div>
 
       {requested && !requestedCovers && (
         <p className="text-sm text-amber-800 bg-amber-50 rounded-lg p-3" data-testid="requested-package-note">
           Le package <strong>{requested.name}</strong> ({requested.service_label}
-          {requested.value_cap_cents ? `, jusqu'à ${formatEuros(requested.value_cap_cents, currency)} de services` : ''})
+          {requested.value_cap_cents ? `, jusqu'à ${formatMoney(requested.value_cap_cents, currency)} de services` : ''})
           {tierCovers(requested, quote.services.filter(s => s.family === requested.family).length, quote.services.filter(s => s.family === requested.family).reduce((n, s) => n + s.price_cents, 0))
             ? ' couvre bien votre sélection, mais la payer à la carte revient moins cher.'
             : ' ne couvre pas votre sélection.'}
@@ -88,8 +103,8 @@ const PricingStep: React.FC<Props> = ({ pricing, pricingError, codes, choice, on
                   {isRecommended && <span className="ml-2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary text-white">Conseillé</span>}
                 </span>
                 <span className="text-right">
-                  <span className="font-bold text-gray-900">{formatEuros(o.priceCents, currency)}</span>
-                  {o.savingsCents > 0 && <span className="block text-xs text-emerald-700">économie {formatEuros(o.savingsCents, currency)}</span>}
+                  <span className="font-bold text-gray-900">{formatMoney(o.priceCents, currency)}</span>
+                  {o.savingsCents > 0 && <span className="block text-xs text-emerald-700">économie {formatMoney(o.savingsCents, currency)}</span>}
                 </span>
               </button>
             );
@@ -102,7 +117,7 @@ const PricingStep: React.FC<Props> = ({ pricing, pricingError, codes, choice, on
                 <span className="font-semibold text-gray-900">{consultation.name}</span>
                 <span className="block text-xs text-gray-500">Pas sûr ? Un expert analyse votre projet ; {consultation.features?.[1] ?? '5 % de remise sur le package choisi ensuite'}.</span>
               </span>
-              <span className="font-bold text-gray-900">{formatEuros(consultation.price_from_cents, currency)}</span>
+              <span className="font-bold text-gray-900">{formatMoney(consultation.price_from_cents, currency)}</span>
             </button>
           )}
         </div>
@@ -125,7 +140,7 @@ const PricingStep: React.FC<Props> = ({ pricing, pricingError, codes, choice, on
                     {opt.discount_pct > 0 && <span className="ml-1 text-emerald-700">−{opt.discount_pct} %</span>}
                   </span>
                   <span className="block text-xs text-gray-600">
-                    {opt.installments === 1 ? formatEuros(plan.totalCents, currency) : `${opt.installments} × ${formatEuros(plan.perInstallmentCents, currency)}`}
+                    {opt.installments === 1 ? formatMoney(plan.totalCents, currency) : `${opt.installments} × ${formatMoney(plan.perInstallmentCents, currency)}`}
                   </span>
                 </button>
               );
@@ -138,18 +153,18 @@ const PricingStep: React.FC<Props> = ({ pricing, pricingError, codes, choice, on
         <span className="text-sm">Total estimé</span>
         <span className="text-lg font-bold" data-testid="price-total">
           {isConsultation
-            ? formatEuros(basePrice, currency)
+            ? formatMoney(basePrice, currency)
             : (() => {
               const opt = pricing.payment_options.find(o => o.installments === choice.installments) ?? { installments: 1, discount_pct: 0 };
               const plan = paymentPlan(basePrice, opt);
               return plan.installments > 1
-                ? `${plan.installments} × ${formatEuros(plan.perInstallmentCents, currency)} (${formatEuros(plan.totalCents, currency)})`
-                : formatEuros(plan.totalCents, currency);
+                ? `${plan.installments} × ${formatMoney(plan.perInstallmentCents, currency)} (${formatMoney(plan.totalCents, currency)})`
+                : formatMoney(plan.totalCents, currency);
             })()}
         </span>
       </div>
       <p className="text-xs text-gray-500">
-        Montants calculés sur la grille tarifaire MIDZOE. Après votre demande, un conseiller confirme l'offre et vous transmet
+        Montants calculés sur la grille tarifaire MIDZO. Après votre demande, un conseiller confirme l'offre et vous transmet
         les modalités de paiement. <Link to="/packages" className="underline">Voir la grille complète</Link>.
       </p>
     </div>

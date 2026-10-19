@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { formatEuros } from '../pricing/pricingEngine';
+import { formatMoney, useCurrency } from '../pricing/currency';
+
 
 interface Confirmed {
   status: string;
@@ -16,6 +17,7 @@ interface Confirmed {
 
 /** Retour de Stripe : /payment/success?session_id=… (confirmation serveur) ou /payment/cancel. */
 const PaymentResult: React.FC<{ outcome: 'success' | 'cancel' }> = ({ outcome }) => {
+  useCurrency();
   const [params] = useSearchParams();
   const { user } = useAuth();
   const [state, setState] = useState<'loading' | 'paid' | 'pending' | 'error'>(outcome === 'success' ? 'loading' : 'error');
@@ -61,19 +63,19 @@ const PaymentResult: React.FC<{ outcome: 'success' | 'cancel' }> = ({ outcome })
     );
   }
   const plan = purchase && purchase.installments > 1
-    ? `${purchase.installments} échéances de ${formatEuros(Math.round(purchase.amount_cents / purchase.installments), purchase.currency)} (1re réglée)`
+    ? `${purchase.installments} échéances de ${formatMoney(Math.round(purchase.amount_cents / purchase.installments), purchase.currency)} (1re réglée)`
     : null;
   return (
     <Shell icon={<CheckCircleIcon className="h-12 w-12 text-emerald-500" />} title={state === 'paid' ? 'Paiement confirmé' : 'Paiement en cours de confirmation'}>
       {purchase && (
         <dl className="text-sm text-left bg-gray-50 rounded-xl p-4 space-y-1 my-4" data-testid="payment-summary">
           <div className="flex justify-between gap-4"><dt className="text-gray-500">Offre</dt><dd className="font-medium">{purchase.offer_label ?? '—'}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-gray-500">Montant</dt><dd className="font-medium">{formatEuros(purchase.amount_cents, purchase.currency)}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-gray-500">Montant</dt><dd className="font-medium">{formatMoney(purchase.amount_cents, purchase.currency)}</dd></div>
           {plan && <div className="flex justify-between gap-4"><dt className="text-gray-500">Paiement</dt><dd className="font-medium">{plan}</dd></div>}
         </dl>
       )}
       <p>{state === 'paid'
-        ? 'Votre dossier est ouvert : un conseiller MIDZOE vous contacte et suit chaque étape. Vous recevez aussi un email de confirmation.'
+        ? 'Votre dossier est ouvert : un conseiller MIDZO vous contacte et suit chaque étape. Vous recevez aussi un email de confirmation.'
         : 'Stripe finalise la transaction : elle apparaîtra dans votre dashboard d’ici quelques minutes.'}</p>
       <Actions />
     </Shell>

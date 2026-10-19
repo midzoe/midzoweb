@@ -67,6 +67,19 @@ const eq = (label: string, got: unknown, want: unknown) => {
   eq('6× : −2 % → 276 € × 6', [paymentPlan(169000, opt(6)).perInstallmentCents, paymentPlan(169000, opt(6)).totalCents], [27600, 165600]);
   eq('12× : −1 % → 139 € × 12', [paymentPlan(169000, opt(12)).perInstallmentCents, paymentPlan(169000, opt(12)).totalCents], [13900, 166800]);
 
+  // Voyageurs : services voyage par dossier, N inclus, +X % par voyageur supplémentaire
+  const policy = data.traveler_policy ?? { included: 2, extra_pct: 25 };
+  const tour = ['T1', 'T2', 'T3', 'T4'];
+  const base2 = quoteSelection(tour, data, { travelers: policy.included }).recommended!;
+  const base1 = quoteSelection(tour, data, { travelers: 1 }).recommended!;
+  const four = quoteSelection(tour, data, { travelers: policy.included + 2 }).recommended!;
+  eq(`Tourisme : 1 voyageur = ${policy.included} voyageurs (inclus)`, base1.priceCents, base2.priceCents);
+  eq(`Tourisme : ${policy.included + 2} voyageurs → +${2 * policy.extra_pct} %`, four.priceCents, Math.round(base2.priceCents * (1 + 2 * policy.extra_pct / 100) / 100) * 100);
+  eq('Études : le nombre de voyageurs ne change rien', quoteSelection(['S8', 'S9', 'S11'], data, { travelers: 6 }).recommended?.priceCents, 55000);
+  const mix2 = quoteSelection([...allStudy, 'T1', 'T2'], data, { travelers: 2 }).recommended!;
+  const mix5 = quoteSelection([...allStudy, 'T1', 'T2'], data, { travelers: 5 }).recommended!;
+  eq('Mix : seule la part voyage augmente (prix 5 voyageurs > 2 voyageurs, < +75 %)', mix5.priceCents > mix2.priceCents && mix5.priceCents < mix2.priceCents * 1.75, true);
+
   // Robustesse
   eq('Sélection vide → pas d’offre', best([]), null);
   eq('Code inconnu ignoré et signalé', q(['S1', 'X99']).unknownCodes, ['X99']);

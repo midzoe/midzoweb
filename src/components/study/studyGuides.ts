@@ -100,7 +100,7 @@ export function levelGuide(destination: string, level: string): LevelGuide | nul
     return {
       title: 'Formation professionnelle',
       points: [
-        'Le catalogue MIDZOE ne référence pas encore de formations professionnelles pour ce pays. Enregistrez votre projet : un conseiller vous orientera.',
+        'Le catalogue MIDZO ne référence pas encore de formations professionnelles pour ce pays. Enregistrez votre projet : un conseiller vous orientera.',
       ],
       links: [],
     };

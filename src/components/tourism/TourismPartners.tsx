@@ -105,14 +105,14 @@ const TourismPartners = () => {
       specialty: 'Speciality',
       need_help_title: 'Need help choosing?',
       need_help_desc: 'Not sure which platform is right for your trip? Tell us your destination, dates, and budget — we\'ll point you in the right direction for free.',
-      need_help_cta: 'Ask Midzoe',
-      midzoe_title: 'What Midzoe does instead',
-      midzoe_1: 'Event packages (World Cup, AFCON, Olympics)',
+      need_help_cta: 'Ask Midzo',
+      midzoe_title: 'What Midzo does instead',
+      midzoe_1: 'Event trips (AFCON 2027, marathons, Grands Prix)',
       midzoe_2: 'Safari & curated Africa experiences',
       midzoe_3: 'Sports tourism trips',
       midzoe_4: 'Visa assistance for your destination',
       midzoe_5: 'Full orientation & guidance services',
-      midzoe_cta: 'Explore Midzoe Services'
+      midzoe_cta: 'Explore Midzo Services'
     },
     fr: {
       title: 'Vols & Séjours',
@@ -123,14 +123,14 @@ const TourismPartners = () => {
       specialty: 'Spécialité',
       need_help_title: 'Besoin d\'aide pour choisir?',
       need_help_desc: 'Pas sûr de quelle plateforme choisir? Dites-nous votre destination, vos dates et votre budget — nous vous orienterons gratuitement.',
-      need_help_cta: 'Demander à Midzoe',
-      midzoe_title: 'Ce que fait Midzoe à la place',
-      midzoe_1: 'Packages événementiels (Coupe du Monde, CAN, JO)',
+      need_help_cta: 'Demander à Midzo',
+      midzoe_title: 'Ce que fait Midzo à la place',
+      midzoe_1: 'Voyages événementiels (CAN 2027, marathons, Grands Prix)',
       midzoe_2: 'Safari & expériences Afrique curated',
       midzoe_3: 'Voyages tourisme sportif',
       midzoe_4: 'Assistance visa pour votre destination',
       midzoe_5: 'Services d\'orientation & accompagnement complet',
-      midzoe_cta: 'Explorer les Services Midzoe'
+      midzoe_cta: 'Explorer les Services Midzo'
     },
     de: {
       title: 'Flüge & Aufenthalte',
@@ -141,14 +141,14 @@ const TourismPartners = () => {
       specialty: 'Spezialgebiet',
       need_help_title: 'Brauchen Sie Hilfe bei der Auswahl?',
       need_help_desc: 'Nicht sicher, welche Plattform für Ihre Reise die richtige ist? Nennen Sie uns Ihr Reiseziel, Ihre Daten und Ihr Budget — wir helfen kostenlos weiter.',
-      need_help_cta: 'Midzoe Fragen',
-      midzoe_title: 'Was Midzoe stattdessen macht',
-      midzoe_1: 'Event-Pakete (Weltmeisterschaft, AFCON, Olympia)',
+      need_help_cta: 'Midzo Fragen',
+      midzoe_title: 'Was Midzo stattdessen macht',
+      midzoe_1: 'Event-Reisen (AFCON 2027, Marathons, Grands Prix)',
       midzoe_2: 'Safari & kuratierte Afrika-Erlebnisse',
       midzoe_3: 'Sporttourismus-Reisen',
       midzoe_4: 'Visum-Unterstützung für Ihr Reiseziel',
       midzoe_5: 'Vollständige Orientierungs- & Beratungsleistungen',
-      midzoe_cta: 'Midzoe Services Erkunden'
+      midzoe_cta: 'Midzo Services Erkunden'
     }
   };
 
@@ -160,7 +160,7 @@ const TourismPartners = () => {
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 py-24 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="inline-block bg-gold-500/20 border border-gold-400/40 px-4 py-2 rounded-lg text-sm font-semibold mb-6 text-gold-200">
-            ✨ Midzoe Tourism
+            ✨ Midzo Tourism
           </div>
           <h1 className="text-4xl font-bold text-white sm:text-5xl mb-4 tracking-tight">{t.title}</h1>
           <p className="text-xl text-slate-100 max-w-3xl mx-auto font-light">{t.subtitle}</p>
@@ -249,7 +249,7 @@ const TourismPartners = () => {
           </Link>
         </div>
 
-        {/* What Midzoe does instead */}
+        {/* What Midzo does instead */}
         <div className="mt-16 bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg p-10 text-white border border-slate-700">
           <h2 className="text-2xl font-bold mb-6 text-center tracking-tight">{t.midzoe_title}</h2>
           <ul className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">

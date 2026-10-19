@@ -1,280 +1,155 @@
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useState } from 'react';
-import { usePricing } from '../pricing/usePricing';
-import { formatEuros } from '../pricing/pricingEngine';
-// import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
+import { apiService } from '../services/api';
+import { formatMoney, useCurrency } from '../pricing/currency';
+import { destinationSlug } from './TourismHome';
 
-const DestinationGuide = () => {
-  const { destination = 'botswana' } = useParams();
-  // const { i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState('itinerary');
+/**
+ * Guide d'une destination, construit à partir des données de la base (fiche pays, circuits
+ * types, programmes et événements publiés). Plus de guide codé en dur : toute destination
+ * ajoutée en admin a son guide.
+ */
+const T = {
+  fr: { back: 'Toutes les destinations', notFound: 'Destination introuvable', notFoundText: 'Cette destination n’est pas encore proposée. Composez votre voyage : un conseiller Midzo vous prépare un programme sur mesure.', plan: 'Composer mon voyage', visa: 'Vérifier le visa', season: 'Meilleure saison', budget: 'Budget sur place (indicatif, par jour)', currency: 'Monnaie', language: 'Langue', visaInfo: 'Visa pour les ressortissants africains', visaTime: 'Délai de visa', flights: 'Vols directs depuis', top: 'Incontournables', circuits: 'Circuits types', from: 'Accompagnement dès', days: 'jours', programs: 'Programmes', onQuote: 'Prix sur devis', events: 'Événements à venir', see: 'Voir', loading: 'Chargement…', indicative: 'Informations indicatives : vérifiez les conditions officielles avant de réserver.' },
+  en: { back: 'All destinations', notFound: 'Destination not found', notFoundText: 'This destination is not offered yet. Plan your trip: a Midzo advisor prepares a tailor-made programme.', plan: 'Plan my trip', visa: 'Check the visa', season: 'Best season', budget: 'On-site budget (indicative, per day)', currency: 'Currency', language: 'Language', visaInfo: 'Visa for African nationals', visaTime: 'Visa processing time', flights: 'Direct flights from', top: 'Highlights', circuits: 'Sample tours', from: 'Support from', days: 'days', programs: 'Programmes', onQuote: 'Price on request', events: 'Upcoming events', see: 'See', loading: 'Loading…', indicative: 'Indicative information: check official conditions before booking.' },
+  de: { back: 'Alle Reiseziele', notFound: 'Reiseziel nicht gefunden', notFoundText: 'Dieses Reiseziel wird noch nicht angeboten. Planen Sie Ihre Reise: Ein Midzo-Berater erstellt ein individuelles Programm.', plan: 'Meine Reise planen', visa: 'Visum prüfen', season: 'Beste Reisezeit', budget: 'Budget vor Ort (Richtwert, pro Tag)', currency: 'Währung', language: 'Sprache', visaInfo: 'Visum für afrikanische Staatsangehörige', visaTime: 'Bearbeitungszeit Visum', flights: 'Direktflüge ab', top: 'Höhepunkte', circuits: 'Beispielreisen', from: 'Begleitung ab', days: 'Tage', programs: 'Programme', onQuote: 'Preis auf Anfrage', events: 'Kommende Veranstaltungen', see: 'Ansehen', loading: 'Lädt…', indicative: 'Richtwerte: Prüfen Sie vor der Buchung die offiziellen Bedingungen.' },
+};
 
-  // Guide data for different destinations
-  const guides: Record<string, any> = {
-    botswana: {
-      country: 'Botswana',
-      title: 'Botswana — The Jewel of Africa',
-      subtitle: 'Pristine wilderness, authentic safaris, and unforgettable encounters',
-      hero: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80',
-      overview: 'Botswana is Africa\'s best-kept secret. Home to the iconic Okavango Delta, pristine national parks, and some of the world\'s most exclusive safari experiences. With Midzoe, you\'ll experience authentic wildlife encounters without the crowds.',
-      highlights: [
-        '🦁 Big Five game drives in pristine reserves',
-        '🛶 Mokoro canoe rides through the Okavango Delta',
-        '🌅 Sunrise and sunset safaris',
-        '🏕️ Luxury bush camps and lodge stays',
-        '📸 World-class photography opportunities',
-        '🌿 Eco-conscious tourism practices'
-      ],
-      bestTime: 'June — October (dry season, best wildlife viewing)',
-      itinerary: [
-        {
-          day: 1,
-          title: 'Arrival in Gaborone',
-          description: 'Land in Botswana\'s capital, transfer to your lodge. Orientation briefing and dinner.',
-          meals: 'Dinner',
-          included: '✈️ Transfer • 🏨 Accommodation'
-        },
-        {
-          day: 2,
-          title: 'Chobe National Park — Elephant Paradise',
-          description: 'Full-day game drive in Chobe NP. See the largest elephant population in Africa. Sunset cruise.',
-          meals: 'All meals',
-          included: '🚗 Game drive • 🍽️ Meals • 🏨 Lodge'
-        },
-        {
-          day: 3,
-          title: 'Okavango Delta — Mokoro Adventure',
-          description: 'Traditional mokoro canoe rides through the delta channels. Bush walk and birdwatching.',
-          meals: 'All meals',
-          included: '🛶 Mokoro • 🚶 Bush walk • 📸 Photography'
-        },
-        {
-          day: '4-5',
-          title: 'Deep Safari Experience',
-          description: 'Multi-day lodge stay with twice-daily game drives. Night drives for nocturnal predators.',
-          meals: 'All meals',
-          included: '🦁 Game drives • 🏕️ Premium lodge • 🌙 Night drives'
-        },
-        {
-          day: 6,
-          title: 'Cultural Experience & Relaxation',
-          description: 'Visit a local San community. Learn about their culture and traditions. Relax at the lodge.',
-          meals: 'All meals',
-          included: '👥 Cultural visit • 💆 Spa treatment'
-        },
-        {
-          day: 7,
-          title: 'Return Home',
-          description: 'Final morning game drive, breakfast, and transfer to airport.',
-          meals: 'Breakfast',
-          included: '✈️ Transfer to airport'
-        }
-      ],
-      whatToExpect: [
-        {
-          icon: '🌅',
-          title: 'Early Mornings',
-          desc: 'Game drives start at 5:30 AM to catch wildlife at their most active.'
-        },
-        {
-          icon: '☀️',
-          title: 'Hot Days',
-          desc: 'Daytime temperatures can reach 35°C. Bring sunscreen and light clothing.'
-        },
-        {
-          icon: '🦁',
-          title: 'Wildlife Close Encounters',
-          desc: 'You\'ll see lions, elephants, buffalo, leopards, and countless bird species.'
-        },
-        {
-          icon: '🏕️',
-          title: 'Authentic Accommodation',
-          desc: 'Luxury bush camps offer comfort while keeping you immersed in nature.'
-        }
-      ]
-    }
-  };
+const DestinationGuide: React.FC = () => {
+  useCurrency();
+  const { destination = '' } = useParams();
+  const { i18n } = useTranslation();
+  const lang = (i18n.language?.startsWith('fr') ? 'fr' : i18n.language?.startsWith('de') ? 'de' : 'en') as keyof typeof T;
+  const t = T[lang];
+  const [countries, setCountries] = useState<any[] | null>(null);
+  const [circuits, setCircuits] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
 
-  const guide = guides[destination.toLowerCase()];
-  const { pricing } = usePricing();
-  const tourismTiers = (pricing?.packages ?? []).filter(p => p.family === 'tourism');
+  useEffect(() => {
+    apiService.getTourismCountries().then(r => setCountries(r?.data ?? r?.countries ?? [])).catch(() => setCountries([]));
+  }, []);
 
-  // Une destination sans guide affichait jusqu'ici le guide du Botswana sous son propre titre.
-  if (!guide) {
+  const country = useMemo(() => {
+    const slug = destination.toLowerCase();
+    return (countries ?? []).find(c => destinationSlug(c.name) === slug || (c.nameFr && destinationSlug(c.nameFr) === slug));
+  }, [countries, destination]);
+
+  useEffect(() => {
+    if (!country) return;
+    apiService.getCircuits(country.name).then(r => setCircuits(r?.data ?? [])).catch(() => setCircuits([]));
+    apiService.getTourismPrograms().then(r => setPrograms((r?.data ?? []).filter((p: any) => p.country === country.name))).catch(() => setPrograms([]));
+    apiService.getTourismEvents().then(r => {
+      const now = Date.now();
+      setEvents((r?.data ?? []).filter((e: any) => e.country === country.name && (!e.endDate && !e.startDate ? true : new Date(e.endDate ?? e.startDate).getTime() >= now)));
+    }).catch(() => setEvents([]));
+  }, [country]);
+
+  if (countries === null) return <div className="min-h-[50vh] flex items-center justify-center text-gray-500">{t.loading}</div>;
+
+  if (!country) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-lg text-center bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
-          <h1 className="text-2xl font-bold text-gray-900">Guide pas encore disponible</h1>
-          <p className="text-gray-600 mt-3">
-            Nous n'avons pas encore de guide détaillé pour cette destination. Composez votre voyage : un conseiller
-            MIDZOE vous prépare un programme sur mesure.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <Link to="/tourism/plan" className="px-6 py-3 bg-orange-600 text-white font-bold rounded-lg">Composer mon voyage</Link>
-            <Link to="/tourism" className="px-6 py-3 border-2 border-orange-600 text-orange-600 font-bold rounded-lg">Toutes les destinations</Link>
+      <div className="min-h-[60vh] bg-gray-50 py-16 px-4">
+        <div className="max-w-xl mx-auto bg-white rounded-2xl border border-gray-100 p-8 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">{t.notFound}</h1>
+          <p className="text-gray-600 mb-6">{t.notFoundText}</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link to="/tourism/plan" className="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-medium">{t.plan}</Link>
+            <Link to="/tourism" className="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium">{t.back}</Link>
           </div>
         </div>
       </div>
     );
   }
-  const planHref = `/tourism/plan?country=${encodeURIComponent(guide.country)}`;
+
+  const name = lang === 'fr' ? (country.nameFr || country.name) : country.name;
+  const facts: [string, string | null | undefined][] = [
+    [t.season, country.bestTime], [t.budget, country.avgBudgetPerDay], [t.currency, country.currency], [t.language, country.language],
+    [t.visaInfo, country.visaForAfricans], [t.visaTime, country.processingTimeVisa],
+    [t.flights, (country.directFlightsFrom ?? []).join(', ')],
+  ];
+  const dateRange = (e: any) => [e.startDate, e.endDate].filter(Boolean).map((d: string) => new Date(d).toLocaleDateString(lang)).join(' → ');
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-white shadow sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <Link to="/tourism" className="text-sm font-medium text-gray-600 hover:text-primary">
-            ← Back to Midzoe Tourism
-          </Link>
+    <div className="min-h-screen bg-slate-50">
+      <div className="relative bg-slate-900 text-white">
+        {country.image && <img src={country.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />}
+        <div className="relative max-w-6xl mx-auto px-4 py-16">
+          <Link to="/tourism" className="text-sm text-slate-300 hover:text-white">← {t.back}</Link>
+          <h1 className="text-4xl md:text-5xl font-bold mt-4" data-testid="guide-title">{country.flag} {name}</h1>
+          {country.description && <p className="mt-4 max-w-2xl text-lg text-slate-100">{country.description}</p>}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to={`/tourism/plan?country=${encodeURIComponent(country.name)}`} className="px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 font-semibold">{t.plan}</Link>
+            <Link to="/services/tourist-visa" className="px-6 py-3 rounded-xl border border-white/60 hover:bg-white/10 font-semibold">{t.visa}</Link>
+          </div>
         </div>
       </div>
 
-      {/* Hero */}
-      <div className="relative h-96 md:h-[500px] overflow-hidden">
-        <img src={guide.hero} alt={guide.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 text-white">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">{guide.title}</h1>
-          <p className="text-xl md:text-2xl text-white/90">{guide.subtitle}</p>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        {/* Overview */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Overview</h2>
-          <p className="text-lg text-gray-700 mb-8 leading-relaxed max-w-3xl">{guide.overview}</p>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Highlights</h3>
-              <ul className="space-y-3">
-                {guide.highlights.map((highlight: string, i: number) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700">
-                    <span className="text-xl">{highlight.split(' ')[0]}</span>
-                    {highlight.slice(2)}
-                  </li>
-                ))}
-              </ul>
+      <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
+        <section className="grid md:grid-cols-3 gap-4" data-testid="guide-facts">
+          {facts.filter(([, v]) => v).map(([k, v]) => (
+            <div key={k} className="bg-white rounded-xl border border-slate-200 p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">{k}</p>
+              <p className="mt-1 text-slate-900 font-medium">{v}</p>
             </div>
+          ))}
+        </section>
+        <p className="text-xs text-slate-500 -mt-8">{t.indicative}</p>
 
-            <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-2xl p-8 border-2 border-orange-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Best Time to Visit</h3>
-              <p className="text-lg font-semibold text-orange-600 mb-4">{guide.bestTime}</p>
-              <p className="text-gray-700 mb-6">
-                Peak season offers the best wildlife viewing, cooler temperatures, and optimal photography conditions.
-              </p>
-              <Link
-                to={planHref}
-                className="block text-center px-6 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition-colors"
-              >
-                Plan Your Visit
-              </Link>
+        {!!country.topAttractions?.length && (
+          <section>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">{t.top}</h2>
+            <div className="flex flex-wrap gap-2">
+              {country.topAttractions.map((a: string) => <span key={a} className="px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700">{a}</span>)}
             </div>
-          </div>
-        </div>
+          </section>
+        )}
 
-        {/* Tabs */}
-        <div className="mb-16">
-          <div className="flex border-b border-gray-200 mb-8 gap-8 overflow-x-auto">
-            {['itinerary', 'pricing', 'expect'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`py-4 font-semibold transition-colors border-b-2 whitespace-nowrap ${
-                  activeTab === tab
-                    ? 'text-orange-600 border-orange-600'
-                    : 'text-gray-600 border-transparent hover:text-gray-900'
-                }`}
-              >
-                {tab === 'itinerary' && '📋 Itinerary'}
-                {tab === 'pricing' && '💰 Pricing'}
-                {tab === 'expect' && '✓ What to Expect'}
-              </button>
-            ))}
-          </div>
+        {circuits.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">{t.circuits}</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {circuits.map(c => (
+                <Link key={c.slug} to={`/tourism/circuits/${c.slug}`} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow">
+                  <p className="font-semibold text-slate-900">{c.title}</p>
+                  <p className="text-sm text-slate-500 mt-1">{c.duration_days} {t.days} · {c.stops.map((s: any) => s.label).join(' → ')}</p>
+                  {c.price_from && <p className="mt-2 text-sm text-orange-700 font-medium">{t.from} {formatMoney(c.price_from.price_cents)}</p>}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-          {/* Itinerary */}
-          {activeTab === 'itinerary' && (
-            <div className="space-y-6">
-              {guide.itinerary.map((item: any, i: number) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-6 border-l-4 border-orange-600">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">Day {item.day}</h3>
-                      <p className="font-semibold text-orange-600 mt-1">{item.title}</p>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-4">{item.description}</p>
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <div><span className="font-semibold text-gray-900">Meals:</span> {item.meals}</div>
-                    <div><span className="font-semibold text-gray-900">Included:</span> {item.included}</div>
-                  </div>
+        {programs.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">{t.programs}</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {programs.map(p => (
+                <div key={p.id} className="bg-white rounded-xl border border-slate-200 p-5">
+                  <p className="font-semibold text-slate-900">{p.title}</p>
+                  {p.description && <p className="text-sm text-slate-600 mt-1">{p.description}</p>}
+                  {p.itinerary && <p className="text-xs text-slate-500 mt-2 whitespace-pre-line">{p.itinerary}</p>}
+                  <p className="mt-2 text-sm text-slate-700">{p.price ? formatMoney(Math.round(p.price * 100)) : t.onQuote}</p>
                 </div>
               ))}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Pricing : grille tarifaire réelle (services à la carte ou packages Tourism) */}
-          {activeTab === 'pricing' && (
-            <div>
-              <p className="text-gray-700 mb-6 max-w-3xl">
-                Le prix dépend des services que vous choisissez (guide, hébergement, itinéraire, accueil à l'aéroport…).
-                Composez votre voyage pour obtenir le prix exact : nous comparons le prix à la carte et nos packages Tourism.
-              </p>
-              <div className="grid md:grid-cols-4 gap-4">
-                {tourismTiers.map(t => (
-                  <div key={t.id} className="border-2 border-gray-200 rounded-xl p-6">
-                    <h3 className="text-lg font-bold text-gray-900">{t.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{t.service_label}</p>
-                    <p className="text-2xl font-black text-orange-600">{formatEuros(t.price_from_cents, t.currency)}</p>
-                  </div>
-                ))}
-              </div>
-              <Link to={planHref} className="inline-block mt-6 px-6 py-3 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700">
-                Calculer le prix de mon voyage
-              </Link>
-            </div>
-          )}
-
-          {/* What to Expect */}
-          {activeTab === 'expect' && (
-            <div className="grid md:grid-cols-2 gap-8">
-              {guide.whatToExpect.map((item: any, i: number) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-8">
-                  <div className="text-4xl mb-4">{item.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                  <p className="text-gray-700">{item.desc}</p>
-                </div>
+        {events.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">{t.events}</h2>
+            <ul className="space-y-2">
+              {events.map(e => (
+                <li key={e.id} className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap justify-between gap-2">
+                  <span><strong>{e.title}</strong>{e.city ? ` — ${e.city}` : ''}</span>
+                  <span className="text-sm text-slate-500">{dateRange(e)}{e.link && <> · <a href={e.link} target="_blank" rel="noopener noreferrer" className="underline">{t.see}</a></>}</span>
+                </li>
               ))}
-            </div>
-          )}
-
-        </div>
-
-        {/* Final CTA */}
-        <div className="bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl p-12 text-white text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Experience {guide.title.split(' —')[0]}?</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Let us handle all the details. You focus on creating memories.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to={planHref}
-              className="px-8 py-4 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              Build Your Custom Trip
-            </Link>
-            <Link
-              to="/contact"
-              className="px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-white/10 transition-colors"
-            >
-              Contact Our Experts
-            </Link>
-          </div>
-        </div>
+            </ul>
+          </section>
+        )}
       </div>
     </div>
   );

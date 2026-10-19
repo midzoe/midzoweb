@@ -37,16 +37,16 @@ const Hero = () => {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                to="/services"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-white hover:text-primary transition-colors"
+                to="/study"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-semibold rounded-md text-white bg-primary hover:bg-white hover:text-primary transition-colors"
               >
-                {t('explore_services')}
+                🎓 {t('cta_study')}
               </Link>
               <Link
-                to="/about"
-                className="inline-flex items-center px-6 py-3 border-2 border-white text-base font-medium rounded-md text-white hover:bg-white hover:text-primary transition-colors"
+                to="/tourism"
+                className="inline-flex items-center px-6 py-3 border-2 border-white text-base font-semibold rounded-md text-white hover:bg-white hover:text-primary transition-colors"
               >
-                {t('common:buttons.learnMore')}
+                🌍 {t('cta_travel')}
               </Link>
             </div>
           </div>
@@ -216,22 +216,20 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* CTA vers Midzoe Tourism */}
+      {/* CTA vers Midzo Tourism */}
       <div className="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="" className="w-full h-full object-cover" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 text-center">
-          <p className="text-secondary font-semibold mb-2">Envie d'aventure?</p>
-          <h2 className="text-4xl font-bold mb-4">Découvrez Midzoe Tourism</h2>
-          <p className="text-gray-300 max-w-2xl mx-auto mb-8 text-lg">
-            Safari en Afrique, Coupe du Monde 2026, Tourisme Sportif, Événements mondiaux... Vivez les expériences qui font rêver.
-          </p>
+          <p className="text-secondary font-semibold mb-2">{t('tourism_teaser_kicker')}</p>
+          <h2 className="text-4xl font-bold mb-4">{t('tourism_teaser_title')}</h2>
+          <p className="text-gray-300 max-w-2xl mx-auto mb-8 text-lg">{t('tourism_teaser_text')}</p>
           <Link
             to="/tourism"
             className="inline-flex items-center gap-2 px-8 py-4 bg-secondary hover:bg-orange-500 text-white font-bold rounded-lg transition-colors text-lg"
           >
-            Entrer dans Midzoe Tourism <span>🌍</span>
+            {t('tourism_teaser_cta')} <span>🌍</span>
           </Link>
         </div>
       </div>

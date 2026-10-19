@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BriefcaseIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
-import { formatEuros } from '../pricing/pricingEngine';
+import { formatMoney, useCurrency } from '../pricing/currency';
+
 
 interface Dossier {
   is_premium: boolean;
@@ -24,6 +25,7 @@ const PURCHASE_STATUS: Record<string, string> = { paid: 'réglé', past_due: 'é
  * prochaine étape), les achats et l'avancement des services. Les notes internes n'y figurent pas.
  */
 const DossierCard: React.FC = () => {
+  useCurrency();
   const [dossier, setDossier] = useState<Dossier | null>(null);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ const DossierCard: React.FC = () => {
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 border border-gray-100 rounded-lg px-3 py-2">
               <span className="font-medium text-gray-900">{p.offer_label}</span>
               <span className="text-gray-600">
-                {formatEuros(p.amount_cents, p.currency)}
+                {formatMoney(p.amount_cents, p.currency)}
                 {p.installments > 1 ? ` · ${p.installments_paid}/${p.installments} échéances` : ''}
                 {` · ${METHOD_LABELS[p.method] ?? p.method}`}
                 {` · ${PURCHASE_STATUS[p.status] ?? p.status}`}
@@ -78,7 +80,12 @@ const DossierCard: React.FC = () => {
         </ul>
       )}
 
-      <Link to="/my-trips" className="mt-4 inline-block text-xs font-medium text-primary hover:underline">Voir mes voyages et services →</Link>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1">
+        <Link to="/my-trips" className="text-xs font-medium text-primary hover:underline">Voir mes voyages et services →</Link>
+        {dossier.purchases.some(p => p.status === 'paid') && (
+          <Link to="/avis#write-review" className="text-xs font-medium text-primary hover:underline" data-testid="review-invite">Donner mon avis →</Link>
+        )}
+      </div>
     </section>
   );
 };

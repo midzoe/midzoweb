@@ -1,5 +1,5 @@
 /**
- * Moteur de prix MIDZOE — fonctions pures, sans appel réseau.
+ * Moteur de prix MIDZO — fonctions pures, sans appel réseau.
  *
  * Données : `GET /api/pricing` (prix unitaire des services S1..S11 / T1..T10, paliers
  * Study / Tourism / Mix avec leur couverture, remises selon le nombre d'échéances).
@@ -48,7 +48,18 @@ export interface PricingData {
   services: PricedServiceDto[];
   packages: TierDto[];
   payment_options: PaymentOptionDto[];
+  /** Services voyage : prix par dossier, N voyageurs inclus, +X % par voyageur supplémentaire. */
+  traveler_policy?: { included: number; extra_pct: number };
 }
+
+/** Coefficient des services voyage selon le nombre de voyageurs (même règle que le serveur). */
+export function travelerFactor(travelers: number | undefined, data: Pick<PricingData, 'traveler_policy'>): number {
+  const policy = data.traveler_policy ?? { included: 2, extra_pct: 25 };
+  const n = Math.max(1, Math.min(50, Math.floor(travelers ?? 1)));
+  return 1 + Math.max(0, n - policy.included) * (policy.extra_pct / 100);
+}
+
+const roundEuro = (cents: number) => Math.round(cents / 100) * 100;
 
 export type OfferKind = 'alacarte' | 'tier' | 'mix';
 
@@ -89,17 +100,19 @@ export function tierCovers(tier: TierDto, count: number, valueCents: number): bo
   return true;
 }
 
-function familyLines(family: 'study' | 'tourism', services: PricedServiceDto[], tiers: TierDto[]): OfferLine[] {
+function familyLines(family: 'study' | 'tourism', services: PricedServiceDto[], tiers: TierDto[], factor = 1): OfferLine[] {
   if (!services.length) return [];
   const value = sum(services);
+  const scaled = (c: number) => (factor === 1 ? c : roundEuro(c * factor));
   const lines: OfferLine[] = [{
-    kind: 'alacarte', family, label: 'À la carte', valueCents: value, priceCents: value, serviceCount: services.length,
+    kind: 'alacarte', family, label: 'À la carte', valueCents: scaled(value), priceCents: scaled(value), serviceCount: services.length,
   }];
+  // Couverture d'un palier = services choisis ; le nombre de voyageurs s'applique ensuite au prix.
   tiers
     .filter(t => t.family === family && tierCovers(t, services.length, value) && t.price_from_cents < value)
     .forEach(t => lines.push({
       kind: 'tier', family, label: t.name, slug: t.slug ?? undefined,
-      valueCents: value, priceCents: t.price_from_cents, serviceCount: services.length,
+      valueCents: scaled(value), priceCents: scaled(t.price_from_cents), serviceCount: services.length,
     }));
   return lines;
 }
@@ -112,7 +125,8 @@ function makeOffer(lines: OfferLine[]): Offer {
 }
 
 /** Devis d'une sélection de services (codes S1..T10). Les codes inconnus sont ignorés et signalés. */
-export function quoteSelection(codes: string[], data: PricingData): Quote {
+export function quoteSelection(codes: string[], data: PricingData, opts: { travelers?: number } = {}): Quote {
+  const factor = travelerFactor(opts.travelers, data);
   const byCode = new Map(data.services.map(s => [s.code, s]));
   const unique = [...new Set(codes)];
   const services = unique.map(c => byCode.get(c)).filter((s): s is PricedServiceDto => !!s);
@@ -123,7 +137,7 @@ export function quoteSelection(codes: string[], data: PricingData): Quote {
   if (!services.length) return { services, unknownCodes, valueCents, offers: [], recommended: null };
 
   const studyLines = familyLines('study', study, data.packages);
-  const tourismLines = familyLines('tourism', tourism, data.packages);
+  const tourismLines = familyLines('tourism', tourism, data.packages, factor);
 
   // Combinaisons famille par famille (à la carte ou palier, indépendamment).
   const offers: Offer[] = [];
@@ -138,11 +152,14 @@ export function quoteSelection(codes: string[], data: PricingData): Quote {
 
   // Paliers Mix : un service de chaque famille au minimum, valeur cumulée sous le plafond.
   if (study.length && tourism.length) {
+    // Mix : seule la part voyage suit le nombre de voyageurs.
+    const mixFactor = 1 + (factor - 1) * (sum(tourism) / valueCents);
+    const scaledValue = roundEuro(sum(study) + sum(tourism) * factor);
     data.packages
       .filter(t => t.family === 'mix' && (t.value_cap_cents == null || valueCents <= t.value_cap_cents) && t.price_from_cents < valueCents)
       .forEach(t => offers.push(makeOffer([{
         kind: 'mix', family: 'mix', label: t.name, slug: t.slug ?? undefined,
-        valueCents, priceCents: t.price_from_cents, serviceCount: services.length,
+        valueCents: scaledValue, priceCents: mixFactor === 1 ? t.price_from_cents : roundEuro(t.price_from_cents * mixFactor), serviceCount: services.length,
       }])));
   }
 

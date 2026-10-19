@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiService } from '../services/api';
 import { useTranslation } from 'react-i18next';
 
 const About: React.FC = () => {
   const { t } = useTranslation('about');
+  const [counts, setCounts] = useState<{ study?: number; destinations?: number; circuits?: number; universities?: number }>({});
+  useEffect(() => {
+    Promise.allSettled([apiService.getStudyCountries(), apiService.getTourismCountries(), apiService.getCircuits(), apiService.getUniversities()])
+      .then(([s, d, c, u]) => setCounts({
+        study: s.status === 'fulfilled' ? (s.value?.data ?? []).length : undefined,
+        destinations: d.status === 'fulfilled' ? (d.value?.data ?? []).length : undefined,
+        circuits: c.status === 'fulfilled' ? (c.value?.data ?? []).length : undefined,
+        universities: u.status === 'fulfilled' ? (u.value?.count ?? (u.value?.data ?? []).length) : undefined,
+      }));
+  }, []);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -132,23 +143,19 @@ const About: React.FC = () => {
       >
         <div className="absolute inset-0 bg-primary/90"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold mb-2">15+</div>
-              <div className="text-lg">{t('stats_services')}</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">1k+</div>
-              <div className="text-lg">{t('stats_users')}</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">10+</div>
-              <div className="text-lg">{t('stats_countries')}</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">98%</div>
-              <div className="text-lg">{t('stats_satisfaction')}</div>
-            </div>
+          {/* Chiffres réels du catalogue (aucune statistique de clientèle non prouvée). */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center" data-testid="about-stats">
+            {[
+              [counts.study, t('stats_study_countries')],
+              [counts.universities, t('stats_universities')],
+              [counts.destinations, t('stats_destinations')],
+              [counts.circuits, t('stats_circuits')],
+            ].filter(([n]) => typeof n === 'number' && (n as number) > 0).map(([n, label]) => (
+              <div key={label as string}>
+                <div className="text-4xl font-bold mb-2">{n as number}</div>
+                <div className="text-lg">{label as string}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

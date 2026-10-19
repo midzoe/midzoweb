@@ -3,7 +3,7 @@ import { loadTripRecord, recordOf, saveTripRecord, serviceStatusOf } from '../pr
 import { emptyPriceChoice, normalizePriceChoice, PriceChoice, snapshotLabel } from '../../pricing/priceChoice';
 
 /**
- * Parcours « MIDZOE Study » : un projet d'études (pays > niveau > domaine > villes),
+ * Parcours « MIDZO Study » : un projet d'études (pays > niveau > domaine > villes),
  * les services choisis et la présélection d'universités.
  *
  * Sans compte, le projet vit en brouillon dans le navigateur (il survit à la

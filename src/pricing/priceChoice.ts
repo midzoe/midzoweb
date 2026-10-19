@@ -40,7 +40,7 @@ export function normalizePriceChoice(raw: any): PriceChoice {
 }
 
 /** Montants de l'offre choisie (ou conseillée) pour une sélection de services. */
-export function computeSnapshot(codes: string[], data: PricingData, choice: PriceChoice): PriceSnapshot | null {
+export function computeSnapshot(codes: string[], data: PricingData, choice: PriceChoice, travelers = 1): PriceSnapshot | null {
   const option = data.payment_options.find(o => o.installments === choice.installments)
     ?? data.payment_options[0] ?? { installments: 1, discount_pct: 0 };
 
@@ -62,7 +62,7 @@ export function computeSnapshot(codes: string[], data: PricingData, choice: Pric
     };
   }
 
-  const quote = quoteSelection(codes, data);
+  const quote = quoteSelection(codes, data, { travelers });
   const offer = quote.offers.find(o => o.id === choice.offerId) ?? quote.recommended;
   if (!offer) return null;
   const plan = paymentPlan(offer.priceCents, option);

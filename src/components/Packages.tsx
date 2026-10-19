@@ -11,12 +11,14 @@ import {
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { goToCheckout } from '../pricing/checkout';
+import TermsCheckbox from './legal/TermsCheckbox';
 import { usePricing } from '../pricing/usePricing';
-import { formatEuros, paymentPlan } from '../pricing/pricingEngine';
+import { paymentPlan } from '../pricing/pricingEngine';
 import { useCategories } from '../hooks/useCategories';
+import { formatMoney, localEquivalent, useCurrency } from '../pricing/currency';
 
 /**
- * Grille commerciale publique — reprise de la plaquette « MIDZOE PACKAGES ».
+ * Grille commerciale publique — reprise de la plaquette « MIDZO PACKAGES ».
  *
  * Les PALIERS et leurs prix viennent de la base (`/packages/showcase`, famille non nulle) :
  * un tarif se change depuis l'admin, jamais en redéployant le front. Les PILIERS de services
@@ -144,6 +146,7 @@ function formatPrice(cents: number, currency: string, locale: string): string {
 }
 
 const Packages: React.FC = () => {
+  useCurrency();
   const { t, i18n } = useTranslation('packages');
   const { serviceDetails } = useCategories();
 
@@ -187,11 +190,12 @@ const Packages: React.FC = () => {
   const { user } = useAuth();
   const [payingConsultation, setPayingConsultation] = useState(false);
   const [payError, setPayError] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
   // Consultation : seule offre réglable directement depuis la grille (sans sélection de services).
   const payConsultation = async () => {
     setPayingConsultation(true);
     setPayError('');
-    const error = await goToCheckout({ codes: [], offerId: 'consultation', installments: 1 });
+    const error = await goToCheckout({ codes: [], offerId: 'consultation', installments: 1, acceptTerms });
     if (error) { setPayError(error); setPayingConsultation(false); }
   };
 
@@ -207,7 +211,7 @@ const Packages: React.FC = () => {
   const consultation = byFamily.consultation?.[0] ?? null;
   const theme = THEME[family];
 
-  const priceOf = (p: ShowcasePackage) => formatPrice(p.price_from_cents, p.currency, i18n.language);
+  const priceOf = (p: ShowcasePackage) => formatPrice(p.price_from_cents, p.currency, i18n.language) + (localEquivalent(p.price_from_cents) ? ` (${localEquivalent(p.price_from_cents)})` : '');
   const { pricing } = usePricing();
   const paymentExample = packages.find(p => p.slug === 'mix-xxl') ?? packages.find(p => p.family !== 'consultation');
 
@@ -459,7 +463,7 @@ const Packages: React.FC = () => {
               <div className="rounded-2xl border border-stone-200 bg-white p-6 text-center shadow-card">
                 <CalendarDaysIcon className="mx-auto h-8 w-8 text-gold-600" />
                 <p className="mt-4 font-display text-4xl font-semibold tabular-nums text-stone-900">
-                  {formatPrice(consultation.price_from_cents, consultation.currency, i18n.language)}
+                  {formatMoney(consultation.price_from_cents, consultation.currency)}
                 </p>
                 <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-400">
                   {t('consultation_note')}
@@ -472,10 +476,13 @@ const Packages: React.FC = () => {
                   <ArrowRightIcon className="h-4 w-4" />
                 </Link>
                 {user ? (
-                  <button type="button" onClick={payConsultation} disabled={payingConsultation} data-testid="pay-consultation"
+                  <>
+                  <div className="mt-3"><TermsCheckbox id="accept-terms-consultation" checked={acceptTerms} onChange={setAcceptTerms} /></div>
+                  <button type="button" onClick={payConsultation} disabled={payingConsultation || !acceptTerms} data-testid="pay-consultation"
                     className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50">
                     {payingConsultation ? t('pay_opening') : t('consultation_pay')}
                   </button>
+                  </>
                 ) : (
                   <Link to="/login?redirect=%2Fpackages" className="mt-2 block text-center text-xs text-stone-500 underline">{t('consultation_pay_login')}</Link>
                 )}
@@ -520,12 +527,12 @@ const Packages: React.FC = () => {
                           <tr key={sv.code} className="border-b border-stone-100">
                             <td className="px-4 py-2 text-stone-400 w-12">{sv.code}</td>
                             <td className="px-2 py-2 text-stone-700">{sv.name}</td>
-                            <td className="px-4 py-2 text-right font-semibold tabular-nums text-stone-900 whitespace-nowrap">{formatEuros(sv.price_cents, sv.currency)}</td>
+                            <td className="px-4 py-2 text-right font-semibold tabular-nums text-stone-900 whitespace-nowrap">{formatMoney(sv.price_cents, sv.currency)}</td>
                           </tr>
                         ))}
                         <tr className="bg-stone-50 font-semibold">
                           <td className="px-4 py-2" colSpan={2}>{t('unit_total')}</td>
-                          <td className="px-4 py-2 text-right tabular-nums">{formatEuros(list.reduce((n, sv) => n + sv.price_cents, 0))}</td>
+                          <td className="px-4 py-2 text-right tabular-nums">{formatMoney(list.reduce((n, sv) => n + sv.price_cents, 0))}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -541,7 +548,7 @@ const Packages: React.FC = () => {
           <section className="mt-12" data-testid="payment-options">
             <h2 className="font-display text-2xl font-semibold text-stone-900">{t('payment_title')}</h2>
             <p className="mt-1 text-sm text-stone-600">
-              {t('payment_text', { example: paymentExample.name, price: formatEuros(paymentExample.price_from_cents, paymentExample.currency) })}
+              {t('payment_text', { example: paymentExample.name, price: formatMoney(paymentExample.price_from_cents, paymentExample.currency) })}
             </p>
             <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
               {pricing.payment_options.map(opt => {
@@ -551,9 +558,9 @@ const Packages: React.FC = () => {
                     <p className="text-sm font-semibold text-stone-800">{opt.installments === 1 ? t('payment_once') : t('payment_n', { n: opt.installments })}</p>
                     <p className="mt-1 text-xs font-semibold text-emerald-700">{t('payment_discount', { pct: opt.discount_pct })}</p>
                     <p className="mt-3 font-display text-2xl font-semibold tabular-nums text-stone-900">
-                      {opt.installments === 1 ? formatEuros(plan.totalCents) : `${opt.installments} × ${formatEuros(plan.perInstallmentCents)}`}
+                      {opt.installments === 1 ? formatMoney(plan.totalCents) : `${opt.installments} × ${formatMoney(plan.perInstallmentCents)}`}
                     </p>
-                    {opt.installments > 1 && <p className="text-xs text-stone-500">≈ {formatEuros(plan.totalCents)}</p>}
+                    {opt.installments > 1 && <p className="text-xs text-stone-500">≈ {formatMoney(plan.totalCents)}</p>}
                   </div>
                 );
               })}

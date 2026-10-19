@@ -16,10 +16,12 @@ import { Chip, InfoCard, LinkList, Section, externalHref, fieldClass, toggle } f
 import { usePricing } from '../../pricing/usePricing';
 import PricingStep from '../../pricing/PricingStep';
 import { goToCheckout } from '../../pricing/checkout';
+import TermsCheckbox from '../legal/TermsCheckbox';
 import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
-import { formatEuros, quoteSelection } from '../../pricing/pricingEngine';
+import { quoteSelection } from '../../pricing/pricingEngine';
+import { formatMoney, useCurrency } from '../../pricing/currency';
 
-// Parcours « MIDZOE Study » : profil → projet → ce que dit le catalogue → services
+// Parcours « MIDZO Study » : profil → projet → ce que dit le catalogue → services
 // → enregistrement (brouillon local sans compte, trip avec compte) → demande.
 
 interface StudyCountry {
@@ -60,7 +62,7 @@ interface OrientationResource {
   provider?: string | null; link?: string | null;
 }
 
-/** Pays d'origine / de résidence : l'Afrique d'abord (public MIDZOE), puis les autres. */
+/** Pays d'origine / de résidence : l'Afrique d'abord (public MIDZO), puis les autres. */
 const OTHER_COUNTRIES: CountryOption[] = [
   { value: 'Germany', label: 'Allemagne' }, { value: 'Belgium', label: 'Belgique' },
   { value: 'Canada', label: 'Canada' }, { value: 'China', label: 'Chine' },
@@ -88,6 +90,7 @@ const DESTINATION_LANGUAGE: Record<string, string> = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const StudyPlanner: React.FC = () => {
+  useCurrency();
   const { user, updateUserLocally } = useAuth();
   const [searchParams] = useSearchParams();
 
@@ -106,6 +109,7 @@ const StudyPlanner: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [needsAccount, setNeedsAccount] = useState(false);
   const [cityInput, setCityInput] = useState('');
@@ -447,7 +451,7 @@ const StudyPlanner: React.FC = () => {
       const withRequest = await saveProjectToAccount({ ...saved, requestSentAt: new Date().toISOString() }, countryLabel);
       setProject(withRequest);
       setDirty(false);
-      setFeedback({ tone: 'success', text: 'Demande envoyée : un conseiller MIDZOE revient vers vous par email. Elle est suivie dans votre dashboard.' });
+      setFeedback({ tone: 'success', text: 'Demande envoyée : un conseiller MIDZO revient vers vous par email. Elle est suivie dans votre dashboard.' });
     } catch {
       setFeedback({ tone: 'error', text: "L'envoi de la demande a échoué. Votre projet est enregistré ; réessayez dans un instant." });
     } finally {
@@ -476,6 +480,7 @@ const StudyPlanner: React.FC = () => {
       offerId: saved.price.snapshot?.offerId ?? saved.price.offerId,
       installments: saved.price.installments,
       tripId: saved.tripId,
+      acceptTerms,
     });
     if (error) {
       setFeedback({ tone: 'error', text: error });
@@ -515,7 +520,7 @@ const StudyPlanner: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <p className="text-blue-100 text-sm font-semibold uppercase tracking-widest mb-2">🎓 MIDZOE Study</p>
+          <p className="text-blue-100 text-sm font-semibold uppercase tracking-widest mb-2">🎓 MIDZO Study</p>
           <h1 className="text-3xl md:text-4xl font-extrabold">Construisez votre projet d'études</h1>
           <p className="mt-3 text-blue-50 max-w-3xl">
             Choisissez un pays, un niveau et un domaine : nous croisons votre profil avec notre catalogue
@@ -1035,7 +1040,7 @@ const StudyPlanner: React.FC = () => {
           </Section>
 
           {/* 4. Services */}
-          <Section step={4} title="Vos services" subtitle="Ce sur quoi MIDZOE vous accompagne.">
+          <Section step={4} title="Vos services" subtitle="Ce sur quoi MIDZO vous accompagne.">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Services">
               {STUDY_SERVICES.map(s => {
                 const active = project.services.includes(s.id);
@@ -1046,7 +1051,7 @@ const StudyPlanner: React.FC = () => {
                     <span className="flex-1">
                       <span className="flex items-baseline justify-between gap-2">
                         <span className="font-semibold text-gray-900">{s.label}</span>
-                        {priceOf(s.code) != null && <span className="text-sm font-semibold text-primary whitespace-nowrap">{formatEuros(priceOf(s.code)!)}</span>}
+                        {priceOf(s.code) != null && <span className="text-sm font-semibold text-primary whitespace-nowrap">{formatMoney(priceOf(s.code)!)}</span>}
                       </span>
                       <span className="block text-xs text-gray-500">{s.code} · {s.description}</span>
                     </span>
@@ -1078,7 +1083,7 @@ const StudyPlanner: React.FC = () => {
                         <input type="checkbox" checked={active} onChange={() => update({ tourismServices: toggle(project.tourismServices, t.code) })}
                           className="mt-0.5 rounded text-primary focus:ring-primary" />
                         <span className="flex-1">{t.name}</span>
-                        <span className="text-primary font-semibold whitespace-nowrap">{formatEuros(t.price_cents)}</span>
+                        <span className="text-primary font-semibold whitespace-nowrap">{formatMoney(t.price_cents)}</span>
                       </label>
                     );
                   })}
@@ -1150,7 +1155,8 @@ const StudyPlanner: React.FC = () => {
                 className="w-full py-3 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary/5 disabled:opacity-50">
                 {sending ? 'Envoi…' : project.requestSentAt ? 'Renvoyer ma demande' : "Demander un accompagnement"}
               </button>
-              <button type="button" onClick={pay} disabled={saving || sending || paying} data-testid="pay-online"
+              <TermsCheckbox checked={acceptTerms} onChange={setAcceptTerms} />
+              <button type="button" onClick={pay} disabled={saving || sending || paying || !acceptTerms} data-testid="pay-online"
                 className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-50">
                 {paying ? 'Ouverture du paiement…' : 'Payer en ligne (carte bancaire)'}
               </button>

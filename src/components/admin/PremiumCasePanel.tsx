@@ -78,7 +78,7 @@ const PremiumCasePanel: React.FC<{ userId: number; onClose: () => void }> = ({ u
           </Field>
 
           <Field label="Conseiller assigné">
-            <TextInput value={assignedTo} onChange={e => setAssignedTo(e.target.value)} placeholder="Nom du conseiller MIDZOE" />
+            <TextInput value={assignedTo} onChange={e => setAssignedTo(e.target.value)} placeholder="Nom du conseiller MIDZO" />
           </Field>
 
           <Field label="Message au client (visible dans son espace)">

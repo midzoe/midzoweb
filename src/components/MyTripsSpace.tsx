@@ -189,7 +189,7 @@ const TripSpace: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">{selected.title}</h2>
-                {selected.createdByAdminId && <p className="text-xs text-emerald-700 mt-1">Préparé par votre conseiller MIDZOE</p>}
+                {selected.createdByAdminId && <p className="text-xs text-emerald-700 mt-1">Préparé par votre conseiller MIDZO</p>}
                 {projectKind(selected) && (
                   <p className="text-xs text-gray-500 mt-1">
                     {projectKind(selected)} — à modifier depuis votre <Link to="/dashboard" className="text-primary underline">dashboard</Link>.

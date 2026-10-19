@@ -7,13 +7,15 @@ import { Chip, InfoCard, Section, externalHref, fieldClass, toggle } from '../pr
 import { usePricing } from '../../pricing/usePricing';
 import PricingStep from '../../pricing/PricingStep';
 import { goToCheckout } from '../../pricing/checkout';
+import TermsCheckbox from '../legal/TermsCheckbox';
 import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
-import { formatEuros, quoteSelection } from '../../pricing/pricingEngine';
+import { quoteSelection } from '../../pricing/pricingEngine';
 import {
   INTERESTS, TOURISM_SERVICES, TourismProject, TourismStop,
   clearTourismDraft, emptyTourismProject, loadTourismDraft, loadTourismProject, nightsBetween,
   saveTourismDraft, saveTourismToAccount, tourismSummary, tourismTitle, stopsLabel, syncedStops, itineraryText,
 } from './tourismProject';
+import { formatMoney, useCurrency } from '../../pricing/currency';
 
 // Parcours « Composer mon voyage » : profil → voyage → ce que propose le catalogue →
 // services (T1..T10) → prix (à la carte, packages Tourism, paiement) → enregistrement / demande.
@@ -30,6 +32,7 @@ interface CatalogItem { id: number; name?: string; title?: string; city?: string
 const today = () => new Date().toISOString().slice(0, 10);
 
 const TourismPlanner: React.FC = () => {
+  useCurrency();
   const { user, updateUserLocally } = useAuth();
   const [searchParams] = useSearchParams();
   const { pricing, error: pricingError } = usePricing();
@@ -49,6 +52,7 @@ const TourismPlanner: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [cityInput, setCityInput] = useState('');
 
@@ -63,6 +67,31 @@ const TourismPlanner: React.FC = () => {
     setDirty(true);
     setFeedback(null);
   };
+
+  // Circuit type à personnaliser (?circuit=<slug>) : étapes, villes, nuits, services, voyageurs.
+  useEffect(() => {
+    const slug = searchParams.get('circuit');
+    if (!slug || searchParams.get('project')) return;
+    let mounted = true;
+    apiService.getCircuit(slug).then(r => {
+      const c = r?.data;
+      if (!mounted || !c?.stops?.length) return;
+      const stops = c.stops.map((st: any) => ({ country: st.country, label: st.label || st.country, cities: st.cities ?? [], nights: st.nights ?? null }));
+      setProject(prev => ({
+        ...prev,
+        stops,
+        destination: stops[0].country,
+        destinationLabel: stops[0].label,
+        cities: stops[0].cities,
+        services: (c.services ?? []).filter((code: string) => TOURISM_SERVICES.some(sv => sv.id === code)),
+        travelers: c.travelers_base ?? prev.travelers,
+        notes: prev.notes || `Circuit type : ${c.title}`,
+      }));
+      setDirty(true);
+      setFeedback({ tone: 'info', text: `Circuit « ${c.title} » chargé : ajustez les dates, les étapes et les services.` });
+    }).catch(() => { /* circuit introuvable : parcours vide */ });
+    return () => { mounted = false; };
+  }, [searchParams]);
 
   // Projet du compte ouvert depuis le dashboard (?project=<id>).
   useEffect(() => {
@@ -149,12 +178,12 @@ const TourismPlanner: React.FC = () => {
   const nights = nightsBetween(project.startDate, project.endDate);
   const requestedSlug = searchParams.get('package');
   const codes = project.services;
-  const liveSnapshot = pricing ? computeSnapshot(codes, pricing, project.price) : null;
+  const liveSnapshot = pricing ? computeSnapshot(codes, pricing, project.price, project.travelers) : null;
   const priceOf = (code: string) => pricing?.services.find(s => s.code === code)?.price_cents ?? null;
 
   useEffect(() => {
     if (!requestedSlug || !pricing || project.price.offerId) return;
-    const offer = quoteSelection(codes, pricing).offers.find(o => o.lines.some(l => l.slug === requestedSlug));
+    const offer = quoteSelection(codes, pricing, { travelers: project.travelers }).offers.find(o => o.lines.some(l => l.slug === requestedSlug));
     if (offer) update({ price: { ...project.price, offerId: offer.id } });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestedSlug, pricing, codes.join(',')]);
@@ -209,7 +238,7 @@ const TourismPlanner: React.FC = () => {
   };
 
   const withSnapshot = (p: TourismProject): TourismProject =>
-    ({ ...p, price: { ...p.price, snapshot: pricing ? computeSnapshot(p.services, pricing, p.price) : p.price.snapshot } });
+    ({ ...p, price: { ...p.price, snapshot: pricing ? computeSnapshot(p.services, pricing, p.price, p.travelers) : p.price.snapshot } });
 
   const syncProfile = async () => {
     if (!user) return;
@@ -287,7 +316,7 @@ const TourismPlanner: React.FC = () => {
       const withRequest = await saveTourismToAccount({ ...saved, requestSentAt: new Date().toISOString() }, countryLabel);
       setProject(withRequest);
       setDirty(false);
-      setFeedback({ tone: 'success', text: 'Demande envoyée : un conseiller MIDZOE revient vers vous par email. Elle est suivie dans votre dashboard.' });
+      setFeedback({ tone: 'success', text: 'Demande envoyée : un conseiller MIDZO revient vers vous par email. Elle est suivie dans votre dashboard.' });
     } catch {
       setFeedback({ tone: 'error', text: "L'envoi de la demande a échoué. Votre voyage est enregistré ; réessayez dans un instant." });
     } finally {
@@ -316,6 +345,8 @@ const TourismPlanner: React.FC = () => {
       offerId: saved.price.snapshot?.offerId ?? saved.price.offerId,
       installments: saved.price.installments,
       tripId: saved.tripId,
+      travelers: saved.travelers,
+      acceptTerms,
     });
     if (error) {
       setFeedback({ tone: 'error', text: error });
@@ -358,7 +389,7 @@ const TourismPlanner: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-br from-orange-500 to-amber-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <p className="text-orange-100 text-sm font-semibold uppercase tracking-widest mb-2">🌍 MIDZOE Tourism</p>
+          <p className="text-orange-100 text-sm font-semibold uppercase tracking-widest mb-2">🌍 MIDZO Tourism</p>
           <h1 className="text-3xl md:text-4xl font-extrabold">Composez votre voyage</h1>
           <p className="mt-3 text-orange-50 max-w-3xl">
             Choisissez une destination, vos dates et les services dont vous avez besoin : nous calculons le prix à la carte,
@@ -568,7 +599,7 @@ const TourismPlanner: React.FC = () => {
             )}
           </Section>
 
-          <Section step={4} title="Vos services" subtitle="Prix à l'unité de la grille MIDZOE, par dossier de voyage.">
+          <Section step={4} title="Vos services" subtitle="Prix à l'unité de la grille MIDZO, par dossier de voyage.">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Services">
               {TOURISM_SERVICES.map(s => {
                 const active = project.services.includes(s.id);
@@ -578,7 +609,7 @@ const TourismPlanner: React.FC = () => {
                     <input type="checkbox" checked={active} onChange={() => update({ services: toggle(project.services, s.id) })} className="mt-1 rounded text-orange-500 focus:ring-orange-500" />
                     <span className="flex-1 flex items-baseline justify-between gap-2">
                       <span><span className="block font-semibold text-gray-900">{s.label}</span><span className="text-xs text-gray-500">{s.id}</span></span>
-                      {price != null && <span className="text-sm font-semibold text-orange-600 whitespace-nowrap">{formatEuros(price)}</span>}
+                      {price != null && <span className="text-sm font-semibold text-orange-600 whitespace-nowrap">{formatMoney(price)}</span>}
                     </span>
                   </label>
                 );
@@ -591,7 +622,7 @@ const TourismPlanner: React.FC = () => {
 
           <Section step={5} title="Prix et package" id="tp-price" subtitle="À la carte ou package Tourism : nous vous conseillons le moins cher.">
             <PricingStep pricing={pricing} pricingError={pricingError} codes={codes} choice={project.price}
-              onChange={price => update({ price })} requestedSlug={requestedSlug} />
+              onChange={price => update({ price })} requestedSlug={requestedSlug} travelers={project.travelers} />
           </Section>
         </div>
 
@@ -631,7 +662,8 @@ const TourismPlanner: React.FC = () => {
                 className="w-full py-3 rounded-xl border-2 border-orange-500 text-orange-600 font-semibold hover:bg-orange-50 disabled:opacity-50">
                 {sending ? 'Envoi…' : project.requestSentAt ? 'Renvoyer ma demande' : 'Demander ce voyage'}
               </button>
-              <button type="button" onClick={pay} disabled={saving || sending || paying} data-testid="pay-online"
+              <TermsCheckbox checked={acceptTerms} onChange={setAcceptTerms} />
+              <button type="button" onClick={pay} disabled={saving || sending || paying || !acceptTerms} data-testid="pay-online"
                 className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-50">
                 {paying ? 'Ouverture du paiement…' : 'Payer en ligne (carte bancaire)'}
               </button>

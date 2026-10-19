@@ -673,6 +673,47 @@ class ApiService {
   async getTourismEvents() {
     return this.request<any>('/tourism/events');
   }
+  // Circuits types (prix « à partir de » calculé côté serveur) et avis clients vérifiés.
+  async getCircuits(country?: string) {
+    return this.request<any>(`/circuits${country ? `?country=${encodeURIComponent(country)}` : ''}`);
+  }
+  async getCircuit(slug: string) {
+    return this.request<any>(`/circuits/${encodeURIComponent(slug)}`);
+  }
+  async adminGetCircuits() {
+    return this.request<any>('/admin/circuits');
+  }
+  async adminCreateCircuit(data: object) {
+    return this.request<any>('/admin/circuits', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async adminUpdateCircuit(id: number, data: object) {
+    return this.request<any>(`/admin/circuits/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async adminDeleteCircuit(id: number) {
+    return this.request<any>(`/admin/circuits/${id}`, { method: 'DELETE' });
+  }
+  async getReviews(params: { service?: string; limit?: number } = {}) {
+    const qs = new URLSearchParams();
+    if (params.service) qs.set('service', params.service);
+    if (params.limit) qs.set('limit', String(params.limit));
+    return this.request<any>(`/reviews${qs.toString() ? `?${qs}` : ''}`);
+  }
+  async postReview(data: { rating: number; title?: string; body: string; destination?: string; purchase_id?: number }) {
+    return this.request<any>('/reviews', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async getMyReviews() {
+    return this.request<any>('/me/reviews');
+  }
+  async adminGetReviews(status?: string) {
+    return this.request<any>(`/admin/reviews${status ? `?status=${status}` : ''}`);
+  }
+  async adminModerateReview(id: number, data: { status?: string; admin_reply?: string; reject_reason?: string }) {
+    return this.request<any>(`/admin/reviews/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  }
+  async adminDeleteReview(id: number) {
+    return this.request<any>(`/admin/reviews/${id}`, { method: 'DELETE' });
+  }
+
   async getTourismPartners(category?: string) {
     const qs = category ? `?category=${encodeURIComponent(category)}` : '';
     return this.request<any>(`/tourism/partners${qs}`);
@@ -1245,11 +1286,16 @@ class ApiService {
 
   // ─── Paiement en ligne (grille tarifaire, Stripe Checkout) ─────
   /** Le serveur recalcule le prix : on n'envoie que les services, l'offre et les échéances. */
-  async createPaymentCheckout(data: { codes: string[]; offer_id?: string | null; installments: number; trip_id?: number }) {
+  async createPaymentCheckout(data: { codes: string[]; offer_id?: string | null; installments: number; trip_id?: number; travelers?: number; accept_terms: boolean; terms_version?: string }) {
     return this.request<any>('/payments/checkout', { method: 'POST', body: JSON.stringify(data) });
   }
   async confirmPayment(sessionId: string) {
     return this.request<any>(`/payments/confirm?session_id=${encodeURIComponent(sessionId)}`);
+  }
+
+  /** Taux EUR → monnaies (affichage indicatif uniquement). */
+  async getFxRates() {
+    return this.request<any>('/fx');
   }
 
   // ─── Espace client : suivi du dossier, suppression du compte ───

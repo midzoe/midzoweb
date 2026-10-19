@@ -1,9 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import LeadMagnetModal from './components/leadMagnet/LeadMagnetModal';
-import { useLeadCapture } from './hooks/useLeadCapture';
+import { AuthProvider } from './context/AuthContext';
 
 // Admin
 import AdminLayout from './components/admin/AdminLayout';
@@ -53,6 +51,9 @@ import NewsSlider from './components/NewsSlider';
 import Services from './components/Services';
 import PaymentResult from './components/PaymentResult';
 import AdminClientTrips from './components/admin/AdminClientTrips';
+import AdminReviews from './components/admin/AdminReviews';
+import AdminCircuits from './components/admin/AdminCircuits';
+import { TourismCircuits, TourismCircuitDetail } from './components/tourism/TourismCircuits';
 import Packages from './components/Packages';
 import About from './components/About';
 import Contact from './components/Contact';
@@ -62,8 +63,7 @@ import Dashboard from './components/Dashboard';
 import MyTripsSpace from './components/MyTripsSpace';
 import Profile from './components/Profile';
 import FAQ from './components/FAQ';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import TermsOfService from './components/TermsOfService';
+import LegalPage from './components/legal/LegalPage';
 import FlightBooking from './components/FlightBooking';
 import Insurance from './components/Insurance';
 import CountryDetail from './components/CountryDetail';
@@ -84,8 +84,7 @@ import TourismRestaurants from './components/tourism/TourismRestaurants';
 import TouristSites from './components/tourism/TouristSites';
 import TouristVisa from './components/tourism/TouristVisa';
 import TourismEvents from './components/tourism/TourismEvents';
-import SafariAfrica from './components/tourism/SafariAfrica';
-import SportsTourism from './components/tourism/SportsTourism';
+import ProgramsPage from './components/tourism/ProgramsPage';
 import TourismPartners from './components/tourism/TourismPartners';
 
 // Orientation Components
@@ -93,7 +92,7 @@ import Orientation from './components/orientation/Orientation';
 
 // Tourism Home
 import TourismHome from './components/TourismHome';
-import Community from './components/Community';
+import ReviewsPage from './components/ReviewsPage';
 import DestinationGuide from './components/DestinationGuide';
 import NewsArticle from './components/news/NewsArticle';
 import BlogList from './components/blog/BlogList';
@@ -119,18 +118,6 @@ function PublicLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Pages où l'on remplit quelque chose : la popup d'inscription n'y apparaît pas. */
-const TASK_PAGES = /^\/(study|tourism\/plan|login|register|forgot-password|dashboard|profile|my-trips|premium|payment|admin|contact)(\/|$)/;
-
-/** Popup « lead magnet » : visiteurs non connectés, hors pages de tâche. */
-function LeadCapture() {
-  const { pathname } = useLocation();
-  const { user } = useAuth();
-  const enabled = !user && !TASK_PAGES.test(pathname);
-  const { isModalOpen, closeModal } = useLeadCapture(enabled);
-  return <LeadMagnetModal isOpen={isModalOpen && enabled} onClose={closeModal} />;
-}
-
 function AppContent() {
   const { i18n } = useTranslation();
 
@@ -141,7 +128,7 @@ function AppContent() {
   return (
     <>
       <Router>
-        <LeadCapture />
+        {/* Popup « lead magnet » retirée : elle annonçait « 10 000+ étudiants » et un guide PDF inexistant. */}
         <PublicLayout>
           <Routes>
             {/* ─── Admin Routes ──────────────────────────────── */}
@@ -165,6 +152,8 @@ function AppContent() {
             <Route path="/admin/pricing" element={<AdminLayout><AdminPricing /></AdminLayout>} />
             <Route path="/admin/price-grid" element={<AdminLayout><AdminPricedServices /></AdminLayout>} />
             <Route path="/admin/client-trips" element={<AdminLayout><AdminClientTrips /></AdminLayout>} />
+            <Route path="/admin/reviews" element={<AdminLayout><AdminReviews /></AdminLayout>} />
+            <Route path="/admin/circuits" element={<AdminLayout><AdminCircuits /></AdminLayout>} />
             <Route path="/admin/services" element={<AdminLayout><AdminServices /></AdminLayout>} />
             <Route path="/admin/contact-messages" element={<AdminLayout><AdminContactMessages /></AdminLayout>} />
             <Route path="/admin/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
@@ -187,7 +176,10 @@ function AppContent() {
             <Route path="/" element={<><Hero /><NewsSlider /></>} />
             <Route path="/tourism" element={<TourismHome />} />
             <Route path="/tourism/plan" element={<TourismPlanner />} />
-            <Route path="/community" element={<Community />} />
+            <Route path="/tourism/circuits" element={<TourismCircuits />} />
+            <Route path="/tourism/circuits/:slug" element={<TourismCircuitDetail />} />
+            <Route path="/community" element={<Navigate to="/avis" replace />} />
+            <Route path="/avis" element={<ReviewsPage />} />
             <Route path="/destination/:destination" element={<DestinationGuide />} />
             <Route path="/actualites/:id" element={<NewsArticle />} />
             <Route path="/blog" element={<BlogList />} />
@@ -208,8 +200,11 @@ function AppContent() {
             <Route path="/my-trips" element={<MyTripsSpace />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/faq" element={<FAQ />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<LegalPage doc="privacy" />} />
+            <Route path="/terms" element={<LegalPage doc="terms" />} />
+            <Route path="/cgv" element={<LegalPage doc="cgv" />} />
+            <Route path="/remboursement" element={<LegalPage doc="refund" />} />
+            <Route path="/mentions-legales" element={<LegalPage doc="notice" />} />
             <Route path="/flights" element={<FlightBooking />} />
             <Route path="/insurance" element={<Insurance />} />
 
@@ -228,8 +223,8 @@ function AppContent() {
             <Route path="/services/tourist-sites" element={<TouristSites />} />
             <Route path="/services/tourist-visa" element={<TouristVisa />} />
             <Route path="/services/tourism-events" element={<TourismEvents />} />
-            <Route path="/services/tourism-safari" element={<SafariAfrica />} />
-            <Route path="/services/tourism-sports" element={<SportsTourism />} />
+            <Route path="/services/tourism-safari" element={<ProgramsPage kind="safari" />} />
+            <Route path="/services/tourism-sports" element={<ProgramsPage kind="sport" />} />
             <Route path="/services/tourism-partners" element={<TourismPartners />} />
 
             {/* Orientation Routes */}

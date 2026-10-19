@@ -13,7 +13,7 @@ import {
 /**
  * Gestion des packages — deux natures cohabitent volontairement ici :
  *
- *  1. Les PALIERS de la grille commerciale (plaquette « MIDZOE PACKAGES ») : Starter →
+ *  1. Les PALIERS de la grille commerciale (plaquette « MIDZO PACKAGES ») : Starter →
  *     All-Inclusive, Escape → Ultimate, Mix Essential → Mix XXL, consultation. Ils portent
  *     une famille, un prix d'appel et une liste d'avantages, et alimentent la page publique
  *     `/packages`. C'est ce que cet écran sert à éditer au quotidien.

@@ -235,7 +235,7 @@ const Dashboard: React.FC = () => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Mon espace MIDZOE</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Mon espace MIDZO</h1>
             <p className="text-gray-500 mt-2">
               Connectez-vous pour retrouver vos projets enregistrés, sur tous vos appareils.
             </p>
@@ -524,7 +524,7 @@ const Dashboard: React.FC = () => {
           {/* RIGHT — Sidebar */}
           <div className="space-y-5">
 
-            {/* Suivi du dossier par l'équipe MIDZOE */}
+            {/* Suivi du dossier par l'équipe MIDZO */}
             <DossierCard />
 
             {/* Notifications (alertes visa premium — story 4.6) */}

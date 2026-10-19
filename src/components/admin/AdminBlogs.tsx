@@ -41,7 +41,7 @@ type BlogForm = {
 };
 
 const emptyForm: BlogForm = {
-  title: '', slug: '', category: '', author: 'Équipe Midzoe',
+  title: '', slug: '', category: '', author: 'Équipe Midzo',
   image: '', excerpt: '', body: '',
   published_at: new Date().toISOString().slice(0, 10), is_published: false,
 };

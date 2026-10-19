@@ -1,161 +1,102 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-// import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
+import { apiService } from '../services/api';
+
+/**
+ * Pied de page. Aucune promesse non vérifiable (nombre de clients, note, certification) :
+ * seuls des faits (paiement Stripe) et des liens vers de vraies pages. Les réseaux sociaux
+ * s'affichent uniquement si leur adresse est configurée (VITE_SOCIAL_*).
+ */
+const SOCIAL = [
+  { key: 'facebook', label: 'Facebook', url: import.meta.env.VITE_SOCIAL_FACEBOOK as string | undefined },
+  { key: 'instagram', label: 'Instagram', url: import.meta.env.VITE_SOCIAL_INSTAGRAM as string | undefined },
+  { key: 'linkedin', label: 'LinkedIn', url: import.meta.env.VITE_SOCIAL_LINKEDIN as string | undefined },
+  { key: 'tiktok', label: 'TikTok', url: import.meta.env.VITE_SOCIAL_TIKTOK as string | undefined },
+  { key: 'whatsapp', label: 'WhatsApp', url: import.meta.env.VITE_WHATSAPP_URL as string | undefined },
+].filter(s => s.url);
 
 const Footer: React.FC = () => {
-  // const { t } = useTranslation('footer');
+  const { t } = useTranslation('footer');
   const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  const currentYear = new Date().getFullYear();
+  const [type, setType] = useState<'study' | 'tourism'>('study');
+  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+  const year = new Date().getFullYear();
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const subscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubscribed(true);
-    setEmail('');
-    setTimeout(() => setSubscribed(false), 3000);
+    setState('busy');
+    try {
+      await apiService.subscribeNewsletter(type, email.trim());
+      setState('done');
+      setEmail('');
+    } catch {
+      setState('error');
+    }
   };
+
+  const col = (title: string, links: [string, string][]) => (
+    <div>
+      <h4 className="font-semibold mb-5">{title}</h4>
+      <ul className="space-y-2.5 text-sm">
+        {links.map(([to, label]) => (
+          <li key={to + label}><Link to={to} className="text-gray-400 hover:text-white transition">{label}</Link></li>
+        ))}
+      </ul>
+    </div>
+  );
 
   return (
     <footer className="bg-gray-900 text-white">
-      {/* Newsletter */}
-      <div className="bg-gradient-to-r from-orange-600 to-orange-500">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="text-2xl font-bold mb-2">Get Exclusive Deals</h3>
-              <p className="text-white/90">
-                Subscribe to our newsletter for early access to new experiences and exclusive discounts.
-              </p>
-            </div>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-600 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 bg-white text-orange-600 font-bold rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                Subscribe
-              </button>
-            </form>
-            {subscribed && (
-              <p className="text-white text-sm">✓ Thanks for subscribing!</p>
-            )}
+      <div className="bg-gradient-to-r from-primary to-emerald-600">
+        <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-2 gap-6 items-center">
+          <div>
+            <h3 className="text-2xl font-bold mb-1">{t('newsletter_title')}</h3>
+            <p className="text-white/90 text-sm">{t('newsletter_text')}</p>
           </div>
+          <form onSubmit={subscribe} className="flex flex-col sm:flex-row gap-2">
+            <select aria-label={t('newsletter_title')} value={type} onChange={e => setType(e.target.value as 'study' | 'tourism')}
+              className="px-3 py-3 rounded-lg text-gray-900 bg-white">
+              <option value="study">{t('newsletter_study')}</option>
+              <option value="tourism">{t('newsletter_tourism')}</option>
+            </select>
+            <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder={t('newsletter_placeholder')}
+              aria-label={t('newsletter_placeholder')} className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none" />
+            <button type="submit" disabled={state === 'busy'}
+              className="px-6 py-3 bg-white text-primary font-bold rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-60">
+              {t('subscribe')}
+            </button>
+          </form>
+          {state === 'done' && <p role="status" className="md:col-start-2 text-sm">✓ {t('subscribed')}</p>}
+          {state === 'error' && <p role="alert" className="md:col-start-2 text-sm">{t('subscribe_error')}</p>}
         </div>
       </div>
 
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-3xl font-black text-orange-400">🌍</span>
-              <span className="text-2xl font-bold">Midzoe</span>
+      <div className="max-w-7xl mx-auto px-4 py-14">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
+          <div className="col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl">🌍</span>
+              <span className="text-2xl font-bold">Midzo</span>
             </div>
-            <p className="text-gray-400 text-sm mb-6">
-              Transform your dreams into unforgettable experiences. Global travel, reimagined.
-            </p>
-            <div className="flex gap-4">
-              <a href="#" className="text-gray-400 hover:text-orange-400 transition">
-                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
-                </svg>
-              </a>
-              <a href="#" className="text-gray-400 hover:text-orange-400 transition">
-                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm3.6 11.5h-2.1v6.6h-2.2v-6.6H9.9v-2h1.4V7.7c0-1.164.573-2.987 2.987-2.987h1.846v1.98h-1.337c-.226 0-.536.113-.536.6v1.237h1.9l-.264 2h-1.636v6.6z" />
-                </svg>
-              </a>
-              <a href="#" className="text-gray-400 hover:text-orange-400 transition">
-                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm0 2.25c5.385 0 9.75 4.365 9.75 9.75s-4.365 9.75-9.75 9.75-9.75-4.365-9.75-9.75 4.365-9.75 9.75-9.75zm0 1.5c-4.56 0-8.25 3.69-8.25 8.25s3.69 8.25 8.25 8.25 8.25-3.69 8.25-8.25-3.69-8.25-8.25-8.25zm3.75 9.75h-7.5v-1.5h7.5v1.5z" />
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          {/* Midzoe */}
-          <div>
-            <h4 className="font-semibold mb-6">Midzoe</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link to="/" className="text-gray-400 hover:text-white transition">Home</Link></li>
-              <li><Link to="/about" className="text-gray-400 hover:text-white transition">About Us</Link></li>
-              <li><Link to="/services" className="text-gray-400 hover:text-white transition">Services</Link></li>
-              <li><Link to="/contact" className="text-gray-400 hover:text-white transition">Contact</Link></li>
-              <li><Link to="/blog" className="text-gray-400 hover:text-white transition">Blog</Link></li>
-              <li><Link to="/faq" className="text-gray-400 hover:text-white transition">FAQ</Link></li>
-            </ul>
-          </div>
-
-          {/* Tourism */}
-          <div>
-            <h4 className="font-semibold mb-6">Tourism</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link to="/tourism" className="text-gray-400 hover:text-white transition">Experiences</Link></li>
-              <li><Link to="/tourism/plan" className="text-gray-400 hover:text-white transition">Trip Builder</Link></li>
-              <li><Link to="/community" className="text-gray-400 hover:text-white transition">Community</Link></li>
-              <li><Link to="/tourism" className="text-gray-400 hover:text-white transition">Guides</Link></li>
-              <li><Link to="/contact" className="text-gray-400 hover:text-white transition">Deals</Link></li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h4 className="font-semibold mb-6">Support</h4>
-            <ul className="space-y-3 text-sm">
-              <li><Link to="/faq" className="text-gray-400 hover:text-white transition">Help Center</Link></li>
-              <li><Link to="/faq" className="text-gray-400 hover:text-white transition">Safety</Link></li>
-              <li><Link to="/contact" className="text-gray-400 hover:text-white transition">Accessibility</Link></li>
-              <li><Link to="/terms" className="text-gray-400 hover:text-white transition">Terms</Link></li>
-              <li><Link to="/privacy" className="text-gray-400 hover:text-white transition">Privacy</Link></li>
-            </ul>
-          </div>
-
-          {/* Trust Signals */}
-          <div>
-            <h4 className="font-semibold mb-6">Certified</h4>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <span>✓</span>
-                <span className="text-gray-400">50K+ Travelers</span>
+            <p className="text-gray-400 text-sm mb-5">{t('tagline')}</p>
+            {SOCIAL.length > 0 && (
+              <div className="flex flex-wrap gap-3 text-sm">
+                {SOCIAL.map(s => (
+                  <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white underline">{s.label}</a>
+                ))}
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span>✓</span>
-                <span className="text-gray-400">4.9★ Rating</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span>✓</span>
-                <span className="text-gray-400">24/7 Support</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span>✓</span>
-                <span className="text-gray-400">Secure Payments</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span>✓</span>
-                <span className="text-gray-400">Travel Insurance</span>
-              </div>
-            </div>
+            )}
           </div>
+          {col(t('col_midzo'), [['/', t('home')], ['/about', t('about')], ['/services', t('services')], ['/packages', t('packages')], ['/contact', t('contact')], ['/blog', t('blog')], ['/faq', t('faq')]])}
+          {col(t('col_study'), [['/study', t('study_plan')], ['/services/university-finder', t('university_finder')], ['/services/student-visa', t('student_visa')], ['/services/student-accommodation', t('housing')]])}
+          {col(t('col_travel'), [['/tourism/plan', t('travel_plan')], ['/tourism/circuits', t('circuits')], ['/tourism', t('destinations')], ['/services/tourism-events', t('events')], ['/avis', t('reviews')]])}
+          {col(t('col_legal'), [['/cgv', t('cgv')], ['/remboursement', t('refund')], ['/mentions-legales', t('legal_notice')], ['/terms', t('terms')], ['/privacy', t('privacy')]])}
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-gray-800 py-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">
-            &copy; {currentYear} Midzoe. All rights reserved. | Made with 🌍 for travelers
-          </p>
-          <div className="flex gap-4 mt-4 md:mt-0 text-sm">
-            <span className="text-gray-400">🔒 SSL Secure</span>
-            <span className="text-gray-400">💳 PCI Compliant</span>
-            <span className="text-gray-400">🌍 GDPR</span>
-          </div>
+        <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-sm text-gray-400">
+          <p>&copy; {year} Midzo. {t('rights')}</p>
+          <p>🔒 {t('secure_payment')}</p>
         </div>
       </div>
     </footer>

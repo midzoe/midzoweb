@@ -62,11 +62,11 @@
   },
   "register": {
     "title": "Créer un Compte",
-    "subtitle": "Rejoignez Midzoe pour accéder à tous nos services",
+    "subtitle": "Rejoignez Midzo pour accéder à tous nos services",
     "have_account": "Vous avez déjà un compte ?",
     "sign_in": "Se connecter",
     "no_account": "Vous n'avez pas de compte ?",
-    "success": "Compte créé avec succès ! Bienvenue sur Midzoe.",
+    "success": "Compte créé avec succès ! Bienvenue sur Midzo.",
     "error_email_exists": "Un compte avec cet email existe déjà.",
     "error_generic": "Inscription échouée. Veuillez réessayer.",
     "verify_title": "Vérifiez Votre Email",

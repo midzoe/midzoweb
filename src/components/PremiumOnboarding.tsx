@@ -93,7 +93,7 @@ const PremiumOnboarding: React.FC<PremiumOnboardingProps> = ({ isOpen, onClose, 
             <div className="space-y-4">
               <h3 className="font-semibold text-gray-900">Votre identité de voyageur</h3>
               <p className="text-sm text-gray-500">
-                Ces informations permettent à Midzoe de personnaliser les alertes visa et les recommandations pour vous.
+                Ces informations permettent à Midzo de personnaliser les alertes visa et les recommandations pour vous.
               </p>
 
               <div>
