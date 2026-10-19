@@ -10,9 +10,9 @@ import { goToCheckout } from '../../pricing/checkout';
 import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
 import { formatEuros, quoteSelection } from '../../pricing/pricingEngine';
 import {
-  INTERESTS, TOURISM_SERVICES, TourismProject,
+  INTERESTS, TOURISM_SERVICES, TourismProject, TourismStop,
   clearTourismDraft, emptyTourismProject, loadTourismDraft, loadTourismProject, nightsBetween,
-  saveTourismDraft, saveTourismToAccount, tourismSummary, tourismTitle,
+  saveTourismDraft, saveTourismToAccount, tourismSummary, tourismTitle, stopsLabel, syncedStops, itineraryText,
 } from './tourismProject';
 
 // Parcours « Composer mon voyage » : profil → voyage → ce que propose le catalogue →
@@ -38,8 +38,11 @@ const TourismPlanner: React.FC = () => {
     const country = searchParams.get('country');
     if (searchParams.get('project')) return emptyTourismProject();
     const draft = loadTourismDraft();
-    if (draft) return country && !draft.destination ? { ...draft, destination: country } : draft;
-    return { ...emptyTourismProject(), destination: country || '' };
+    const withCountry = (p: TourismProject): TourismProject => (!country || p.stops.some(st => st.country === country)
+      ? p
+      : { ...p, destination: country, cities: [], stops: [...syncedStops(p), { country, label: country, cities: [], nights: null }] });
+    if (draft) return draft.destination ? draft : withCountry(draft);
+    return withCountry(emptyTourismProject());
   });
   const [loadingProject, setLoadingProject] = useState(!!searchParams.get('project'));
   const [dirty, setDirty] = useState(false);
@@ -167,6 +170,37 @@ const TourismPlanner: React.FC = () => {
   const canSave = missing.length === 0 && !dateError;
 
   // ── Actions ─────────────────────────────────────────────────────────────────
+
+  // Itinéraire multi-destination : chaque étape garde ses villes ; `destination` = étape affichée.
+  const toggleStop = (name: string, label: string) => {
+    const list = syncedStops(project);
+    if (list.some(st => st.country === name)) {
+      const rest = list.filter(st => st.country !== name);
+      const next = project.destination === name ? rest[0] : rest.find(st => st.country === project.destination);
+      update({ stops: rest, destination: next?.country ?? '', destinationLabel: next?.label, cities: next?.cities ?? [] });
+    } else {
+      update({ stops: [...list, { country: name, label, cities: [], nights: null }], destination: name, destinationLabel: label, cities: [] });
+    }
+  };
+  const showStop = (name: string) => {
+    if (name === project.destination) return;
+    const list = syncedStops(project);
+    const next = list.find(st => st.country === name);
+    if (next) update({ stops: list, destination: name, destinationLabel: next.label, cities: next.cities });
+  };
+  const moveStop = (index: number, delta: number) => {
+    const list = syncedStops(project);
+    const j = index + delta;
+    if (j < 0 || j >= list.length) return;
+    const copy = [...list];
+    [copy[index], copy[j]] = [copy[j], copy[index]];
+    update({ stops: copy });
+  };
+  const setStopNights = (name: string, value: string) => {
+    const n = parseInt(value, 10);
+    update({ stops: syncedStops(project).map(st => (st.country === name ? { ...st, nights: Number.isInteger(n) && n > 0 ? Math.min(n, 365) : null } : st)) });
+  };
+  const plannedNights = project.stops.reduce((sum, st) => sum + (st.nights ?? 0), 0);
 
   const addCity = (raw: string) => {
     const city = raw.trim();
@@ -368,20 +402,48 @@ const TourismPlanner: React.FC = () => {
           <Section step={2} title="Votre voyage" subtitle="Destination, étapes, dates et envies.">
             <div className="space-y-6">
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Destination</p>
+                <p className="block text-sm font-medium text-gray-700 mb-1">Destinations</p>
+                <p className="text-xs text-gray-500 mb-2">Choisissez un ou plusieurs pays : ils forment votre itinéraire, dans l'ordre ci-dessous.</p>
                 {countries.length === 0 ? <p className="text-sm text-gray-500">Chargement des destinations…</p> : (
                   <div className="flex flex-wrap gap-2" role="group" aria-label="Destination">
                     {countries.map(c => (
-                      <Chip key={c.id} active={project.destination === c.name}
-                        onClick={() => update({ destination: c.name, destinationLabel: c.nameFr || c.name, cities: [] })}>
+                      <Chip key={c.id} active={project.stops.some(st => st.country === c.name)}
+                        onClick={() => toggleStop(c.name, c.nameFr || c.name)}>
                         {c.flag} {c.nameFr || c.name}
                       </Chip>
                     ))}
                   </div>
                 )}
               </div>
+              {project.stops.length > 0 && (
+                <div>
+                  <p className="block text-sm font-medium text-gray-700 mb-2">Votre itinéraire</p>
+                  <ol className="space-y-2" aria-label="Itinéraire" data-testid="itinerary">
+                    {syncedStops(project).map((st: TourismStop, i, all) => (
+                      <li key={st.country} className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${st.country === project.destination ? 'border-orange-400 bg-orange-50' : 'border-gray-200'}`}>
+                        <span className="h-6 w-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                        <button type="button" onClick={() => showStop(st.country)} className="font-medium text-gray-900 hover:text-orange-600">{st.label}</button>
+                        <span className="text-xs text-gray-500 flex-1 min-w-[6rem]">{st.cities.join(', ') || 'villes à préciser'}</span>
+                        <label className="flex items-center gap-1 text-xs text-gray-600">
+                          <input type="number" min={1} max={365} value={st.nights ?? ''} onChange={e => setStopNights(st.country, e.target.value)}
+                            aria-label={`Nuits en ${st.label}`} className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm" />
+                          nuits
+                        </label>
+                        <button type="button" aria-label={`Monter ${st.label}`} disabled={i === 0} onClick={() => moveStop(i, -1)} className="px-1.5 text-gray-500 disabled:opacity-30">▲</button>
+                        <button type="button" aria-label={`Descendre ${st.label}`} disabled={i === all.length - 1} onClick={() => moveStop(i, 1)} className="px-1.5 text-gray-500 disabled:opacity-30">▼</button>
+                        <button type="button" aria-label={`Retirer ${st.label} de l’itinéraire`} onClick={() => toggleStop(st.country, st.label)} className="px-1.5 text-gray-400 hover:text-red-600">×</button>
+                      </li>
+                    ))}
+                  </ol>
+                  {nights != null && plannedNights > 0 && plannedNights !== nights && (
+                    <p className="text-xs text-amber-700 mt-2" data-testid="nights-mismatch">
+                      Les étapes totalisent {plannedNights} nuit{plannedNights > 1 ? 's' : ''} pour {nights} nuit{nights > 1 ? 's' : ''} entre vos dates.
+                    </p>
+                  )}
+                </div>
+              )}
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Villes / étapes</p>
+                <p className="block text-sm font-medium text-gray-700 mb-2">Villes / étapes{project.stops.length > 1 && project.destination ? ` — ${countryLabel}` : ''}</p>
                 {project.cities.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {project.cities.map(c => (
@@ -430,6 +492,19 @@ const TourismPlanner: React.FC = () => {
 
           <Section step={3} id="tp-results" title="Ce que propose le catalogue"
             subtitle={project.destination ? `Pour ${countryLabel}` : 'Choisissez une destination pour afficher les informations.'}>
+            {project.stops.length > 1 && (
+              <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label="Informations pour">
+                <span className="text-sm text-gray-500 mr-1">Informations pour :</span>
+                {project.stops.map(st => (
+                  <button key={st.country} type="button" role="tab" aria-selected={st.country === project.destination}
+                    onClick={() => showStop(st.country)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                      st.country === project.destination ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'}`}>
+                    {st.label}
+                  </button>
+                ))}
+              </div>
+            )}
             {!project.destination ? (
               <p className="text-gray-500 text-sm">Sélectionnez une destination à l'étape 2.</p>
             ) : loadingCatalog ? (
@@ -527,8 +602,8 @@ const TourismPlanner: React.FC = () => {
               <span data-testid="project-status" className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}>{status.label}</span>
             </div>
             <dl className="text-sm space-y-2">
-              <div><dt className="text-gray-500">Destination</dt><dd className="font-medium text-gray-900">{countryLabel || '—'}</dd></div>
-              <div><dt className="text-gray-500">Étapes</dt><dd className="font-medium text-gray-900">{project.cities.join(', ') || '—'}</dd></div>
+              <div><dt className="text-gray-500">Destination{project.stops.length > 1 ? 's' : ''}</dt><dd className="font-medium text-gray-900" data-testid="summary-destinations">{stopsLabel(project, countryLabel) || '—'}</dd></div>
+              <div><dt className="text-gray-500">Itinéraire</dt><dd className="font-medium text-gray-900" data-testid="summary-itinerary">{itineraryText(project) || '—'}</dd></div>
               <div><dt className="text-gray-500">Dates</dt><dd className="font-medium text-gray-900">{project.startDate ? `${project.startDate} → ${project.endDate || '?'}` : '—'}</dd></div>
               <div><dt className="text-gray-500">Voyageurs</dt><dd className="font-medium text-gray-900">{project.travelers}</dd></div>
               <div><dt className="text-gray-500">Services ({project.services.length})</dt><dd className="font-medium text-gray-900">

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { SavedTourismProject, TourismProject, TOURISM_SERVICES, deleteTourismProject, tourismTitle } from './tourismProject';
+import { SavedTourismProject, TourismProject, TOURISM_SERVICES, deleteTourismProject, tourismTitle, itineraryText } from './tourismProject';
 import { snapshotLabel } from '../../pricing/priceChoice';
 
 // Dashboard : voyages composés dans « Composer mon voyage » (compte et brouillon de l'appareil).
 
 const facts = (p: TourismProject) =>
-  [p.cities.join(', '), p.startDate && `${p.startDate}${p.endDate ? ` → ${p.endDate}` : ''}`, `${p.travelers} voyageur${p.travelers > 1 ? 's' : ''}`]
+  [p.stops.length > 1 ? itineraryText(p) : p.cities.join(', '), p.startDate && `${p.startDate}${p.endDate ? ` → ${p.endDate}` : ''}`, `${p.travelers} voyageur${p.travelers > 1 ? 's' : ''}`]
     .filter(Boolean).join(' · ');
 
 interface Props {

@@ -26,9 +26,15 @@ export const TOURISM_SERVICES: TourismServiceOption[] = [
 
 export const INTERESTS = ['Safari & nature', 'Plage & détente', 'Culture & patrimoine', 'Sport & événements', 'Gastronomie', 'Shopping & ville'];
 
+/** Une étape de l'itinéraire : un pays, ses villes, et le nombre de nuits prévu (facultatif). */
+export interface TourismStop { country: string; label: string; cities: string[]; nights: number | null }
+
 export interface TourismProject {
   version: 1;
   profile: { nationality: string; residence: string };
+  /** Itinéraire multi-destination, dans l'ordre du voyage. */
+  stops: TourismStop[];
+  /** Pays affiché dans les informations (l'une des étapes) ; ses villes sont dans `cities`. */
   destination: string;
   destinationLabel?: string;
   cities: string[];
@@ -49,6 +55,7 @@ export function emptyTourismProject(): TourismProject {
   return {
     version: 1,
     profile: { nationality: '', residence: '' },
+    stops: [],
     destination: '',
     cities: [],
     startDate: '',
@@ -66,10 +73,25 @@ export function normalizeTourismProject(raw: any): TourismProject {
   if (!raw || typeof raw !== 'object') return base;
   const arr = (v: any) => (Array.isArray(v) ? v.filter((x: any) => typeof x === 'string') : []);
   const travelers = Number(raw.travelers);
+  // Anciens voyages : une seule destination (`destination` + `cities`).
+  const destination = typeof raw.destination === 'string' ? raw.destination : '';
+  let stops: TourismStop[] = Array.isArray(raw.stops)
+    ? raw.stops
+        .filter((st: any) => st && typeof st.country === 'string' && st.country)
+        .map((st: any) => {
+          const n = Number(st.nights);
+          return { country: st.country, label: typeof st.label === 'string' && st.label ? st.label : st.country, cities: arr(st.cities), nights: Number.isInteger(n) && n > 0 && n < 366 ? n : null };
+        })
+    : [];
+  if (destination && !stops.some(st => st.country === destination)) {
+    stops = [...stops, { country: destination, label: raw.destinationLabel || destination, cities: arr(raw.cities), nights: null }];
+  }
   return {
     ...base,
     ...raw,
     version: 1,
+    stops,
+    destination: destination || stops[0]?.country || '',
     profile: { ...base.profile, ...(raw.profile || {}) },
     cities: arr(raw.cities),
     interests: arr(raw.interests),
@@ -88,8 +110,26 @@ export function nightsBetween(start: string, end: string): number | null {
   return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
+/** Étapes avec les villes de l'étape affichée (`cities` est la copie de travail). */
+export function syncedStops(project: TourismProject): TourismStop[] {
+  return project.stops.map(st => (st.country === project.destination ? { ...st, cities: project.cities } : st));
+}
+
+export function stopsLabel(project: TourismProject, countryLabel?: string): string {
+  if (project.stops.length > 1) return project.stops.map(st => st.label).join(' → ');
+  return countryLabel || project.destinationLabel || project.stops[0]?.label || project.destination || '';
+}
+
+/** « Kenya (Nairobi, Masai Mara · 5 nuits) → Tanzanie (Zanzibar · 4 nuits) » */
+export function itineraryText(project: TourismProject): string {
+  return syncedStops(project).map(st => {
+    const details = [st.cities.join(', '), st.nights ? `${st.nights} nuit${st.nights > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
+    return details ? `${st.label} (${details})` : st.label;
+  }).join(' → ');
+}
+
 export function tourismTitle(project: TourismProject, countryLabel?: string): string {
-  const country = countryLabel || project.destinationLabel || project.destination || 'destination à choisir';
+  const country = stopsLabel(project, countryLabel) || 'destination à choisir';
   const when = project.startDate ? ` — ${project.startDate}${project.endDate ? ` → ${project.endDate}` : ''}` : '';
   return `Voyage — ${country}${when}`;
 }
@@ -147,9 +187,9 @@ export async function saveTourismToAccount(project: TourismProject, countryLabel
     title: tourismTitle(project, countryLabel),
     startDate: project.startDate || undefined,
     endDate: project.endDate || undefined,
-    destinations: project.cities.length
-      ? project.cities.map((city, order) => ({ country: project.destination, city, order }))
-      : [{ country: project.destination, order: 0 }],
+    destinations: (syncedStops(project).length ? syncedStops(project) : [{ country: project.destination, label: project.destination, cities: project.cities, nights: null }])
+      .flatMap(st => (st.cities.length ? st.cities.map(city => ({ country: st.country, city })) : [{ country: st.country, city: undefined as string | undefined }]))
+      .map((d, order) => ({ ...d, order })),
   });
 }
 
@@ -184,8 +224,7 @@ export function tourismSummary(project: TourismProject, countryLabel?: string): 
     '',
     `Nationalité : ${project.profile.nationality || '—'}`,
     `Pays de résidence : ${project.profile.residence || '—'}`,
-    `Destination : ${countryLabel || project.destination || '—'}`,
-    `Villes / étapes : ${project.cities.join(', ') || '—'}`,
+    `Itinéraire : ${itineraryText(project) || countryLabel || project.destination || '—'}`,
     `Dates : ${project.startDate || '—'} → ${project.endDate || '—'}${nights != null ? ` (${nights} nuit${nights > 1 ? 's' : ''})` : ''}`,
     `Voyageurs : ${project.travelers}`,
     `Centres d’intérêt : ${project.interests.join(', ') || '—'}`,
