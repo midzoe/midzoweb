@@ -42,6 +42,9 @@ const ServiceRow: React.FC<{ svc: Service; onChanged: () => void }> = ({ svc, on
   const [doc, setDoc] = useState(svc.documentUrl ?? '');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  // La ligne reste montée après le rechargement (clé = id) : on resynchronise les champs avec la
+  // base sans effacer la confirmation affichée à l'admin.
+  useEffect(() => { setStatus(svc.status); setNote(svc.note ?? ''); setDoc(svc.documentUrl ?? ''); }, [svc.status, svc.note, svc.documentUrl]);
   const dirty = status !== svc.status || note !== (svc.note ?? '') || doc !== (svc.documentUrl ?? '');
 
   const save = async () => {
@@ -140,7 +143,7 @@ const TripCard: React.FC<{ trip: Trip; onChanged: () => void }> = ({ trip, onCha
 
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-stone-500 mb-1">Services</p>
-        {services.length ? services.map(s => <ServiceRow key={`${s.id}-${s.status}-${s.note}-${s.documentUrl}`} svc={s} onChanged={onChanged} />)
+        {services.length ? services.map(s => <ServiceRow key={s.id} svc={s} onChanged={onChanged} />)
           : <p className="text-sm text-stone-400">Aucun service.</p>}
         <div className="flex flex-wrap gap-2 mt-2">
           <Select aria-label="Service à ajouter" value={preset} onChange={e => setPreset(e.target.value)}>
