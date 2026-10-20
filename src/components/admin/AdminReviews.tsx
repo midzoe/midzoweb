@@ -15,7 +15,8 @@ const ReviewRow: React.FC<{ r: any; onChanged: () => void }> = ({ r, onChanged }
     try { await apiService.adminModerateReview(r.id, data); onChanged(); } finally { setBusy(false); }
   };
   return (
-    <Card className="p-5 space-y-3" data-testid="admin-review">
+    <div data-testid="admin-review">
+    <Card className="p-5 space-y-3">
       <div className="flex flex-wrap justify-between gap-2">
         <div>
           <p className="font-semibold text-stone-800">{r.authorName} · {'★'.repeat(r.rating)}<span className="text-stone-300">{'★'.repeat(5 - r.rating)}</span></p>
@@ -33,6 +34,7 @@ const ReviewRow: React.FC<{ r: any; onChanged: () => void }> = ({ r, onChanged }
         {r.status !== 'pending' && <SecondaryButton disabled={busy} onClick={() => act({ admin_reply: reply })}>Enregistrer la réponse</SecondaryButton>}
       </div>
     </Card>
+    </div>
   );
 };
 
