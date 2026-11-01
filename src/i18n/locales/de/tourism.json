@@ -1,0 +1,101 @@
+{
+  "hero": {
+    "title": "Planen Sie Ihre Reise",
+    "text": "Wählen Sie ein Ziel, Ihre Reisedaten und die gewünschten Leistungen: Wir berechnen den Einzelpreis, vergleichen ihn mit unseren Paketen und empfehlen das günstigste Angebot."
+  },
+  "travelers": {
+    "title": "Ihre Reisenden",
+    "subtitle": "Die Staatsangehörigkeit bestimmt die Formalitäten (Visum).",
+    "count": "Reisende"
+  },
+  "trip": {
+    "title": "Ihre Reise",
+    "subtitle": "Ziel, Etappen, Daten und Wünsche.",
+    "destinations": "Reiseziele",
+    "destinations_hint": "Wählen Sie ein oder mehrere Länder: Sie bilden Ihre Reiseroute in der Reihenfolge unten.",
+    "loading": "Reiseziele werden geladen…",
+    "itinerary": "Ihre Reiseroute",
+    "cities_tbd": "Städte noch offen",
+    "nights_in": "Nächte in {{country}}",
+    "nights_word": "Nächte",
+    "nights_one": "{{count}} Nacht",
+    "nights_other": "{{count}} Nächte",
+    "move_up": "{{country}} nach oben",
+    "move_down": "{{country}} nach unten",
+    "remove_stop": "{{country}} aus der Reiseroute entfernen",
+    "nights_mismatch": "Die Etappen ergeben {{planned}}, zwischen Ihren Daten liegen {{total}}.",
+    "cities": "Städte / Etappen",
+    "add_stop": "Etappe hinzufügen",
+    "add_city_placeholder": "Stadt hinzufügen (z. B. Nairobi)",
+    "pick_destination_first": "Wählen Sie zuerst ein Reiseziel",
+    "start": "Abreise",
+    "end": "Rückreise",
+    "nights_on_site": "{{nights}} vor Ort",
+    "interests": "Wünsche"
+  },
+  "dates": {
+    "past": "Das Abreisedatum liegt in der Vergangenheit.",
+    "order": "Das Rückreisedatum liegt vor dem Abreisedatum."
+  },
+  "missing": {
+    "destination": "das Reiseziel",
+    "start": "das Abreisedatum"
+  },
+  "catalog": {
+    "pick_destination": "Wählen Sie ein Reiseziel, um die Informationen zu sehen.",
+    "info_for": "Informationen für",
+    "select_destination": "Wählen Sie in Schritt 2 ein Reiseziel.",
+    "best_time": "Beste Reisezeit",
+    "budget": "Budget vor Ort",
+    "per_day": "{{budget}} / Tag",
+    "currency": "Währung",
+    "languages": "Sprachen",
+    "direct_flights": "Direktflüge ab",
+    "visa_need_nationality": "Geben Sie die Staatsangehörigkeit der Reisenden an (Schritt 1).",
+    "visa_national": "Für Staatsangehörige dieses Landes ist kein Visum nötig.",
+    "visa_fallback": "Kein detailliertes Touristenvisum-Blatt für diese Route. Allgemeiner Hinweis für afrikanische Reisende:",
+    "visa_check_embassy": "bei der Botschaft prüfen",
+    "visa_delay": "Bearbeitungszeit: {{delay}}",
+    "nothing": "Für {{country}} ist noch nichts erfasst: Ihr Berater schlägt Ihnen Optionen vor.",
+    "stays": "Unterkünfte",
+    "restaurants": "Restaurants",
+    "sites": "Sehenswürdigkeiten",
+    "programs": "Programme (Safari, Sport…)",
+    "events": "Veranstaltungen"
+  },
+  "services": {
+    "subtitle": "Einzelpreise der Midzo-Preisliste, pro Reiseakte.",
+    "notes_placeholder": "Hinweise für den Berater (Budget, Reisestil, Einschränkungen…)"
+  },
+  "price": {
+    "subtitle": "Einzeln oder Tourism-Paket: Wir empfehlen das günstigste."
+  },
+  "summary": {
+    "title": "Meine Reise",
+    "dates": "Daten"
+  },
+  "actions": {
+    "save_trip": "Meine Reise speichern",
+    "request": "Diese Reise anfragen",
+    "new_trip": "Neue Reise planen"
+  },
+  "fb": {
+    "circuit_loaded": "Rundreise „{{title}}“ geladen: Passen Sie Daten, Etappen und Leistungen an.",
+    "not_found": "Diese Reise ist in Ihrem Konto nicht vorhanden.",
+    "load_error": "Reise konnte nicht geladen werden. Bitte später erneut versuchen.",
+    "saved_device": "Reise auf diesem Gerät gespeichert. Erstellen Sie ein Konto (oder melden Sie sich an), um sie überall zu finden und Ihre Anfrage zu senden.",
+    "storage_blocked": "Ihr Browser blockiert die lokale Speicherung. Erstellen Sie ein Konto, um Ihre Reise zu sichern.",
+    "saved_account": "Reise in Ihrem Konto gespeichert. Sie finden sie in Ihrem Dashboard.",
+    "login_to_send": "Um eine Anfrage zu senden, melden Sie sich an oder erstellen Sie ein Konto: Ihre Reise bleibt erhalten.",
+    "pick_service_send": "Wählen Sie mindestens eine Leistung (oder die Beratung), bevor Sie Ihre Anfrage senden.",
+    "request_failed": "Senden der Anfrage fehlgeschlagen. Ihre Reise ist gespeichert; bitte gleich erneut versuchen."
+  },
+  "interests": {
+    "Safari & nature": "Safari & Natur",
+    "Plage & détente": "Strand & Erholung",
+    "Culture & patrimoine": "Kultur & Erbe",
+    "Sport & événements": "Sport & Events",
+    "Gastronomie": "Gastronomie",
+    "Shopping & ville": "Shopping & Stadt"
+  }
+}

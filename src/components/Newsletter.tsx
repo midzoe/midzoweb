@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { EnvelopeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -10,24 +11,16 @@ interface NewsletterProps {
   className?: string;
 }
 
+/** Textes : `ui:newsletter.<type>.*`. */
 const defaults = {
-  study: {
-    title: 'Newsletter Études',
-    subtitle: 'Recevez les meilleures opportunités académiques, bourses et conseils pour étudier à l\'étranger.',
-    color: 'bg-primary',
-    badge: 'Études',
-  },
-  tourism: {
-    title: 'Newsletter Tourisme',
-    subtitle: 'Destinations, bons plans voyages et événements touristiques directement dans votre boîte mail.',
-    color: 'bg-orange-500',
-    badge: 'Tourisme',
-  },
+  study: { color: 'bg-primary' },
+  tourism: { color: 'bg-orange-500' },
 };
 
 const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, className = '' }) => {
   const { user, updateUserLocally } = useAuth();
-  const config = defaults[type];
+  const { t } = useTranslation('ui');
+  const config = { ...defaults[type], title: t(`newsletter.${type}.title`), subtitle: t(`newsletter.${type}.subtitle`), badge: t(`newsletter.${type}.badge`) };
 
   const [email, setEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
@@ -52,7 +45,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, classNam
         );
       }
     } catch {
-      setError('Une erreur est survenue. Réessayez plus tard.');
+      setError(t('newsletter.error'));
     } finally {
       setLoading(false);
     }
@@ -72,7 +65,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, classNam
         );
       }
     } catch {
-      setError('Une erreur est survenue. Réessayez plus tard.');
+      setError(t('newsletter.error'));
     } finally {
       setLoading(false);
     }
@@ -85,8 +78,8 @@ const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, classNam
           <div className="flex items-center gap-3">
             <CheckCircleIcon className="h-8 w-8 shrink-0" />
             <div>
-              <p className="font-semibold text-lg">Vous êtes abonné·e !</p>
-              <p className="text-white/80 text-sm">Newsletter {config.badge} — vous recevrez nos prochains envois.</p>
+              <p className="font-semibold text-lg">{t('newsletter.subscribed')}</p>
+              <p className="text-white/80 text-sm">{t('newsletter.subscribed_text', { badge: config.badge })}</p>
             </div>
           </div>
           <button
@@ -95,7 +88,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, classNam
             disabled={loading}
             className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
           >
-            {loading ? '...' : 'Se désabonner'}
+            {loading ? '...' : t('newsletter.unsubscribe')}
           </button>
         </div>
         {error && <p className="mt-2 text-sm text-white/80">{error}</p>}
@@ -121,7 +114,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, classNam
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="Votre adresse email"
+              placeholder={t('newsletter.email')}
               required
               className="flex-1 px-3 py-2 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
             />
@@ -130,7 +123,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ type, title, subtitle, classNam
               disabled={loading}
               className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
             >
-              {loading ? '...' : "S'abonner"}
+              {loading ? '...' : t('newsletter.subscribe')}
             </button>
           </form>
 

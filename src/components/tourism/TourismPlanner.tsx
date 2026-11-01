@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
-import { AFRICAN_COUNTRIES } from '../../data/africanCountries';
+import { AFRICAN_COUNTRIES, countryName } from '../../data/africanCountries';
 import { Chip, InfoCard, Section, externalHref, fieldClass, toggle } from '../projects/plannerUi';
 import { usePricing } from '../../pricing/usePricing';
-import PricingStep from '../../pricing/PricingStep';
-import { goToCheckout } from '../../pricing/checkout';
+import PricingStep, { useServiceName } from '../../pricing/PricingStep';
+import { goToCheckout, loginToPayHref, RESUME_PAY_PARAM } from '../../pricing/checkout';
+import { usePaymentEligibility } from '../../pricing/paymentRules';
 import TermsCheckbox from '../legal/TermsCheckbox';
 import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
 import { quoteSelection } from '../../pricing/pricingEngine';
@@ -33,9 +35,19 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const TourismPlanner: React.FC = () => {
   useCurrency();
+  const { t, i18n } = useTranslation('tourism');
+  const lang = i18n.language?.slice(0, 2) || 'fr';
+  const isFr = lang === 'fr';
+  const st = (key: string, opts?: Record<string, unknown>) => t(`study:${key}`, opts);
+  const serviceName = useServiceName();
+  /** Envies enregistrées en français : traduites à l'affichage. */
+  const interestLabel = (value: string) => (isFr ? value : (t('interests', { returnObjects: true }) as Record<string, string>)[value] ?? value);
+  const countryText = (value: string, fallback?: string) => (isFr ? fallback || value : countryName(value, lang, fallback || value));
   const { user, updateUserLocally } = useAuth();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { pricing, error: pricingError } = usePricing();
+  const { firstPurchase } = usePaymentEligibility(user?.id);
 
   const [project, setProject] = useState<TourismProject>(() => {
     const country = searchParams.get('country');
@@ -88,9 +100,10 @@ const TourismPlanner: React.FC = () => {
         notes: prev.notes || `Circuit type : ${c.title}`,
       }));
       setDirty(true);
-      setFeedback({ tone: 'info', text: `Circuit « ${c.title} » chargé : ajustez les dates, les étapes et les services.` });
+      setFeedback({ tone: 'info', text: t('fb.circuit_loaded', { title: c.title }) });
     }).catch(() => { /* circuit introuvable : parcours vide */ });
     return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // Projet du compte ouvert depuis le dashboard (?project=<id>).
@@ -103,11 +116,12 @@ const TourismPlanner: React.FC = () => {
       .then(p => {
         if (!mounted) return;
         if (p) { setProject(p); setDirty(false); }
-        else setFeedback({ tone: 'error', text: 'Ce voyage est introuvable dans votre compte.' });
+        else setFeedback({ tone: 'error', text: t('fb.not_found') });
       })
-      .catch(() => mounted && setFeedback({ tone: 'error', text: 'Impossible de charger ce voyage. Réessayez plus tard.' }))
+      .catch(() => mounted && setFeedback({ tone: 'error', text: t('fb.load_error') }))
       .finally(() => mounted && setLoadingProject(false));
     return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, user]);
 
   useEffect(() => {
@@ -174,11 +188,13 @@ const TourismPlanner: React.FC = () => {
   // ── Dérivés ─────────────────────────────────────────────────────────────────
 
   const country = countries.find(c => c.name === project.destination);
-  const countryLabel = country?.nameFr || project.destinationLabel || project.destination;
+  const countryLabel = isFr
+    ? country?.nameFr || project.destinationLabel || project.destination
+    : countryName(project.destination, lang, country?.name || project.destinationLabel || project.destination);
   const nights = nightsBetween(project.startDate, project.endDate);
   const requestedSlug = searchParams.get('package');
   const codes = project.services;
-  const liveSnapshot = pricing ? computeSnapshot(codes, pricing, project.price, project.travelers) : null;
+  const liveSnapshot = pricing ? computeSnapshot(codes, pricing, project.price, project.travelers, { residence: project.profile.residence, firstPurchase }) : null;
   const priceOf = (code: string) => pricing?.services.find(s => s.code === code)?.price_cents ?? null;
 
   useEffect(() => {
@@ -189,13 +205,13 @@ const TourismPlanner: React.FC = () => {
   }, [requestedSlug, pricing, codes.join(',')]);
 
   const dateError =
-    project.startDate && project.startDate < today() ? 'La date de départ est passée.'
-      : project.startDate && project.endDate && project.endDate < project.startDate ? 'La date de retour précède la date de départ.'
+    project.startDate && project.startDate < today() ? t('dates.past')
+      : project.startDate && project.endDate && project.endDate < project.startDate ? t('dates.order')
         : '';
 
   const missing: string[] = [];
-  if (!project.destination) missing.push('la destination');
-  if (!project.startDate) missing.push('la date de départ');
+  if (!project.destination) missing.push(t('missing.destination'));
+  if (!project.startDate) missing.push(t('missing.start'));
   const canSave = missing.length === 0 && !dateError;
 
   // ── Actions ─────────────────────────────────────────────────────────────────
@@ -238,7 +254,7 @@ const TourismPlanner: React.FC = () => {
   };
 
   const withSnapshot = (p: TourismProject): TourismProject =>
-    ({ ...p, price: { ...p.price, snapshot: pricing ? computeSnapshot(p.services, pricing, p.price, p.travelers) : p.price.snapshot } });
+    ({ ...p, price: { ...p.price, snapshot: pricing ? computeSnapshot(p.services, pricing, p.price, p.travelers, { residence: p.profile.residence, firstPurchase }) : p.price.snapshot } });
 
   const syncProfile = async () => {
     if (!user) return;
@@ -256,7 +272,7 @@ const TourismPlanner: React.FC = () => {
 
   const save = async (): Promise<TourismProject | null> => {
     if (!canSave) {
-      setFeedback({ tone: 'error', text: dateError || `Complétez d'abord ${missing.join(' et ')}.` });
+      setFeedback({ tone: 'error', text: dateError || st('fb.complete_first', { list: missing.join(st('missing.and')) }) });
       return null;
     }
     const current = withSnapshot(project);
@@ -265,8 +281,8 @@ const TourismPlanner: React.FC = () => {
       setProject(current);
       setDirty(false);
       setFeedback(stored
-        ? { tone: 'info', text: 'Voyage enregistré sur cet appareil. Créez un compte (ou connectez-vous) pour le retrouver partout et envoyer votre demande.' }
-        : { tone: 'error', text: "Votre navigateur bloque l'enregistrement local. Créez un compte pour sauvegarder votre voyage." });
+        ? { tone: 'info', text: t('fb.saved_device') }
+        : { tone: 'error', text: t('fb.storage_blocked') });
       return stored;
     }
     setSaving(true);
@@ -276,15 +292,15 @@ const TourismPlanner: React.FC = () => {
       setProject(saved);
       setDirty(false);
       clearTourismDraft();
-      setFeedback({ tone: 'success', text: 'Voyage enregistré dans votre compte. Retrouvez-le dans votre dashboard.' });
+      setFeedback({ tone: 'success', text: t('fb.saved_account') });
       return saved;
     } catch (err: any) {
       saveTourismDraft(current);
       setFeedback({
         tone: 'error',
         text: err?.status === 401
-          ? 'Votre session a expiré : reconnectez-vous pour enregistrer (le brouillon est conservé sur cet appareil).'
-          : "L'enregistrement a échoué. Le brouillon est conservé sur cet appareil ; réessayez dans un instant.",
+          ? st('fb.session_expired')
+          : st('fb.save_failed'),
       });
       return null;
     } finally {
@@ -295,11 +311,11 @@ const TourismPlanner: React.FC = () => {
   const sendRequest = async () => {
     if (!user) {
       saveTourismDraft(withSnapshot(project));
-      setFeedback({ tone: 'info', text: 'Pour envoyer une demande, connectez-vous ou créez un compte : votre voyage est conservé.' });
+      setFeedback({ tone: 'info', text: t('fb.login_to_send') });
       return;
     }
     if (project.services.length === 0 && project.price.offerId !== 'consultation') {
-      setFeedback({ tone: 'error', text: 'Choisissez au moins un service (ou la consultation) avant d’envoyer votre demande.' });
+      setFeedback({ tone: 'error', text: t('fb.pick_service_send') });
       return;
     }
     setSending(true);
@@ -316,19 +332,21 @@ const TourismPlanner: React.FC = () => {
       const withRequest = await saveTourismToAccount({ ...saved, requestSentAt: new Date().toISOString() }, countryLabel);
       setProject(withRequest);
       setDirty(false);
-      setFeedback({ tone: 'success', text: 'Demande envoyée : un conseiller MIDZO revient vers vous par email. Elle est suivie dans votre dashboard.' });
+      setFeedback({ tone: 'success', text: st('fb.request_sent') });
     } catch {
-      setFeedback({ tone: 'error', text: "L'envoi de la demande a échoué. Votre voyage est enregistré ; réessayez dans un instant." });
+      setFeedback({ tone: 'error', text: t('fb.request_failed') });
     } finally {
       setSending(false);
     }
   };
 
   // Paiement en ligne : le projet est d'abord enregistré, puis le serveur recalcule le prix de
-  // l'offre choisie (aucun montant n'est envoyé) et ouvre Stripe Checkout.
-  const pay = async () => {
+  // l'offre choisie (aucun montant n'est envoyé) et ouvre Stripe Checkout. Sans compte : brouillon
+  // gardé, connexion (ou inscription), puis retour ici avec `?pay=1` et reprise du paiement.
+  const pay = async (termsAccepted = acceptTerms) => {
     if (!user) {
-      setFeedback({ tone: 'info', text: 'Pour payer en ligne, connectez-vous ou créez un compte : votre voyage est conservé.' });
+      saveTourismDraft(withSnapshot(project));
+      navigate(loginToPayHref('/tourism/plan'));
       return;
     }
     setPaying(true);
@@ -336,7 +354,7 @@ const TourismPlanner: React.FC = () => {
     if (!saved) { setPaying(false); return; }
     const codesToPay = saved.services;
     if (!codesToPay.length && saved.price.offerId !== 'consultation') {
-      setFeedback({ tone: 'error', text: 'Choisissez au moins un service (ou la consultation) avant de payer.' });
+      setFeedback({ tone: 'error', text: st('fb.pick_service_pay') });
       setPaying(false);
       return;
     }
@@ -346,13 +364,29 @@ const TourismPlanner: React.FC = () => {
       installments: saved.price.installments,
       tripId: saved.tripId,
       travelers: saved.travelers,
-      acceptTerms,
+      residence: saved.profile.residence,
+      consultationSlot: saved.price.consultationSlot,
+      acceptTerms: termsAccepted,
     });
     if (error) {
       setFeedback({ tone: 'error', text: error });
       setPaying(false);
     }
   };
+
+  // Retour de connexion après « Payer en ligne » : les CGV avaient été acceptées pour cliquer.
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (resumed.current || searchParams.get(RESUME_PAY_PARAM) !== '1' || !user || !pricing || loadingProject) return;
+    resumed.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete(RESUME_PAY_PARAM);
+    setSearchParams(next, { replace: true });
+    setAcceptTerms(true);
+    setFeedback({ tone: 'info', text: st('fb.resuming_payment') });
+    pay(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pricing, loadingProject, searchParams]);
 
   const startNew = () => {
     clearTourismDraft();
@@ -372,17 +406,17 @@ const TourismPlanner: React.FC = () => {
   }
 
   const status = project.requestSentAt
-    ? { label: 'Demande envoyée', className: 'bg-emerald-100 text-emerald-800' }
+    ? { label: st('status.sent'), className: 'bg-emerald-100 text-emerald-800' }
     : project.tripId && !dirty
-      ? { label: 'Enregistré dans votre compte', className: 'bg-emerald-100 text-emerald-800' }
+      ? { label: st('status.saved'), className: 'bg-emerald-100 text-emerald-800' }
       : project.tripId
-        ? { label: 'Modifications non enregistrées', className: 'bg-amber-100 text-amber-800' }
-        : { label: user ? 'Pas encore enregistré dans votre compte' : 'Brouillon sur cet appareil', className: 'bg-gray-100 text-gray-700' };
+        ? { label: st('status.unsaved'), className: 'bg-amber-100 text-amber-800' }
+        : { label: user ? st('status.not_saved') : st('status.draft'), className: 'bg-gray-100 text-gray-700' };
 
   const redirect = encodeURIComponent('/tourism/plan');
   const catalogCards: [string, CatalogItem[]][] = [
-    ['Hébergements', catalog.stays], ['Restaurants', catalog.restaurants], ['Sites touristiques', catalog.sites],
-    ['Programmes (safari, sport…)', catalog.programs], ['Événements', catalog.events],
+    [t('catalog.stays'), catalog.stays], [t('catalog.restaurants'), catalog.restaurants], [t('catalog.sites'), catalog.sites],
+    [t('catalog.programs'), catalog.programs], [t('catalog.events'), catalog.events],
   ];
 
   return (
@@ -390,57 +424,54 @@ const TourismPlanner: React.FC = () => {
       <div className="bg-gradient-to-br from-orange-500 to-amber-500 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <p className="text-orange-100 text-sm font-semibold uppercase tracking-widest mb-2">🌍 MIDZO Tourism</p>
-          <h1 className="text-3xl md:text-4xl font-extrabold">Composez votre voyage</h1>
-          <p className="mt-3 text-orange-50 max-w-3xl">
-            Choisissez une destination, vos dates et les services dont vous avez besoin : nous calculons le prix à la carte,
-            le comparons à nos packages et vous conseillons l'offre la plus avantageuse.
-          </p>
+          <h1 className="text-3xl md:text-4xl font-extrabold">{t('hero.title')}</h1>
+          <p className="mt-3 text-orange-50 max-w-3xl">{t('hero.text')}</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Section step={1} title="Vos voyageurs" subtitle="La nationalité détermine les formalités (visa).">
+          <Section step={1} title={t('travelers.title')} subtitle={t('travelers.subtitle')}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="tp-nationality" className="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
+                <label htmlFor="tp-nationality" className="block text-sm font-medium text-gray-700 mb-1">{st('profile.nationality')}</label>
                 <select id="tp-nationality" value={project.profile.nationality} onChange={e => update({ profile: { ...project.profile, nationality: e.target.value } })} className={fieldClass}>
-                  <option value="">— Choisir —</option>
-                  {AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  <option value="">{st('common.choose')}</option>
+                  {AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{countryText(c.value, c.label)}</option>)}
                   {project.profile.nationality && !AFRICAN_COUNTRIES.some(c => c.value === project.profile.nationality) && (
                     <option value={project.profile.nationality}>{project.profile.nationality}</option>
                   )}
                 </select>
               </div>
               <div>
-                <label htmlFor="tp-residence" className="block text-sm font-medium text-gray-700 mb-1">Pays de résidence</label>
+                <label htmlFor="tp-residence" className="block text-sm font-medium text-gray-700 mb-1">{st('profile.residence')}</label>
                 <select id="tp-residence" value={project.profile.residence} onChange={e => update({ profile: { ...project.profile, residence: e.target.value } })} className={fieldClass}>
-                  <option value="">— Choisir —</option>
-                  {AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  <option value="">{st('common.choose')}</option>
+                  {AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{countryText(c.value, c.label)}</option>)}
                   {project.profile.residence && !AFRICAN_COUNTRIES.some(c => c.value === project.profile.residence) && (
                     <option value={project.profile.residence}>{project.profile.residence}</option>
                   )}
                 </select>
               </div>
               <div>
-                <label htmlFor="tp-travelers" className="block text-sm font-medium text-gray-700 mb-1">Voyageurs</label>
+                <label htmlFor="tp-travelers" className="block text-sm font-medium text-gray-700 mb-1">{t('travelers.count')}</label>
                 <input id="tp-travelers" type="number" min={1} max={50} value={project.travelers}
                   onChange={e => update({ travelers: Math.min(50, Math.max(1, Number(e.target.value) || 1)) })} className={fieldClass} />
               </div>
             </div>
           </Section>
 
-          <Section step={2} title="Votre voyage" subtitle="Destination, étapes, dates et envies.">
+          <Section step={2} title={t('trip.title')} subtitle={t('trip.subtitle')}>
             <div className="space-y-6">
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-1">Destinations</p>
-                <p className="text-xs text-gray-500 mb-2">Choisissez un ou plusieurs pays : ils forment votre itinéraire, dans l'ordre ci-dessous.</p>
-                {countries.length === 0 ? <p className="text-sm text-gray-500">Chargement des destinations…</p> : (
-                  <div className="flex flex-wrap gap-2" role="group" aria-label="Destination">
+                <p className="block text-sm font-medium text-gray-700 mb-1">{t('trip.destinations')}</p>
+                <p className="text-xs text-gray-500 mb-2">{t('trip.destinations_hint')}</p>
+                {countries.length === 0 ? <p className="text-sm text-gray-500">{t('trip.loading')}</p> : (
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={t('trip.destinations')}>
                     {countries.map(c => (
                       <Chip key={c.id} active={project.stops.some(st => st.country === c.name)}
                         onClick={() => toggleStop(c.name, c.nameFr || c.name)}>
-                        {c.flag} {c.nameFr || c.name}
+                        {c.flag} {countryText(c.name, c.nameFr || c.name)}
                       </Chip>
                     ))}
                   </div>
@@ -448,39 +479,42 @@ const TourismPlanner: React.FC = () => {
               </div>
               {project.stops.length > 0 && (
                 <div>
-                  <p className="block text-sm font-medium text-gray-700 mb-2">Votre itinéraire</p>
-                  <ol className="space-y-2" aria-label="Itinéraire" data-testid="itinerary">
-                    {syncedStops(project).map((st: TourismStop, i, all) => (
-                      <li key={st.country} className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${st.country === project.destination ? 'border-orange-400 bg-orange-50' : 'border-gray-200'}`}>
-                        <span className="h-6 w-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">{i + 1}</span>
-                        <button type="button" onClick={() => showStop(st.country)} className="font-medium text-gray-900 hover:text-orange-600">{st.label}</button>
-                        <span className="text-xs text-gray-500 flex-1 min-w-[6rem]">{st.cities.join(', ') || 'villes à préciser'}</span>
-                        <label className="flex items-center gap-1 text-xs text-gray-600">
-                          <input type="number" min={1} max={365} value={st.nights ?? ''} onChange={e => setStopNights(st.country, e.target.value)}
-                            aria-label={`Nuits en ${st.label}`} className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm" />
-                          nuits
-                        </label>
-                        <button type="button" aria-label={`Monter ${st.label}`} disabled={i === 0} onClick={() => moveStop(i, -1)} className="px-1.5 text-gray-500 disabled:opacity-30">▲</button>
-                        <button type="button" aria-label={`Descendre ${st.label}`} disabled={i === all.length - 1} onClick={() => moveStop(i, 1)} className="px-1.5 text-gray-500 disabled:opacity-30">▼</button>
-                        <button type="button" aria-label={`Retirer ${st.label} de l’itinéraire`} onClick={() => toggleStop(st.country, st.label)} className="px-1.5 text-gray-400 hover:text-red-600">×</button>
-                      </li>
-                    ))}
+                  <p className="block text-sm font-medium text-gray-700 mb-2">{t('trip.itinerary')}</p>
+                  <ol className="space-y-2" aria-label={t('trip.itinerary')} data-testid="itinerary">
+                    {syncedStops(project).map((stop: TourismStop, i, all) => {
+                      const label = countryText(stop.country, stop.label);
+                      return (
+                        <li key={stop.country} className={`flex flex-wrap items-center gap-2 rounded-xl border px-3 py-2 ${stop.country === project.destination ? 'border-orange-400 bg-orange-50' : 'border-gray-200'}`}>
+                          <span className="h-6 w-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                          <button type="button" onClick={() => showStop(stop.country)} className="font-medium text-gray-900 hover:text-orange-600">{label}</button>
+                          <span className="text-xs text-gray-500 flex-1 min-w-[6rem]">{stop.cities.join(', ') || t('trip.cities_tbd')}</span>
+                          <label className="flex items-center gap-1 text-xs text-gray-600">
+                            <input type="number" min={1} max={365} value={stop.nights ?? ''} onChange={e => setStopNights(stop.country, e.target.value)}
+                              aria-label={t('trip.nights_in', { country: label })} className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm" />
+                            {t('trip.nights_word')}
+                          </label>
+                          <button type="button" aria-label={t('trip.move_up', { country: label })} disabled={i === 0} onClick={() => moveStop(i, -1)} className="px-1.5 text-gray-500 disabled:opacity-30">▲</button>
+                          <button type="button" aria-label={t('trip.move_down', { country: label })} disabled={i === all.length - 1} onClick={() => moveStop(i, 1)} className="px-1.5 text-gray-500 disabled:opacity-30">▼</button>
+                          <button type="button" aria-label={t('trip.remove_stop', { country: label })} onClick={() => toggleStop(stop.country, stop.label)} className="px-1.5 text-gray-400 hover:text-red-600">×</button>
+                        </li>
+                      );
+                    })}
                   </ol>
                   {nights != null && plannedNights > 0 && plannedNights !== nights && (
                     <p className="text-xs text-amber-700 mt-2" data-testid="nights-mismatch">
-                      Les étapes totalisent {plannedNights} nuit{plannedNights > 1 ? 's' : ''} pour {nights} nuit{nights > 1 ? 's' : ''} entre vos dates.
+                      {t('trip.nights_mismatch', { planned: t('trip.nights', { count: plannedNights }), total: t('trip.nights', { count: nights }) })}
                     </p>
                   )}
                 </div>
               )}
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Villes / étapes{project.stops.length > 1 && project.destination ? ` — ${countryLabel}` : ''}</p>
+                <p className="block text-sm font-medium text-gray-700 mb-2">{t('trip.cities')}{project.stops.length > 1 && project.destination ? ` — ${countryLabel}` : ''}</p>
                 {project.cities.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {project.cities.map(c => (
                       <span key={c} className="inline-flex items-center gap-1 bg-orange-500 text-white px-3 py-1 rounded-full text-sm">
                         {c}
-                        <button type="button" aria-label={`Retirer ${c}`} onClick={() => update({ cities: project.cities.filter(x => x !== c) })}>×</button>
+                        <button type="button" aria-label={st('project.remove_city', { city: c })} onClick={() => update({ cities: project.cities.filter(x => x !== c) })}>×</button>
                       </span>
                     ))}
                   </div>
@@ -488,9 +522,9 @@ const TourismPlanner: React.FC = () => {
                 <div className="flex gap-2">
                   <input value={cityInput} onChange={e => setCityInput(e.target.value)} disabled={!project.destination}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCity(cityInput); setCityInput(''); } }}
-                    aria-label="Ajouter une étape" placeholder={project.destination ? 'Ajouter une ville (ex. Nairobi)' : 'Choisissez d’abord une destination'} className={fieldClass} />
+                    aria-label={t('trip.add_stop')} placeholder={project.destination ? t('trip.add_city_placeholder') : t('trip.pick_destination_first')} className={fieldClass} />
                   <button type="button" disabled={!cityInput.trim()} onClick={() => { addCity(cityInput); setCityInput(''); }}
-                    className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-medium disabled:opacity-40">Ajouter</button>
+                    className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-medium disabled:opacity-40">{st('common.add')}</button>
                 </div>
                 {!!country?.topAttractions?.length && (
                   <div className="flex flex-wrap gap-1.5 mt-3">
@@ -502,46 +536,46 @@ const TourismPlanner: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="tp-start" className="block text-sm font-medium text-gray-700 mb-1">Départ</label>
+                  <label htmlFor="tp-start" className="block text-sm font-medium text-gray-700 mb-1">{t('trip.start')}</label>
                   <input id="tp-start" type="date" min={today()} value={project.startDate} onChange={e => update({ startDate: e.target.value })} className={fieldClass} />
                 </div>
                 <div>
-                  <label htmlFor="tp-end" className="block text-sm font-medium text-gray-700 mb-1">Retour</label>
+                  <label htmlFor="tp-end" className="block text-sm font-medium text-gray-700 mb-1">{t('trip.end')}</label>
                   <input id="tp-end" type="date" min={project.startDate || today()} value={project.endDate} onChange={e => update({ endDate: e.target.value })} className={fieldClass} />
                 </div>
               </div>
               {dateError && <p className="text-sm text-red-600" role="alert">{dateError}</p>}
-              {!dateError && nights != null && <p className="text-sm text-gray-600" data-testid="trip-nights">{nights} nuit{nights > 1 ? 's' : ''} sur place</p>}
+              {!dateError && nights != null && <p className="text-sm text-gray-600" data-testid="trip-nights">{t('trip.nights_on_site', { nights: t('trip.nights', { count: nights }) })}</p>}
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Envies</p>
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Envies">
-                  {INTERESTS.map(i => <Chip key={i} active={project.interests.includes(i)} onClick={() => update({ interests: toggle(project.interests, i) })}>{i}</Chip>)}
+                <p className="block text-sm font-medium text-gray-700 mb-2">{t('trip.interests')}</p>
+                <div className="flex flex-wrap gap-2" role="group" aria-label={t('trip.interests')}>
+                  {INTERESTS.map(i => <Chip key={i} active={project.interests.includes(i)} onClick={() => update({ interests: toggle(project.interests, i) })}>{interestLabel(i)}</Chip>)}
                 </div>
               </div>
             </div>
           </Section>
 
-          <Section step={3} id="tp-results" title="Ce que propose le catalogue"
-            subtitle={project.destination ? `Pour ${countryLabel}` : 'Choisissez une destination pour afficher les informations.'}>
+          <Section step={3} id="tp-results" title={st('catalog.title')}
+            subtitle={project.destination ? st('catalog.for', { country: countryLabel }) : t('catalog.pick_destination')}>
             {project.stops.length > 1 && (
-              <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label="Informations pour">
-                <span className="text-sm text-gray-500 mr-1">Informations pour :</span>
-                {project.stops.map(st => (
-                  <button key={st.country} type="button" role="tab" aria-selected={st.country === project.destination}
-                    onClick={() => showStop(st.country)}
+              <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label={t('catalog.info_for')}>
+                <span className="text-sm text-gray-500 mr-1">{t('catalog.info_for')} :</span>
+                {project.stops.map(stop => (
+                  <button key={stop.country} type="button" role="tab" aria-selected={stop.country === project.destination}
+                    onClick={() => showStop(stop.country)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                      st.country === project.destination ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'}`}>
-                    {st.label}
+                      stop.country === project.destination ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400'}`}>
+                    {countryText(stop.country, stop.label)}
                   </button>
                 ))}
               </div>
             )}
             {!project.destination ? (
-              <p className="text-gray-500 text-sm">Sélectionnez une destination à l'étape 2.</p>
+              <p className="text-gray-500 text-sm">{t('catalog.select_destination')}</p>
             ) : loadingCatalog ? (
               <div className="flex items-center gap-3 text-sm text-gray-500 py-6" data-testid="catalog-loading">
                 <span className="h-6 w-6 rounded-full border-4 border-gray-200 border-t-orange-500 animate-spin" />
-                Chargement du catalogue pour {countryLabel}…
+                {st('catalog.loading', { country: countryLabel })}
               </div>
             ) : (
               <div className="space-y-4">
@@ -549,28 +583,28 @@ const TourismPlanner: React.FC = () => {
                   <InfoCard title={`${country.flag ?? ''} ${countryLabel}`}>
                     {country.description && <p>{country.description}</p>}
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-                      {country.bestTime && <div><dt className="font-medium">Meilleure période</dt><dd>{country.bestTime}</dd></div>}
-                      {country.avgBudgetPerDay && <div><dt className="font-medium">Budget sur place</dt><dd>{country.avgBudgetPerDay} / jour</dd></div>}
-                      {country.currency && <div><dt className="font-medium">Monnaie</dt><dd>{country.currency}</dd></div>}
-                      {country.language && <div><dt className="font-medium">Langues</dt><dd>{country.language}</dd></div>}
-                      {!!country.directFlightsFrom?.length && <div className="sm:col-span-2"><dt className="font-medium">Vols directs depuis</dt><dd>{country.directFlightsFrom.join(', ')}</dd></div>}
+                      {country.bestTime && <div><dt className="font-medium">{t('catalog.best_time')}</dt><dd>{country.bestTime}</dd></div>}
+                      {country.avgBudgetPerDay && <div><dt className="font-medium">{t('catalog.budget')}</dt><dd>{t('catalog.per_day', { budget: country.avgBudgetPerDay })}</dd></div>}
+                      {country.currency && <div><dt className="font-medium">{t('catalog.currency')}</dt><dd>{country.currency}</dd></div>}
+                      {country.language && <div><dt className="font-medium">{t('catalog.languages')}</dt><dd>{country.language}</dd></div>}
+                      {!!country.directFlightsFrom?.length && <div className="sm:col-span-2"><dt className="font-medium">{t('catalog.direct_flights')}</dt><dd>{country.directFlightsFrom.join(', ')}</dd></div>}
                     </dl>
                   </InfoCard>
                 )}
 
-                <InfoCard title="Visa et formalités">
-                  {!project.profile.nationality ? <p>Indiquez la nationalité des voyageurs (étape 1).</p>
-                    : project.profile.nationality === project.destination ? <p>Pas de visa nécessaire pour les ressortissants de ce pays.</p>
+                <InfoCard title={st('catalog.visa_title')}>
+                  {!project.profile.nationality ? <p>{t('catalog.visa_need_nationality')}</p>
+                    : project.profile.nationality === project.destination ? <p>{t('catalog.visa_national')}</p>
                       : visa?.requirements ? (
                         <>
                           <p>{visa.message}</p>
-                          {visa.requirements.costs?.processingTime && <p><span className="font-medium">Délai :</span> {visa.requirements.costs.processingTime}</p>}
+                          {visa.requirements.costs?.processingTime && <p><span className="font-medium">{st('catalog.delay')} :</span> {visa.requirements.costs.processingTime}</p>}
                         </>
                       ) : (
                         <p data-testid="visa-fallback">
-                          Pas de fiche visa tourisme détaillée pour cet itinéraire. Repère général pour les voyageurs africains :
-                          {' '}<strong>{country?.visaForAfricans ?? 'à vérifier auprès de l’ambassade'}</strong>
-                          {country?.processingTimeVisa ? ` (délai : ${country.processingTimeVisa})` : ''}.
+                          {t('catalog.visa_fallback')}
+                          {' '}<strong>{country?.visaForAfricans ?? t('catalog.visa_check_embassy')}</strong>
+                          {country?.processingTimeVisa ? ` (${t('catalog.visa_delay', { delay: country.processingTimeVisa })})` : ''}.
                         </p>
                       )}
                 </InfoCard>
@@ -591,7 +625,7 @@ const TourismPlanner: React.FC = () => {
                             );
                           })}
                         </ul>
-                      ) : <p className="text-gray-500">Rien de référencé pour {countryLabel} pour l'instant : le conseiller vous proposera des options.</p>}
+                      ) : <p className="text-gray-500">{t('catalog.nothing', { country: countryLabel })}</p>}
                     </InfoCard>
                   ))}
                 </div>
@@ -599,8 +633,8 @@ const TourismPlanner: React.FC = () => {
             )}
           </Section>
 
-          <Section step={4} title="Vos services" subtitle="Prix à l'unité de la grille MIDZO, par dossier de voyage.">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Services">
+          <Section step={4} title={st('services.title')} subtitle={t('services.subtitle')}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label={st('services.title')}>
               {TOURISM_SERVICES.map(s => {
                 const active = project.services.includes(s.id);
                 const price = priceOf(s.id);
@@ -608,7 +642,7 @@ const TourismPlanner: React.FC = () => {
                   <label key={s.id} className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${active ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}`}>
                     <input type="checkbox" checked={active} onChange={() => update({ services: toggle(project.services, s.id) })} className="mt-1 rounded text-orange-500 focus:ring-orange-500" />
                     <span className="flex-1 flex items-baseline justify-between gap-2">
-                      <span><span className="block font-semibold text-gray-900">{s.label}</span><span className="text-xs text-gray-500">{s.id}</span></span>
+                      <span><span className="block font-semibold text-gray-900">{serviceName({ code: s.id, name: s.label })}</span><span className="text-xs text-gray-500">{s.id}</span></span>
                       {price != null && <span className="text-sm font-semibold text-orange-600 whitespace-nowrap">{formatMoney(price)}</span>}
                     </span>
                   </label>
@@ -616,32 +650,33 @@ const TourismPlanner: React.FC = () => {
               })}
             </div>
             <textarea value={project.notes} onChange={e => update({ notes: e.target.value })} rows={3}
-              aria-label="Précisions pour le conseiller" placeholder="Précisions pour le conseiller (budget, style de voyage, contraintes…)"
+              aria-label={st('services.notes_label')} placeholder={t('services.notes_placeholder')}
               className={`${fieldClass} mt-4`} />
           </Section>
 
-          <Section step={5} title="Prix et package" id="tp-price" subtitle="À la carte ou package Tourism : nous vous conseillons le moins cher.">
+          <Section step={5} title={st('price.title')} id="tp-price" subtitle={t('price.subtitle')}>
             <PricingStep pricing={pricing} pricingError={pricingError} codes={codes} choice={project.price}
-              onChange={price => update({ price })} requestedSlug={requestedSlug} travelers={project.travelers} />
+              onChange={price => update({ price })} requestedSlug={requestedSlug} travelers={project.travelers}
+              residence={project.profile.residence} firstPurchase={firstPurchase} />
           </Section>
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-6 self-start">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between gap-2 mb-4">
-              <h2 className="font-bold text-gray-900">Mon voyage</h2>
+              <h2 className="font-bold text-gray-900">{t('summary.title')}</h2>
               <span data-testid="project-status" className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}>{status.label}</span>
             </div>
             <dl className="text-sm space-y-2">
-              <div><dt className="text-gray-500">Destination{project.stops.length > 1 ? 's' : ''}</dt><dd className="font-medium text-gray-900" data-testid="summary-destinations">{stopsLabel(project, countryLabel) || '—'}</dd></div>
-              <div><dt className="text-gray-500">Itinéraire</dt><dd className="font-medium text-gray-900" data-testid="summary-itinerary">{itineraryText(project) || '—'}</dd></div>
-              <div><dt className="text-gray-500">Dates</dt><dd className="font-medium text-gray-900">{project.startDate ? `${project.startDate} → ${project.endDate || '?'}` : '—'}</dd></div>
-              <div><dt className="text-gray-500">Voyageurs</dt><dd className="font-medium text-gray-900">{project.travelers}</dd></div>
-              <div><dt className="text-gray-500">Services ({project.services.length})</dt><dd className="font-medium text-gray-900">
-                {TOURISM_SERVICES.filter(s => project.services.includes(s.id)).map(s => s.label).join(', ') || '—'}
+              <div><dt className="text-gray-500">{st('summary.destinations', { count: project.stops.length })}</dt><dd className="font-medium text-gray-900" data-testid="summary-destinations">{(isFr ? stopsLabel(project, countryLabel) : syncedStops(project).map(s => countryText(s.country, s.label)).join(' → ')) || '—'}</dd></div>
+              <div><dt className="text-gray-500">{t('trip.itinerary')}</dt><dd className="font-medium text-gray-900" data-testid="summary-itinerary">{itineraryText(project, { country: stop => countryText(stop.country, stop.label), nights: n => t('trip.nights', { count: n }) }) || '—'}</dd></div>
+              <div><dt className="text-gray-500">{t('summary.dates')}</dt><dd className="font-medium text-gray-900">{project.startDate ? `${project.startDate} → ${project.endDate || '?'}` : '—'}</dd></div>
+              <div><dt className="text-gray-500">{t('travelers.count')}</dt><dd className="font-medium text-gray-900">{project.travelers}</dd></div>
+              <div><dt className="text-gray-500">{st('summary.services', { count: project.services.length })}</dt><dd className="font-medium text-gray-900">
+                {TOURISM_SERVICES.filter(s => project.services.includes(s.id)).map(s => serviceName({ code: s.id, name: s.label })).join(', ') || '—'}
               </dd></div>
-              <div><dt className="text-gray-500">Offre et prix</dt><dd className="font-medium text-gray-900" data-testid="summary-package">
-                {liveSnapshot ? snapshotLabel(liveSnapshot) : '—'}
+              <div><dt className="text-gray-500">{st('summary.offer')}</dt><dd className="font-medium text-gray-900" data-testid="summary-package">
+                {liveSnapshot ? snapshotLabel(liveSnapshot, st) : '—'}
               </dd></div>
             </dl>
 
@@ -651,37 +686,42 @@ const TourismPlanner: React.FC = () => {
                 {feedback.text}
               </p>
             )}
-            {!canSave && <p className="mt-4 text-xs text-gray-500">À compléter : {dateError || missing.join(', ')}.</p>}
+            {!canSave && <p className="mt-4 text-xs text-gray-500">{st('summary.to_complete', { list: dateError || missing.join(', ') })}</p>}
 
             <div className="mt-4 space-y-2">
               <button type="button" onClick={save} disabled={saving || sending || paying} data-testid="save-project"
                 className="w-full py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 disabled:opacity-50">
-                {saving ? 'Enregistrement…' : user ? 'Enregistrer mon voyage' : 'Enregistrer mes choix'}
+                {saving ? st('actions.saving') : user ? t('actions.save_trip') : st('actions.save_choices')}
               </button>
               <button type="button" onClick={sendRequest} disabled={saving || sending || paying} data-testid="send-request"
                 className="w-full py-3 rounded-xl border-2 border-orange-500 text-orange-600 font-semibold hover:bg-orange-50 disabled:opacity-50">
-                {sending ? 'Envoi…' : project.requestSentAt ? 'Renvoyer ma demande' : 'Demander ce voyage'}
+                {sending ? st('actions.sending') : project.requestSentAt ? st('actions.resend') : t('actions.request')}
               </button>
               <TermsCheckbox checked={acceptTerms} onChange={setAcceptTerms} />
-              <button type="button" onClick={pay} disabled={saving || sending || paying || !acceptTerms} data-testid="pay-online"
+              <button type="button" onClick={() => pay()} data-testid="pay-online"
+                disabled={saving || sending || paying || !acceptTerms || (project.price.offerId === 'consultation' && !project.price.consultationSlot)}
                 className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-50">
-                {paying ? 'Ouverture du paiement…' : 'Payer en ligne (carte bancaire)'}
+                {paying ? st('actions.paying') : user ? st('actions.pay') : st('actions.login_and_pay')}
               </button>
-              <Link to="/dashboard" className="block text-center w-full py-2 text-sm text-secondary hover:text-primary underline">Ouvrir mon dashboard</Link>
+              {!user && <p className="text-xs text-gray-500 text-center">{st('actions.pay_login_hint')}</p>}
+              {project.price.offerId === 'consultation' && !project.price.consultationSlot && (
+                <p className="text-xs text-amber-700 text-center">{st('actions.pick_slot')}</p>
+              )}
+              <Link to="/dashboard" className="block text-center w-full py-2 text-sm text-secondary hover:text-primary underline">{st('actions.dashboard')}</Link>
             </div>
 
             {!user && (
               <div className="mt-4 rounded-xl bg-orange-50 border border-orange-100 p-4 text-sm text-orange-900">
-                <p className="font-medium mb-2">Sans compte, vos choix restent sur cet appareil.</p>
+                <p className="font-medium mb-2">{st('account.title')}</p>
                 <div className="flex gap-2">
-                  <Link to={`/register?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg bg-orange-500 text-white font-medium">Créer un compte</Link>
-                  <Link to={`/login?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg border border-orange-500 text-orange-600 font-medium">Se connecter</Link>
+                  <Link to={`/register?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg bg-orange-500 text-white font-medium">{st('account.register')}</Link>
+                  <Link to={`/login?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg border border-orange-500 text-orange-600 font-medium">{st('account.login')}</Link>
                 </div>
               </div>
             )}
 
             {(project.tripId || project.destination) && (
-              <button type="button" onClick={startNew} className="mt-4 w-full text-xs text-gray-500 hover:text-red-600">Composer un nouveau voyage</button>
+              <button type="button" onClick={startNew} className="mt-4 w-full text-xs text-gray-500 hover:text-red-600">{t('actions.new_trip')}</button>
             )}
           </div>
         </aside>

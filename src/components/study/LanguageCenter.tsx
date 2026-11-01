@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiService } from '../../services/api';
-import { isVisaOriginCountry, africanCountryLabel } from '../../data/africanCountries';
+import { useTranslation } from 'react-i18next';
+import { isVisaOriginCountry, africanCountryLabel, countryName } from '../../data/africanCountries';
 
 /**
  * Story 5.4 → 5.14 : centres de langue servis par le backend.
@@ -66,14 +67,23 @@ const COUNTRY_FR: Record<string, string> = {
   Portugal: 'Portugal', China: 'Chine', Belgium: 'Belgique', Luxembourg: 'Luxembourg',
   Morocco: 'Maroc', Senegal: 'Sénégal', Austria: 'Autriche', Ireland: 'Irlande',
 };
-/** Destination connue, sinon pays d'origine africain, sinon la valeur brute. */
-const countryLabel = (c: string) => COUNTRY_FR[c] ?? africanCountryLabel(c);
+/** Destination connue, sinon pays d'origine africain, sinon la valeur brute (en anglais / allemand : nom Intl). */
+const countryLabelIn = (lang: string) => (c: string) =>
+  (lang === 'fr' ? COUNTRY_FR[c] ?? africanCountryLabel(c) : countryName(c, lang, COUNTRY_FR[c] ?? africanCountryLabel(c)));
 
-const formatPrice = (c: LanguageCenter) => {
+/** Hook commun à la page et aux cartes : traductions, pays, langues enregistrées en français. */
+const useLc = () => {
+  const { t, i18n } = useTranslation('ui');
+  const lang = i18n.language?.slice(0, 2) || 'fr';
+  const values = lang === 'fr' ? {} : (i18n.getFixedT(lang, 'study')('values', { returnObjects: true }) as Record<string, string>);
+  return { t, lang, countryLabel: countryLabelIn(lang), languageLabel: (l: string) => values[l] ?? l };
+};
+
+const formatPrice = (c: LanguageCenter, t: (k: string, o?: any) => string, lang: string) => {
   if (c.priceFrom == null) return null;
-  const amount = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(c.priceFrom);
+  const amount = new Intl.NumberFormat(lang, { maximumFractionDigits: 0 }).format(c.priceFrom);
   const symbol = c.currency === 'EUR' ? '€' : c.currency === 'GBP' ? '£' : c.currency === 'USD' ? '$' : (c.currency ?? '');
-  return `dès ${amount} ${symbol}${c.priceUnit ? ` / ${c.priceUnit}` : ''}`;
+  return `${t('lc.from', { price: `${amount} ${symbol}` })}${c.priceUnit ? ` / ${c.priceUnit}` : ''}`;
 };
 
 const withProtocol = (url: string) => (url.startsWith('http') ? url : `https://${url}`);
@@ -114,7 +124,8 @@ const deriveFacets = (list: LanguageCenter[]): Facets => {
 /* ── Carte d'un centre ─────────────────────────────────────────────────────── */
 const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> = ({ center, highlightLevel }) => {
   const [open, setOpen] = useState(false);
-  const price = formatPrice(center);
+  const { t, lang, countryLabel, languageLabel } = useLc();
+  const price = formatPrice(center, t, lang);
   // Le niveau visé par l'étudiant redirigé : on signale les centres qui le couvrent.
   const coversLevel = !!highlightLevel && (center.levelsOffered ?? []).includes(highlightLevel);
 
@@ -132,17 +143,17 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
           {center.city && <span className="text-xs text-gray-500">{center.city}</span>}
           {isVisaOriginCountry(center.country) && (
             <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
-              Avant le départ
+              {t('lc.before_departure')}
             </span>
           )}
           {center.isPartner && (
             <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-              Partenaire Midzo
+              {t('lc.partner')}
             </span>
           )}
           {coversLevel && (
             <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-              Prépare le niveau {highlightLevel}
+              {t('lc.prepares_level', { level: highlightLevel })}
             </span>
           )}
         </div>
@@ -150,9 +161,9 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
         <h3 className="text-xl font-bold text-primary">{center.name}</h3>
 
         <p className="mt-1 text-sm text-gray-500">
-          {center.language}
-          {center.levels && <> · niveaux {center.levels}</>}
-          {center.weeklyHours != null && <> · {center.weeklyHours} h/semaine</>}
+          {languageLabel(center.language)}
+          {center.levels && <> · {t('lc.levels_inline', { levels: center.levels })}</>}
+          {center.weeklyHours != null && <> · {t('lc.weekly_hours', { hours: center.weeklyHours })}</>}
         </p>
 
         {center.description && (
@@ -161,8 +172,8 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
 
         {(center.courseTypes?.length || center.examsPrepared?.length) && (
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {(center.courseTypes ?? []).map(t => (
-              <span key={t} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">{t}</span>
+            {(center.courseTypes ?? []).map(ct => (
+              <span key={ct} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">{ct}</span>
             ))}
             {(center.examsPrepared ?? []).map(e => (
               <span key={e} className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-600">{e}</span>
@@ -172,16 +183,16 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
 
         {(center.offersVisaSupport || center.offersAccommodation || center.offersPathway) && (
           <ul className="mt-3 space-y-1 text-sm text-gray-600">
-            {center.offersVisaSupport && <li>✓ Lettre d’inscription pour le dossier de visa</li>}
-            {center.offersAccommodation && <li>✓ Aide au logement</li>}
-            {center.offersPathway && <li>✓ Passerelle vers l’université (année préparatoire)</li>}
+            {center.offersVisaSupport && <li>✓ {t('lc.visa_letter')}</li>}
+            {center.offersAccommodation && <li>✓ {t('lc.housing_help')}</li>}
+            {center.offersPathway && <li>✓ {t('lc.pathway')}</li>}
           </ul>
         )}
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
           {price && <span className="font-semibold text-gray-800">{price}</span>}
           {center.startDates && <span className="text-gray-500">{center.startDates}</span>}
-          {center.classSize != null && <span className="text-gray-500">Classes de {center.classSize} max.</span>}
+          {center.classSize != null && <span className="text-gray-500">{t('lc.class_size', { size: center.classSize })}</span>}
         </div>
 
         <button
@@ -190,20 +201,20 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
           aria-expanded={open}
           className="mt-3 self-start text-sm text-primary hover:underline cursor-pointer"
         >
-          {open ? 'Masquer les détails' : 'Plus de détails'}
+          {open ? t('lc.hide_details') : t('lc.more_details')}
         </button>
 
         {open && (
           <dl className="mt-3 space-y-1.5 text-sm border-t border-gray-100 pt-3">
             {!!center.levelsOffered?.length && (
               <div className="flex gap-2">
-                <dt className="w-32 shrink-0 text-gray-400">Niveaux</dt>
+                <dt className="w-32 shrink-0 text-gray-400">{t('lc.levels')}</dt>
                 <dd className="text-gray-700">{center.levelsOffered.join(' · ')}</dd>
               </div>
             )}
             {center.address && (
               <div className="flex gap-2">
-                <dt className="w-32 shrink-0 text-gray-400">Adresse</dt>
+                <dt className="w-32 shrink-0 text-gray-400">{t('lc.address')}</dt>
                 <dd className="text-gray-700">{center.address}</dd>
               </div>
             )}
@@ -215,25 +226,25 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
             )}
             {center.phone && (
               <div className="flex gap-2">
-                <dt className="w-32 shrink-0 text-gray-400">Téléphone</dt>
+                <dt className="w-32 shrink-0 text-gray-400">{t('lc.phone')}</dt>
                 <dd className="text-gray-700">{center.phone}</dd>
               </div>
             )}
             {!!center.accreditations?.length && (
               <div className="flex gap-2">
-                <dt className="w-32 shrink-0 text-gray-400">Accréditations</dt>
+                <dt className="w-32 shrink-0 text-gray-400">{t('lc.accreditations')}</dt>
                 <dd className="text-gray-700">{center.accreditations.join(', ')}</dd>
               </div>
             )}
             {!!center.universityPartners?.length && (
               <div className="flex gap-2">
-                <dt className="w-32 shrink-0 text-gray-400">Universités partenaires</dt>
+                <dt className="w-32 shrink-0 text-gray-400">{t('lc.university_partners')}</dt>
                 <dd className="text-gray-700">{center.universityPartners.join(', ')}</dd>
               </div>
             )}
             {price && (
               <p className="pt-1 text-xs text-gray-400">
-                Tarif indicatif : confirmez le prix exact auprès du centre avant de vous inscrire.
+                {t('lc.price_note')}
               </p>
             )}
           </dl>
@@ -247,7 +258,7 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
               rel="noopener noreferrer"
               className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors text-center text-sm font-medium"
             >
-              S’inscrire
+              {t('lc.register')}
             </a>
           )}
           {center.link && (
@@ -261,7 +272,7 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
                   : 'flex-1 bg-primary text-white hover:bg-primary/90'
               }`}
             >
-              Site du centre
+              {t('lc.website')}
             </a>
           )}
         </div>
@@ -272,6 +283,7 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
 
 const LanguageCenterPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { t, countryLabel, languageLabel } = useLc();
 
   // Contexte de redirection (niveau insuffisant) — optionnel.
   const redirectLanguage = searchParams.get('language') ?? '';
@@ -313,16 +325,17 @@ const LanguageCenterPage: React.FC = () => {
       setCenters(res.data ?? []);
     } catch (err) {
       console.error('Error loading language centers:', err);
-      setError('Impossible de charger les centres de langue. Réessayez dans un instant.');
+      setError(t('lc.load_error'));
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, country, city, level, courseType, exam, onlyPartners, query]);
 
   // Recherche texte : on laisse retomber la frappe avant d'interroger l'API.
   useEffect(() => {
-    const t = setTimeout(load, query ? 350 : 0);
-    return () => clearTimeout(t);
+    const timer = setTimeout(load, query ? 350 : 0);
+    return () => clearTimeout(timer);
   }, [load, query]);
 
   useEffect(() => {
@@ -385,23 +398,20 @@ const LanguageCenterPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-2">Centres de langue</h1>
-        <p className="text-gray-600 mb-8">
-          Préparez le niveau exigé par votre université : cours, certifications, tarifs et contacts.
-        </p>
+        <h1 className="text-4xl font-bold text-primary mb-2">{t('lc.title')}</h1>
+        <p className="text-gray-600 mb-8">{t('lc.subtitle')}</p>
 
         {/* Bannière de redirection : niveau de langue insuffisant (story 5.3 → 5.8) */}
         {cameFromCheck && (
           <div className="bg-amber-50 border border-amber-300 rounded-lg p-5 mb-6">
             <p className="text-amber-800 font-medium">
               {redirectUniversity
-                ? `Votre niveau de langue n'atteint pas encore l'exigence de « ${redirectUniversity} ».`
-                : 'Votre niveau de langue est insuffisant pour cette université.'}
+                ? t('lc.level_below', { university: redirectUniversity })
+                : t('lc.level_insufficient')}
             </p>
             <p className="text-amber-700 text-sm mt-1">
-              {redirectLanguage && `Langue requise : ${redirectLanguage}${redirectLevel ? ` (niveau ${redirectLevel})` : ''}. `}
-              Voici les centres qui vous mettent à niveau
-              {redirectCountry ? ` en ${countryLabel(redirectCountry)}` : ''}.
+              {redirectLanguage && `${t('lc.required_language', { language: languageLabel(redirectLanguage) })}${redirectLevel ? ` (${t('lc.level_n', { level: redirectLevel })})` : ''}. `}
+              {redirectCountry ? t('lc.centers_in', { country: countryLabel(redirectCountry) }) : t('lc.centers')}
             </p>
           </div>
         )}
@@ -412,18 +422,18 @@ const LanguageCenterPage: React.FC = () => {
             type="search"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Rechercher un centre, une ville…"
-            aria-label="Rechercher un centre de langue"
+            placeholder={t('lc.search_placeholder')}
+            aria-label={t('lc.search_label')}
             className="w-full border-gray-300 rounded-md shadow-sm text-sm focus:ring-primary focus:border-primary mb-4"
           />
 
           {/* Où apprendre : se mettre à niveau au pays, ou une fois arrivé. */}
           {countryGroups.origin.length > 0 && (
-            <div className="mb-4 inline-flex rounded-lg bg-gray-100 p-0.5" role="group" aria-label="Où apprendre">
+            <div className="mb-4 inline-flex rounded-lg bg-gray-100 p-0.5" role="group" aria-label={t('lc.where')}>
               {([
-                ['all', 'Partout'],
-                ['origin', 'Avant le départ'],
-                ['study', 'À destination'],
+                ['all', t('lc.everywhere')],
+                ['origin', t('lc.before_departure')],
+                ['study', t('lc.at_destination')],
               ] as const).map(([value, label]) => (
                 <button
                   key={value}
@@ -442,14 +452,14 @@ const LanguageCenterPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="lc-country" className="block text-sm font-medium text-gray-700 mb-1.5">Pays</label>
+              <label htmlFor="lc-country" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.country')}</label>
               <select id="lc-country" value={country} onChange={e => { setCountry(e.target.value); setCity(''); }} className={selectCls}>
-                <option value="">Tous les pays</option>
+                <option value="">{t('lc.all_countries')}</option>
                 {scope !== 'origin' && countryGroups.study.map(c => (
                   <option key={c.name} value={c.name}>{countryLabel(c.name)} ({c.count})</option>
                 ))}
                 {scope !== 'study' && countryGroups.origin.length > 0 && (
-                  <optgroup label="Avant le départ">
+                  <optgroup label={t('lc.before_departure')}>
                     {countryGroups.origin.map(c => (
                       <option key={c.name} value={c.name}>{countryLabel(c.name)} ({c.count})</option>
                     ))}
@@ -459,43 +469,43 @@ const LanguageCenterPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="lc-language" className="block text-sm font-medium text-gray-700 mb-1.5">Langue</label>
+              <label htmlFor="lc-language" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.language')}</label>
               <select id="lc-language" value={language} onChange={e => setLanguage(e.target.value)} className={selectCls}>
-                <option value="">Toutes les langues</option>
+                <option value="">{t('lc.all_languages')}</option>
                 {(facets?.languages ?? []).map(l => (
-                  <option key={l.name} value={l.name}>{l.name} ({l.count})</option>
+                  <option key={l.name} value={l.name}>{languageLabel(l.name)} ({l.count})</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label htmlFor="lc-city" className="block text-sm font-medium text-gray-700 mb-1.5">Ville</label>
+              <label htmlFor="lc-city" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.city')}</label>
               <select id="lc-city" value={city} onChange={e => setCity(e.target.value)} className={selectCls}>
-                <option value="">Toutes les villes</option>
+                <option value="">{t('lc.all_cities')}</option>
                 {cityOptions.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
             <div>
-              <label htmlFor="lc-level" className="block text-sm font-medium text-gray-700 mb-1.5">Niveau visé</label>
+              <label htmlFor="lc-level" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.target_level')}</label>
               <select id="lc-level" value={level} onChange={e => setLevel(e.target.value)} className={selectCls}>
-                <option value="">Tous les niveaux</option>
+                <option value="">{t('lc.all_levels')}</option>
                 {levelOptions.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
 
             <div>
-              <label htmlFor="lc-format" className="block text-sm font-medium text-gray-700 mb-1.5">Format</label>
+              <label htmlFor="lc-format" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.format')}</label>
               <select id="lc-format" value={courseType} onChange={e => setCourseType(e.target.value)} className={selectCls}>
-                <option value="">Tous les formats</option>
-                {(facets?.courseTypes ?? []).map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="">{t('lc.all_formats')}</option>
+                {(facets?.courseTypes ?? []).map(ct => <option key={ct} value={ct}>{ct}</option>)}
               </select>
             </div>
 
             <div>
-              <label htmlFor="lc-exam" className="block text-sm font-medium text-gray-700 mb-1.5">Examen préparé</label>
+              <label htmlFor="lc-exam" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.exam')}</label>
               <select id="lc-exam" value={exam} onChange={e => setExam(e.target.value)} className={selectCls}>
-                <option value="">Tous les examens</option>
+                <option value="">{t('lc.all_exams')}</option>
                 {(facets?.exams ?? []).map(e => <option key={e} value={e}>{e}</option>)}
               </select>
             </div>
@@ -505,11 +515,11 @@ const LanguageCenterPage: React.FC = () => {
             <label className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
               <input type="checkbox" checked={onlyPartners} onChange={e => setOnlyPartners(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
-              Partenaires Midzo uniquement
+              {t('lc.partners_only')}
             </label>
             {activeFilters > 0 && (
               <button type="button" onClick={resetFilters} className="text-sm text-primary hover:underline cursor-pointer">
-                Réinitialiser les filtres ({activeFilters})
+                {t('lc.reset')} ({activeFilters})
               </button>
             )}
           </div>
@@ -518,7 +528,7 @@ const LanguageCenterPage: React.FC = () => {
         {loading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-gray-600">Chargement des centres de langue…</p>
+            <p className="mt-2 text-gray-600">{t('lc.loading')}</p>
           </div>
         )}
         {error && (
@@ -530,8 +540,8 @@ const LanguageCenterPage: React.FC = () => {
         {!loading && !error && (
           <>
             <p className="mb-4 text-sm text-gray-500">
-              {visibleCenters.length} centre{visibleCenters.length > 1 ? 's' : ''} trouvé{visibleCenters.length > 1 ? 's' : ''}
-              {facets && visibleCenters.length !== facets.total && <span className="text-gray-400"> sur {facets.total}</span>}
+              {t('lc.found', { count: visibleCenters.length })}
+              {facets && visibleCenters.length !== facets.total && <span className="text-gray-400"> {t('lc.out_of', { total: facets.total })}</span>}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -542,11 +552,11 @@ const LanguageCenterPage: React.FC = () => {
               ) : (
                 <div className="col-span-full text-center py-12">
                   <p className="text-gray-500 text-lg">
-                    Aucun centre ne correspond à ces critères.
+                    {t('lc.none')}
                   </p>
                   {activeFilters > 0 && (
                     <button type="button" onClick={resetFilters} className="mt-3 text-primary hover:underline cursor-pointer">
-                      Réinitialiser les filtres
+                      {t('lc.reset')}
                     </button>
                   )}
                 </div>

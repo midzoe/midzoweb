@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { BellAlertIcon, CheckIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../../services/api';
 
@@ -15,6 +16,7 @@ interface NotificationItem {
 
 // Story 4.6 : panneau des notifications (dont alertes visa) affiché sur le Dashboard.
 const NotificationsPanel: React.FC = () => {
+  const { t } = useTranslation('ui');
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,10 +57,10 @@ const NotificationsPanel: React.FC = () => {
       {loading ? (
         <div className="flex items-center gap-2 text-gray-400 text-sm py-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-          Chargement...
+          {t('notifications.loading')}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-gray-400 text-sm py-2">Aucune notification pour le moment.</p>
+        <p className="text-gray-400 text-sm py-2">{t('notifications.none')}</p>
       ) : (
         <div className="space-y-3">
           {items.map(n => (
@@ -94,7 +96,7 @@ const NotificationsPanel: React.FC = () => {
                         className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80"
                       >
                         <CheckIcon className="w-3 h-3" />
-                        Marquer comme lue
+                        {t('notifications.mark_read')}
                       </button>
                     )}
                   </div>

@@ -1286,8 +1286,23 @@ class ApiService {
 
   // ─── Paiement en ligne (grille tarifaire, Stripe Checkout) ─────
   /** Le serveur recalcule le prix : on n'envoie que les services, l'offre et les échéances. */
-  async createPaymentCheckout(data: { codes: string[]; offer_id?: string | null; installments: number; trip_id?: number; travelers?: number; accept_terms: boolean; terms_version?: string }) {
+  async createPaymentCheckout(data: { codes: string[]; offer_id?: string | null; installments: number; trip_id?: number; travelers?: number; residence?: string; consultation_slot?: string; client_timezone?: string; accept_terms: boolean; terms_version?: string }) {
     return this.request<any>('/payments/checkout', { method: 'POST', body: JSON.stringify(data) });
+  }
+  /** Remise de premier achat encore due, échéances autorisées (pays de résidence). */
+  async getPaymentEligibility() {
+    return this.request<any>('/me/payment-eligibility');
+  }
+  /** Créneaux de consultation à venir (instants UTC ; horaires tenus en heure d'Allemagne). */
+  async getConsultationSlots() {
+    return this.request<any>('/consultation/slots');
+  }
+  /** Admin : horaires de consultation (heure d'Allemagne) et rendez-vous à venir. */
+  async adminGetConsultations() {
+    return this.request<any>('/admin/consultations');
+  }
+  async adminUpdateConsultationAvailability(availability: object) {
+    return this.request<any>('/admin/consultations', { method: 'PUT', body: JSON.stringify({ availability }) });
   }
   async confirmPayment(sessionId: string) {
     return this.request<any>(`/payments/confirm?session_id=${encodeURIComponent(sessionId)}`);

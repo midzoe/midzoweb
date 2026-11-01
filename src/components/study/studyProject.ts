@@ -61,7 +61,7 @@ export interface ServiceOption {
   description: string;
 }
 
-/** Les 11 services Study de la grille tarifaire (libellés repris des scénarios de test). */
+/** Les services Study de la grille tarifaire (libellés repris des scénarios de test). */
 export const STUDY_SERVICES: ServiceOption[] = [
   { id: 'university_finder', code: 'S9', label: 'University Finder', description: 'Recherche d’université / de programme' },
   { id: 'admission', code: 'S10', label: 'Admission / Candidature', description: 'Candidature et inscription à l’université' },
@@ -69,8 +69,8 @@ export const STUDY_SERVICES: ServiceOption[] = [
   { id: 'housing', code: 'S5', label: 'Logement (Housing)', description: 'Recherche de logement' },
   { id: 'recognition', code: 'S8', label: 'Reconnaissance du diplôme', description: 'Équivalence / Recognition du diplôme' },
   { id: 'legalisation', code: 'S6', label: 'Légalisation de documents', description: 'Légalisation / Apostille' },
-  { id: 'language_course', code: 'S4', label: 'Cours de langue', description: 'Inscription à un cours de langue' },
-  { id: 'language_center', code: 'S2', label: 'Centre de langue', description: 'Recherche de centre de langue' },
+  // « Centre de langue » (S2) fusionné ici le 31/10/2026 : les deux se confondaient.
+  { id: 'language_course', code: 'S4', label: 'Cours de langue', description: 'Choix du centre et inscription au cours' },
   { id: 'airport_pickup', code: 'S7', label: "Accueil à l'aéroport", description: 'Accueil + transfert vers le logement' },
   { id: 'bank', code: 'S3', label: 'Compte bancaire', description: 'Aide à l’ouverture de compte' },
   { id: 'flight', code: 'S1', label: 'Vol', description: 'Recherche et réservation de vol' },
@@ -422,7 +422,8 @@ export function normalizeProject(raw: any): StudyProject {
     domains: arr(raw.domains),
     cities: arr(raw.cities),
     // Un service retiré du catalogue (ex. « insurance ») ne doit plus compter dans le prix.
-    services: arr(raw.services).filter((id: string) => STUDY_SERVICES.some(s => s.id === id)),
+    services: [...new Set(arr(raw.services).map((id: string) => (id === 'language_center' ? 'language_course' : id)))]
+      .filter((id: string) => STUDY_SERVICES.some(s => s.id === id)),
     tourismServices: arr(raw.tourismServices).filter((c: string) => /^T\d+$/.test(c)),
     price: normalizePriceChoice(raw.price),
     shortlist: Array.isArray(raw.shortlist) ? raw.shortlist.filter((s: any) => s && typeof s.id === 'number') : [],

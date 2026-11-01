@@ -160,7 +160,7 @@ const TourismPartners = () => {
       <div className="bg-gradient-to-br from-slate-900 to-slate-800 py-24 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="inline-block bg-gold-500/20 border border-gold-400/40 px-4 py-2 rounded-lg text-sm font-semibold mb-6 text-gold-200">
-            ✨ Midzo Tourism
+            Midzo Tourism
           </div>
           <h1 className="text-4xl font-bold text-white sm:text-5xl mb-4 tracking-tight">{t.title}</h1>
           <p className="text-xl text-slate-100 max-w-3xl mx-auto font-light">{t.subtitle}</p>

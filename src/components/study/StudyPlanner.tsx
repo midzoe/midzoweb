@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
-import { AFRICAN_COUNTRIES, CountryOption } from '../../data/africanCountries';
+import { AFRICAN_COUNTRIES, CountryOption, countryName } from '../../data/africanCountries';
 import {
   DOMAINS, FORMATS, LEVELS, STUDY_SERVICES, TEACHING_LANGUAGES,
   StudyProject, University, UniversityMatch, VocationalOffer, projectCodes,
@@ -14,8 +15,9 @@ import {
 import { COUNTRY_GUIDES, levelGuide } from './studyGuides';
 import { Chip, InfoCard, LinkList, Section, externalHref, fieldClass, toggle } from '../projects/plannerUi';
 import { usePricing } from '../../pricing/usePricing';
-import PricingStep from '../../pricing/PricingStep';
-import { goToCheckout } from '../../pricing/checkout';
+import PricingStep, { useServiceName } from '../../pricing/PricingStep';
+import { goToCheckout, loginToPayHref, RESUME_PAY_PARAM } from '../../pricing/checkout';
+import { usePaymentEligibility } from '../../pricing/paymentRules';
 import TermsCheckbox from '../legal/TermsCheckbox';
 import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
 import { quoteSelection } from '../../pricing/pricingEngine';
@@ -75,8 +77,9 @@ const OTHER_COUNTRIES: CountryOption[] = [
 
 const ALL_ORIGINS = [...AFRICAN_COUNTRIES, ...OTHER_COUNTRIES];
 
-function originLabel(value: string): string {
-  return ALL_ORIGINS.find(c => c.value === value)?.label ?? value;
+function originLabel(value: string, lang = 'fr'): string {
+  const fr = ALL_ORIGINS.find(c => c.value === value)?.label ?? value;
+  return lang.startsWith('fr') ? fr : countryName(value, lang, value);
 }
 
 /** Langue des centres (« Allemand ») à proposer selon la destination. */
@@ -91,8 +94,15 @@ const DESTINATION_LANGUAGE: Record<string, string> = {
 
 const StudyPlanner: React.FC = () => {
   useCurrency();
+  const { t, i18n } = useTranslation('study');
+  const lang = i18n.language?.slice(0, 2) || 'fr';
+  const isFr = lang === 'fr';
+  /** Valeurs enregistrées en français (formats, langues, diplômes…) : traduites à l'affichage. */
+  const tv = (value: string) => (isFr ? value : (t('values', { returnObjects: true }) as Record<string, string>)[value] ?? value);
+  const serviceName = useServiceName();
   const { user, updateUserLocally } = useAuth();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [project, setProject] = useState<StudyProject>(() => {
     const draft = loadDraft();
@@ -126,6 +136,7 @@ const StudyPlanner: React.FC = () => {
   const [visa, setVisa] = useState<any>(null);
   const [offers, setOffers] = useState<VocationalOffer[]>([]);
   const { pricing, error: pricingError } = usePricing();
+  const { firstPurchase } = usePaymentEligibility(user?.id);
   const [showTourism, setShowTourism] = useState(false);
 
   const update = (patch: Partial<StudyProject>) => {
@@ -148,9 +159,9 @@ const StudyPlanner: React.FC = () => {
       .then(p => {
         if (!mounted) return;
         if (p) { setProject(p); setDirty(false); }
-        else setFeedback({ tone: 'error', text: 'Ce projet est introuvable dans votre compte.' });
+        else setFeedback({ tone: 'error', text: t('fb.not_found') });
       })
-      .catch(() => mounted && setFeedback({ tone: 'error', text: 'Impossible de charger ce projet. Réessayez plus tard.' }))
+      .catch(() => mounted && setFeedback({ tone: 'error', text: t('fb.load_error') }))
       .finally(() => mounted && setLoadingProject(false));
     return () => { mounted = false; };
   }, [searchParams, user]);
@@ -230,16 +241,17 @@ const StudyPlanner: React.FC = () => {
   }, [requestedSlug, pricing, codesKey]);
 
   /** Montants de l'offre retenue (ou conseillée), recalculés à chaque changement. */
-  const liveSnapshot = pricing ? computeSnapshot(codes, pricing, project.price) : null;
+  const paymentCtx = { residence: project.profile.residence, firstPurchase };
+  const liveSnapshot = pricing ? computeSnapshot(codes, pricing, project.price, 1, paymentCtx) : null;
   const currentProject = project;
   const priceOf = (code: string) => pricing?.services.find(sv => sv.code === code)?.price_cents ?? null;
   const withSnapshot = (p: StudyProject): StudyProject =>
-    ({ ...p, price: { ...p.price, snapshot: pricing ? computeSnapshot(projectCodes(p), pricing, p.price) : p.price.snapshot } });
+    ({ ...p, price: { ...p.price, snapshot: pricing ? computeSnapshot(projectCodes(p), pricing, p.price, 1, { residence: p.profile.residence, firstPurchase }) : p.price.snapshot } });
 
   // ── Dérivés ─────────────────────────────────────────────────────────────────
 
   const country = studyCountries.find(c => c.name === project.destination);
-  const countryLabel = country?.nameFr || project.destination;
+  const countryLabel = isFr ? country?.nameFr || project.destination : countryName(project.destination, lang, country?.name || project.destination);
   const guide = COUNTRY_GUIDES[project.destination];
   const level = LEVELS.find(l => l.id === project.level);
   const isUniversityLevel = !!level?.apiLevel;
@@ -250,8 +262,9 @@ const StudyPlanner: React.FC = () => {
     universities.forEach(u => u.city.split(/[/(),]/).map(s => s.trim()).filter(Boolean).forEach(c => {
       if (!seen.has(cityKey(c))) seen.set(cityKey(c), c);
     }));
-    return [...seen.values()].sort((a, b) => a.localeCompare(b, 'fr'));
-  }, [universities]);
+    return [...seen.values()].sort((a, b) => a.localeCompare(b, lang));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [universities, lang]);
 
   const criteria = {
     level: project.level,
@@ -313,8 +326,8 @@ const StudyPlanner: React.FC = () => {
     !!project.profile.residence && !!project.profile.nationality && project.profile.residence !== project.profile.nationality;
 
   const missing: string[] = [];
-  if (!project.destination) missing.push('le pays de destination');
-  if (!project.level) missing.push('le niveau visé');
+  if (!project.destination) missing.push(t('missing.destination'));
+  if (!project.level) missing.push(t('missing.level'));
   const canSave = missing.length === 0;
 
   // ── Actions ─────────────────────────────────────────────────────────────────
@@ -390,7 +403,7 @@ const StudyPlanner: React.FC = () => {
   const save = async (): Promise<StudyProject | null> => {
     const projectState = currentProject;
     if (!canSave) {
-      setFeedback({ tone: 'error', text: `Complétez d'abord ${missing.join(' et ')}.` });
+      setFeedback({ tone: 'error', text: t('fb.complete_first', { list: missing.join(t('missing.and')) }) });
       return null;
     }
     const project = withSnapshot(projectState);
@@ -399,8 +412,8 @@ const StudyPlanner: React.FC = () => {
       setDirty(false);
       setNeedsAccount(true);
       setFeedback(stored
-        ? { tone: 'info', text: 'Projet enregistré sur cet appareil. Créez un compte (ou connectez-vous) pour le retrouver partout et envoyer votre demande.' }
-        : { tone: 'error', text: "Votre navigateur bloque l'enregistrement local. Créez un compte pour sauvegarder votre projet." });
+        ? { tone: 'info', text: t('fb.saved_device') }
+        : { tone: 'error', text: t('fb.storage_blocked') });
       return stored;
     }
     setSaving(true);
@@ -410,15 +423,15 @@ const StudyPlanner: React.FC = () => {
       setProject(saved);
       setDirty(false);
       clearDraft();
-      setFeedback({ tone: 'success', text: 'Projet enregistré dans votre compte. Retrouvez-le dans votre dashboard.' });
+      setFeedback({ tone: 'success', text: t('fb.saved_account') });
       return saved;
     } catch (err: any) {
       saveDraft(project);
       setFeedback({
         tone: 'error',
         text: err?.status === 401
-          ? 'Votre session a expiré : reconnectez-vous pour enregistrer (le brouillon est conservé sur cet appareil).'
-          : "L'enregistrement a échoué. Le brouillon est conservé sur cet appareil ; réessayez dans un instant.",
+          ? t('fb.session_expired')
+          : t('fb.save_failed'),
       });
       return null;
     } finally {
@@ -430,11 +443,11 @@ const StudyPlanner: React.FC = () => {
     if (!user) {
       saveDraft(project);
       setNeedsAccount(true);
-      setFeedback({ tone: 'info', text: 'Pour envoyer une demande, connectez-vous ou créez un compte : votre projet est conservé.' });
+      setFeedback({ tone: 'info', text: t('fb.login_to_send') });
       return;
     }
     if (project.services.length === 0) {
-      setFeedback({ tone: 'error', text: 'Choisissez au moins un service avant d’envoyer votre demande.' });
+      setFeedback({ tone: 'error', text: t('fb.pick_service_send') });
       return;
     }
     setSending(true);
@@ -451,19 +464,22 @@ const StudyPlanner: React.FC = () => {
       const withRequest = await saveProjectToAccount({ ...saved, requestSentAt: new Date().toISOString() }, countryLabel);
       setProject(withRequest);
       setDirty(false);
-      setFeedback({ tone: 'success', text: 'Demande envoyée : un conseiller MIDZO revient vers vous par email. Elle est suivie dans votre dashboard.' });
+      setFeedback({ tone: 'success', text: t('fb.request_sent') });
     } catch {
-      setFeedback({ tone: 'error', text: "L'envoi de la demande a échoué. Votre projet est enregistré ; réessayez dans un instant." });
+      setFeedback({ tone: 'error', text: t('fb.request_failed') });
     } finally {
       setSending(false);
     }
   };
 
   // Paiement en ligne : le projet est d'abord enregistré, puis le serveur recalcule le prix de
-  // l'offre choisie (aucun montant n'est envoyé) et ouvre Stripe Checkout.
-  const pay = async () => {
+  // l'offre choisie (aucun montant n'est envoyé) et ouvre Stripe Checkout. Sans compte, le
+  // brouillon est gardé et l'on passe par la connexion (ou l'inscription), qui revient ici
+  // avec `?pay=1` : le paiement reprend tout seul.
+  const pay = async (termsAccepted = acceptTerms) => {
     if (!user) {
-      setFeedback({ tone: 'info', text: 'Pour payer en ligne, connectez-vous ou créez un compte : votre projet est conservé.' });
+      saveDraft(withSnapshot(project));
+      navigate(loginToPayHref('/study'));
       return;
     }
     setPaying(true);
@@ -471,7 +487,7 @@ const StudyPlanner: React.FC = () => {
     if (!saved) { setPaying(false); return; }
     const codesToPay = projectCodes(saved);
     if (!codesToPay.length && saved.price.offerId !== 'consultation') {
-      setFeedback({ tone: 'error', text: 'Choisissez au moins un service (ou la consultation) avant de payer.' });
+      setFeedback({ tone: 'error', text: t('fb.pick_service_pay') });
       setPaying(false);
       return;
     }
@@ -480,13 +496,29 @@ const StudyPlanner: React.FC = () => {
       offerId: saved.price.snapshot?.offerId ?? saved.price.offerId,
       installments: saved.price.installments,
       tripId: saved.tripId,
-      acceptTerms,
+      residence: saved.profile.residence,
+      consultationSlot: saved.price.consultationSlot,
+      acceptTerms: termsAccepted,
     });
     if (error) {
       setFeedback({ tone: 'error', text: error });
       setPaying(false);
     }
   };
+
+  // Retour de connexion après « Payer en ligne » : les CGV avaient été acceptées pour cliquer.
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (resumed.current || searchParams.get(RESUME_PAY_PARAM) !== '1' || !user || !pricing || loadingProject) return;
+    resumed.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete(RESUME_PAY_PARAM);
+    setSearchParams(next, { replace: true });
+    setAcceptTerms(true);
+    setFeedback({ tone: 'info', text: t('fb.resuming_payment') });
+    pay(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, pricing, loadingProject, searchParams]);
 
   const startNew = () => {
     clearDraft();
@@ -507,12 +539,12 @@ const StudyPlanner: React.FC = () => {
   }
 
   const status = project.requestSentAt
-    ? { label: 'Demande envoyée', className: 'bg-emerald-100 text-emerald-800' }
+    ? { label: t('status.sent'), className: 'bg-emerald-100 text-emerald-800' }
     : project.tripId && !dirty
-      ? { label: 'Enregistré dans votre compte', className: 'bg-emerald-100 text-emerald-800' }
+      ? { label: t('status.saved'), className: 'bg-emerald-100 text-emerald-800' }
       : project.tripId
-        ? { label: 'Modifications non enregistrées', className: 'bg-amber-100 text-amber-800' }
-        : { label: user ? 'Pas encore enregistré dans votre compte' : 'Brouillon sur cet appareil', className: 'bg-gray-100 text-gray-700' };
+        ? { label: t('status.unsaved'), className: 'bg-amber-100 text-amber-800' }
+        : { label: user ? t('status.not_saved') : t('status.draft'), className: 'bg-gray-100 text-gray-700' };
 
   const redirect = encodeURIComponent('/study');
 
@@ -521,11 +553,10 @@ const StudyPlanner: React.FC = () => {
       <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <p className="text-blue-100 text-sm font-semibold uppercase tracking-widest mb-2">🎓 MIDZO Study</p>
-          <h1 className="text-3xl md:text-4xl font-extrabold">Construisez votre projet d'études</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold">{t('hero.title')}</h1>
           <p className="mt-3 text-blue-50 max-w-3xl">
-            Choisissez un pays, un niveau et un domaine : nous croisons votre profil avec notre catalogue
-            (universités, visa, langue, logement), puis vous enregistrez vos choix et demandez un accompagnement.
-            {!user && ' Aucun compte n’est nécessaire pour explorer.'}
+            {t('hero.text')}
+            {!user && ` ${t('hero.no_account')}`}
           </p>
         </div>
       </div>
@@ -534,84 +565,84 @@ const StudyPlanner: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
 
           {/* 1. Profil */}
-          <Section step={1} title="Votre profil" subtitle="Il détermine les démarches (visa, reconnaissance du diplôme).">
+          <Section step={1} title={t('profile.title')} subtitle={t('profile.subtitle')}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="sp-nationality" className="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
+                <label htmlFor="sp-nationality" className="block text-sm font-medium text-gray-700 mb-1">{t('profile.nationality')}</label>
                 <select id="sp-nationality" value={project.profile.nationality} onChange={e => updateProfile({ nationality: e.target.value })} className={fieldClass}>
-                  <option value="">— Choisir —</option>
-                  <optgroup label="Afrique">{AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
-                  <optgroup label="Autres pays">{OTHER_COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  <option value="">{t('common.choose')}</option>
+                  <optgroup label={t('profile.africa')}>{AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
+                  <optgroup label={t('profile.other_countries')}>{OTHER_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
                   {project.profile.nationality && !ALL_ORIGINS.some(c => c.value === project.profile.nationality) && (
                     <option value={project.profile.nationality}>{project.profile.nationality}</option>
                   )}
                 </select>
               </div>
               <div>
-                <label htmlFor="sp-residence" className="block text-sm font-medium text-gray-700 mb-1">Pays de résidence</label>
+                <label htmlFor="sp-residence" className="block text-sm font-medium text-gray-700 mb-1">{t('profile.residence')}</label>
                 <select id="sp-residence" value={project.profile.residence} onChange={e => updateProfile({ residence: e.target.value })} className={fieldClass}>
-                  <option value="">— Choisir —</option>
-                  <optgroup label="Afrique">{AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
-                  <optgroup label="Autres pays">{OTHER_COUNTRIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  <option value="">{t('common.choose')}</option>
+                  <optgroup label={t('profile.africa')}>{AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
+                  <optgroup label={t('profile.other_countries')}>{OTHER_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
                   {project.profile.residence && !ALL_ORIGINS.some(c => c.value === project.profile.residence) && (
                     <option value={project.profile.residence}>{project.profile.residence}</option>
                   )}
                 </select>
               </div>
               <div>
-                <label htmlFor="sp-diploma" className="block text-sm font-medium text-gray-700 mb-1">Diplôme le plus élevé</label>
+                <label htmlFor="sp-diploma" className="block text-sm font-medium text-gray-700 mb-1">{t('profile.diploma')}</label>
                 <select id="sp-diploma" value={project.profile.diploma} onChange={e => updateProfile({ diploma: e.target.value })} className={fieldClass}>
-                  <option value="">— Choisir —</option>
+                  <option value="">{t('common.choose')}</option>
                   {DIPLOMAS.map(g => (
-                    <optgroup key={g.group} label={g.group}>{g.options.map(o => <option key={o} value={o}>{o}</option>)}</optgroup>
+                    <optgroup key={g.group} label={tv(g.group)}>{g.options.map(o => <option key={o} value={o}>{tv(o)}</option>)}</optgroup>
                   ))}
                   {project.profile.diploma && !ALL_DIPLOMAS.includes(project.profile.diploma) && (
-                    <option value={project.profile.diploma}>{project.profile.diploma} (ancienne saisie)</option>
+                    <option value={project.profile.diploma}>{project.profile.diploma} {t('profile.old_entry')}</option>
                   )}
                 </select>
               </div>
               <div className="md:col-span-2">
-                <p className="block text-sm font-medium text-gray-700 mb-1">Langues parlées et niveau</p>
-                <div className="space-y-2" role="group" aria-label="Langues parlées">
+                <p className="block text-sm font-medium text-gray-700 mb-1">{t('profile.languages')}</p>
+                <div className="space-y-2" role="group" aria-label={t('profile.languages')}>
                   {project.profile.languages.map((l, i) => (
                     <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-                      <select aria-label={`Langue ${i + 1}`} value={l.language} className={fieldClass}
+                      <select aria-label={t('profile.language_n', { n: i + 1 })} value={l.language} className={fieldClass}
                         onChange={e => setLanguages(project.profile.languages.map((x, j) => (j === i ? { ...x, language: e.target.value } : x)))}>
-                        <option value="">— Langue —</option>
+                        <option value="">{t('profile.language_placeholder')}</option>
                         {PROFILE_LANGUAGES.filter(name => name === l.language || !project.profile.languages.some(x => x.language === name))
-                          .map(name => <option key={name} value={name}>{name}</option>)}
+                          .map(name => <option key={name} value={name}>{tv(name)}</option>)}
                         {l.language && !PROFILE_LANGUAGES.includes(l.language) && <option value={l.language}>{l.language}</option>}
                       </select>
-                      <select aria-label={`Niveau en langue ${i + 1}`} value={l.level} className={fieldClass}
+                      <select aria-label={t('profile.level_n', { n: i + 1 })} value={l.level} className={fieldClass}
                         onChange={e => setLanguages(project.profile.languages.map((x, j) => (j === i ? { ...x, level: e.target.value } : x)))}>
-                        {LANGUAGE_LEVELS.map(lv => <option key={lv.value} value={lv.value}>{lv.label}</option>)}
+                        {LANGUAGE_LEVELS.map(lv => <option key={lv.value} value={lv.value}>{tv(lv.label)}</option>)}
                       </select>
-                      <button type="button" aria-label={`Retirer la langue ${i + 1}`} title="Retirer"
+                      <button type="button" aria-label={t('profile.remove_language', { n: i + 1 })} title={t('common.remove')}
                         onClick={() => setLanguages(project.profile.languages.filter((_, j) => j !== i))}
                         className="h-10 w-10 rounded-lg border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200">×</button>
                     </div>
                   ))}
                   <button type="button" onClick={() => setLanguages([...project.profile.languages, { language: '', level: 'B1' }])}
-                    className="text-sm font-medium text-primary hover:underline">+ Ajouter une langue</button>
+                    className="text-sm font-medium text-primary hover:underline">+ {t('profile.add_language')}</button>
                 </div>
               </div>
             </div>
           </Section>
 
           {/* 2. Projet */}
-          <Section step={2} title="Votre projet" subtitle="Pays > niveau > domaine, puis les villes qui vous intéressent.">
+          <Section step={2} title={t('project.title')} subtitle={t('project.subtitle')}>
             <div className="space-y-6">
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-1">Pays de destination</p>
-                <p className="text-xs text-gray-500 mb-2">Vous pouvez en choisir plusieurs : comparez-les dans les résultats.</p>
+                <p className="block text-sm font-medium text-gray-700 mb-1">{t('project.destination')}</p>
+                <p className="text-xs text-gray-500 mb-2">{t('project.destination_hint')}</p>
                 {studyCountries.length === 0 ? (
-                  <p className="text-sm text-gray-500">Chargement des pays d'études…</p>
+                  <p className="text-sm text-gray-500">{t('project.loading_countries')}</p>
                 ) : (
-                  <div className="flex flex-wrap gap-2" role="group" aria-label="Pays de destination">
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={t('project.destination')}>
                     {studyCountries.map(c => (
                       <Chip key={c.id} active={project.destinations.some(d => d.country === c.name)}
                         onClick={() => toggleCountry(c.name, c.nameFr || c.name)}>
-                        {c.flag} {c.nameFr || c.name}
+                        {c.flag} {isFr ? c.nameFr || c.name : countryName(c.name, lang)}
                       </Chip>
                     ))}
                   </div>
@@ -619,8 +650,8 @@ const StudyPlanner: React.FC = () => {
               </div>
 
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Niveau visé</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Niveau visé">
+                <p className="block text-sm font-medium text-gray-700 mb-2">{t('project.level')}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label={t('project.level')}>
                   {LEVELS.map(l => (
                     <button key={l.id} type="button" aria-pressed={project.level === l.id}
                       onClick={() => update({
@@ -630,35 +661,35 @@ const StudyPlanner: React.FC = () => {
                       })}
                       className={`text-left p-4 rounded-xl border-2 transition-colors ${
                         project.level === l.id ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary/50'}`}>
-                      <span className="block font-semibold text-gray-900">{l.label}</span>
-                      <span className="block text-xs text-gray-500 mt-0.5">{l.hint}</span>
+                      <span className="block font-semibold text-gray-900">{t(`level.${l.id}.label`, { defaultValue: l.label })}</span>
+                      <span className="block text-xs text-gray-500 mt-0.5">{t(`level.${l.id}.hint`, { defaultValue: l.hint })}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Domaine(s)</p>
-                <div className="flex flex-wrap gap-2" role="group" aria-label="Domaines">
+                <p className="block text-sm font-medium text-gray-700 mb-2">{t('project.domains')}</p>
+                <div className="flex flex-wrap gap-2" role="group" aria-label={t('project.domains')}>
                   {DOMAINS.map(d => (
                     <Chip key={d.id} active={project.domains.includes(d.id)} onClick={() => update({ domains: toggle(project.domains, d.id) })}>
-                      {d.label}
+                      {t(`domain.${d.id}`, { defaultValue: d.label })}
                     </Chip>
                   ))}
                 </div>
                 <input value={project.fieldQuery} onChange={e => update({ fieldQuery: e.target.value })}
-                  aria-label="Précisez la formation" placeholder="Précisez la formation (optionnel) : ex. Finance, Santé publique"
+                  aria-label={t('project.field_label')} placeholder={t('project.field_placeholder')}
                   className={`${fieldClass} mt-3`} />
               </div>
 
               <div>
-                <p className="block text-sm font-medium text-gray-700 mb-2">Villes</p>
+                <p className="block text-sm font-medium text-gray-700 mb-2">{t('project.cities')}</p>
                 {project.cities.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {project.cities.map(c => (
                       <span key={c} className="inline-flex items-center gap-1 bg-primary text-white px-3 py-1 rounded-full text-sm">
                         {c}
-                        <button type="button" aria-label={`Retirer ${c}`} onClick={() => update({ cities: project.cities.filter(x => x !== c) })}
+                        <button type="button" aria-label={t('project.remove_city', { city: c })} onClick={() => update({ cities: project.cities.filter(x => x !== c) })}
                           className="ml-1 hover:text-gray-200">×</button>
                       </span>
                     ))}
@@ -667,11 +698,11 @@ const StudyPlanner: React.FC = () => {
                 <div className="flex gap-2">
                   <input value={cityInput} onChange={e => setCityInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCity(cityInput); setCityInput(''); } }}
-                    aria-label="Ajouter une ville" placeholder={project.destination ? 'Ajouter une ville (ex. Leipzig)' : 'Choisissez d’abord un pays'}
+                    aria-label={t('project.add_city')} placeholder={project.destination ? t('project.add_city_placeholder') : t('project.pick_country_first')}
                     disabled={!project.destination} list="sp-city-suggestions" className={fieldClass} />
                   <datalist id="sp-city-suggestions">{citySuggestions.map(c => <option key={c} value={c} />)}</datalist>
                   <button type="button" disabled={!cityInput.trim()} onClick={() => { addCity(cityInput); setCityInput(''); }}
-                    className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium disabled:opacity-40">Ajouter</button>
+                    className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium disabled:opacity-40">{t('common.add')}</button>
                 </div>
                 {citySuggestions.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-3">
@@ -685,15 +716,15 @@ const StudyPlanner: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="sp-start" className="block text-sm font-medium text-gray-700 mb-1">Rentrée souhaitée</label>
+                  <label htmlFor="sp-start" className="block text-sm font-medium text-gray-700 mb-1">{t('project.start')}</label>
                   <input id="sp-start" type="month" value={project.startMonth} onChange={e => update({ startMonth: e.target.value })} className={fieldClass} />
                 </div>
                 <div>
-                  <p className="block text-sm font-medium text-gray-700 mb-1">Langue d'enseignement souhaitée</p>
-                  <div className="flex flex-wrap gap-2" role="group" aria-label="Langue d'enseignement">
+                  <p className="block text-sm font-medium text-gray-700 mb-1">{t('project.teaching_language')}</p>
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={t('project.teaching_language')}>
                     {TEACHING_LANGUAGES.map(l => (
                       <Chip key={l} active={project.preferences.teachingLanguages.includes(l)}
-                        onClick={() => updatePreferences({ teachingLanguages: toggle(project.preferences.teachingLanguages, l) })}>{l}</Chip>
+                        onClick={() => updatePreferences({ teachingLanguages: toggle(project.preferences.teachingLanguages, l) })}>{tv(l)}</Chip>
                     ))}
                   </div>
                 </div>
@@ -701,58 +732,58 @@ const StudyPlanner: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="block text-sm font-medium text-gray-700 mb-1">Format</p>
-                  <div className="flex flex-wrap gap-2" role="group" aria-label="Format">
+                  <p className="block text-sm font-medium text-gray-700 mb-1">{t('project.format')}</p>
+                  <div className="flex flex-wrap gap-2" role="group" aria-label={t('project.format')}>
                     {FORMATS.map(f => (
                       <Chip key={f} active={project.preferences.formats.includes(f)}
-                        onClick={() => updatePreferences({ formats: toggle(project.preferences.formats, f) })}>{f}</Chip>
+                        onClick={() => updatePreferences({ formats: toggle(project.preferences.formats, f) })}>{tv(f)}</Chip>
                     ))}
                   </div>
                 </div>
                 <label className="flex items-start gap-2 text-sm text-gray-700 md:mt-6">
                   <input type="checkbox" checked={project.preferences.publicOnly}
                     onChange={e => updatePreferences({ publicOnly: e.target.checked })} className="mt-0.5 rounded text-primary focus:ring-primary" />
-                  Universités publiques uniquement
+                  {t('project.public_only')}
                 </label>
               </div>
             </div>
           </Section>
 
           {/* 3. Catalogue */}
-          <Section step={3} id="sp-results" title="Ce que propose le catalogue"
-            subtitle={project.destination ? `Pour ${countryLabel}${level ? ` · ${level.label}` : ''}` : 'Choisissez un pays pour afficher les résultats.'}>
+          <Section step={3} id="sp-results" title={t('catalog.title')}
+            subtitle={project.destination ? `${t('catalog.for', { country: countryLabel })}${level ? ` · ${t(`level.${level.id}.label`, { defaultValue: level.label })}` : ''}` : t('catalog.pick_country')}>
             {project.destinations.length > 1 && (
-              <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label="Résultats pour">
-                <span className="text-sm text-gray-500 mr-1">Résultats pour :</span>
+              <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label={t('catalog.results_for')}>
+                <span className="text-sm text-gray-500 mr-1">{t('catalog.results_for')} :</span>
                 {project.destinations.map(d => (
                   <button key={d.country} type="button" role="tab" aria-selected={d.country === project.destination}
                     onClick={() => showCountry(d.country)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                       d.country === project.destination ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:border-primary'}`}>
-                    {d.label}
+                    {isFr ? d.label : countryName(d.country, lang, d.label)}
                   </button>
                 ))}
               </div>
             )}
             {!project.destination ? (
-              <p className="text-gray-500 text-sm">Sélectionnez un pays de destination à l'étape 2.</p>
+              <p className="text-gray-500 text-sm">{t('catalog.select_destination')}</p>
             ) : loadingCatalog ? (
               <div className="flex items-center gap-3 text-sm text-gray-500 py-6" data-testid="catalog-loading">
                 <span className="h-6 w-6 rounded-full border-4 border-gray-200 border-t-primary animate-spin" />
-                Chargement du catalogue pour {countryLabel}…
+                {t('catalog.loading', { country: countryLabel })}
               </div>
             ) : (
               <div className="space-y-6">
                 {country && (
-                  <InfoCard title={`${country.flag ?? ''} Étudier en ${countryLabel}`}>
+                  <InfoCard title={`${country.flag ?? ''} ${t('catalog.study_in', { country: countryLabel })}`}>
                     {country.description && <p>{country.description}</p>}
                     <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-                      {!!country.languageInstruction?.length && (<div><dt className="font-medium">Langues d'enseignement</dt><dd>{country.languageInstruction.join(', ')}</dd></div>)}
-                      {country.tuitionRange && (<div><dt className="font-medium">Frais de scolarité</dt><dd>{country.tuitionRange}</dd></div>)}
-                      {country.livingCost && (<div><dt className="font-medium">Coût de la vie</dt><dd>{country.livingCost}</dd></div>)}
-                      {country.processingTimeVisa && (<div><dt className="font-medium">Délai visa</dt><dd>{country.processingTimeVisa}</dd></div>)}
-                      {!!country.popularScholarships?.length && (<div><dt className="font-medium">Bourses</dt><dd>{country.popularScholarships.join(', ')}</dd></div>)}
-                      {!!country.admissionRequirements?.length && (<div><dt className="font-medium">Admission</dt><dd>{country.admissionRequirements.join(', ')}</dd></div>)}
+                      {!!country.languageInstruction?.length && (<div><dt className="font-medium">{t('catalog.teaching_languages')}</dt><dd>{country.languageInstruction.join(', ')}</dd></div>)}
+                      {country.tuitionRange && (<div><dt className="font-medium">{t('catalog.tuition')}</dt><dd>{country.tuitionRange}</dd></div>)}
+                      {country.livingCost && (<div><dt className="font-medium">{t('catalog.living_cost')}</dt><dd>{country.livingCost}</dd></div>)}
+                      {country.processingTimeVisa && (<div><dt className="font-medium">{t('catalog.visa_delay')}</dt><dd>{country.processingTimeVisa}</dd></div>)}
+                      {!!country.popularScholarships?.length && (<div><dt className="font-medium">{t('catalog.scholarships')}</dt><dd>{country.popularScholarships.join(', ')}</dd></div>)}
+                      {!!country.admissionRequirements?.length && (<div><dt className="font-medium">{t('catalog.admission')}</dt><dd>{country.admissionRequirements.join(', ')}</dd></div>)}
                     </dl>
                     {guide?.fees.map(f => <p key={f}>• {f}</p>)}
                   </InfoCard>
@@ -767,18 +798,18 @@ const StudyPlanner: React.FC = () => {
 
                 {cityCoverage.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Vos villes dans le catalogue</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">{t('catalog.your_cities')}</h3>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                       {cityCoverage.map(c => (
                         <li key={c.city} className="rounded-lg border border-gray-200 p-3">
                           <span className="font-medium text-gray-900">{c.city}</span>
                           <span className="block text-gray-600">
                             {isVocational
-                              ? (c.offers ? `${c.offers} offre(s) d’Ausbildung` : 'Aucune offre d’Ausbildung référencée pour l’instant')
+                              ? (c.offers ? t('catalog.city_offers', { count: c.offers }) : t('catalog.city_no_offers'))
                               : c.universities === 0
-                                ? 'Aucune université référencée pour l’instant'
-                                : `${c.universities} université(s)${isUniversityLevel ? ` · ${c.matching} pour votre recherche` : ''}`}
-                            {' · '}{c.housing ? `${c.housing} logement(s)` : 'pas de logement référencé'}
+                                ? t('catalog.city_no_universities')
+                                : `${t('catalog.city_universities', { count: c.universities })}${isUniversityLevel ? ` · ${t('catalog.city_matching', { count: c.matching })}` : ''}`}
+                            {' · '}{c.housing ? t('catalog.city_housing', { count: c.housing }) : t('catalog.city_no_housing')}
                           </span>
                         </li>
                       ))}
@@ -791,38 +822,37 @@ const StudyPlanner: React.FC = () => {
                   <div>
                     <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
                       <h3 className="font-semibold text-gray-900">
-                        Universités ({matches.length})
+                        {t('catalog.universities', { count: matches.length })}
                       </h3>
                       {project.cities.length > 0 && (
                         <button type="button" onClick={() => setIgnoreCities(!ignoreCities)} className="text-sm text-secondary hover:text-primary underline">
-                          {ignoreCities ? 'Revenir à mes villes' : `Voir tout le pays (${countryWideCount})`}
+                          {ignoreCities ? t('catalog.back_to_cities') : t('catalog.whole_country', { count: countryWideCount })}
                         </button>
                       )}
                     </div>
                     {project.preferences.publicOnly && (
                       <p className="text-xs text-gray-500 mb-3" data-testid="public-filter-note">
-                        Universités publiques uniquement : {excludedPrivate > 0 ? `${excludedPrivate} établissement(s) privé(s) écarté(s)` : 'aucun établissement privé dans ces résultats'}
-                        {unknownStatus > 0 && ` · ${unknownStatus} au statut non renseigné, conservé(s)`}.
+                        {t('project.public_only')} : {excludedPrivate > 0 ? t('catalog.private_excluded', { count: excludedPrivate }) : t('catalog.no_private')}
+                        {unknownStatus > 0 && ` · ${t('catalog.unknown_status', { count: unknownStatus })}`}.
                       </p>
                     )}
                     {project.preferences.formats.length > 0 && !matches.some(m => m.formatOk) && matches.length > 0 && (
                       <p className="text-xs text-gray-500 mb-3">
-                        Aucune filière n'est encore renseignée au format {project.preferences.formats.join(' / ')} : les résultats ci-dessous sont à confirmer
-                        auprès des établissements. Votre préférence est transmise au conseiller.
+                        {t('catalog.format_unconfirmed', { formats: project.preferences.formats.map(tv).join(' / ') })}
                       </p>
                     )}
                     {matches.length === 0 ? (
                       <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
-                        Aucune université ne correspond {project.cities.length && !ignoreCities ? 'dans ces villes ' : ''}à ce niveau et ce domaine.
-                        {project.cities.length > 0 && !ignoreCities && countryWideCount > 0 && ` ${countryWideCount} correspondent ailleurs en ${countryLabel}.`}
+                        {project.cities.length && !ignoreCities ? t('catalog.no_match_cities') : t('catalog.no_match')}
+                        {project.cities.length > 0 && !ignoreCities && countryWideCount > 0 && ` ${t('catalog.match_elsewhere', { count: countryWideCount, country: countryLabel })}`}
                       </p>
                     ) : (
                       <div className="space-y-4">
                         {[{ list: bestMatches, heading: '' }, {
                           list: otherMatches,
                           heading: otherMatches.some(m => !m.languageOk)
-                            ? `Langue d'enseignement différente de votre choix (${project.preferences.teachingLanguages.join(', ')})`
-                            : `Format non confirmé (${project.preferences.formats.join(', ')})`,
+                            ? t('catalog.other_language', { languages: project.preferences.teachingLanguages.map(tv).join(', ') })
+                            : t('catalog.format_not_confirmed', { formats: project.preferences.formats.map(tv).join(', ') }),
                         }]
                           .filter(g => g.list.length)
                           .map(group => (
@@ -838,18 +868,18 @@ const StudyPlanner: React.FC = () => {
                                         <p className="text-sm text-gray-600">
                                           {u.city}
                                           <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${u.isPublic === true ? 'bg-emerald-50 text-emerald-700' : u.isPublic === false ? 'bg-gray-100 text-gray-700' : 'bg-amber-50 text-amber-700'}`}>
-                                            {u.isPublic === true ? 'Public' : u.isPublic === false ? 'Privé' : 'Statut non renseigné'}
+                                            {u.isPublic === true ? t('catalog.public') : u.isPublic === false ? t('catalog.private') : t('catalog.status_unknown')}
                                           </span>
                                           {languageFromProgram && project.preferences.teachingLanguages.length > 0 && (
                                             <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700">
-                                              Enseigné en {project.preferences.teachingLanguages.join(' / ').toLowerCase()}
+                                              {t('catalog.taught_in', { languages: project.preferences.teachingLanguages.map(tv).join(' / ') })}
                                             </span>
                                           )}
                                         </p>
                                       </div>
                                       <button type="button" onClick={() => toggleShortlist(u)} aria-pressed={picked}
                                         className={`px-3 py-1.5 rounded-lg text-sm font-medium ${picked ? 'bg-primary text-white' : 'border border-primary text-primary hover:bg-primary/10'}`}>
-                                        {picked ? '★ Présélectionnée' : '☆ Présélectionner'}
+                                        {picked ? `★ ${t('catalog.shortlisted')}` : `☆ ${t('catalog.shortlist')}`}
                                       </button>
                                     </div>
                                     <div className="flex flex-wrap gap-1 mt-3">
@@ -862,13 +892,13 @@ const StudyPlanner: React.FC = () => {
                                       {programs.length > 6 && <span className="text-xs text-gray-500">+{programs.length - 6}</span>}
                                     </div>
                                     <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600">
-                                      {u.requiredLanguage && <div><dt className="inline font-medium">Langue : </dt><dd className="inline">{u.requiredLanguage} {u.requiredLanguageLevel}</dd></div>}
-                                      {u.minimumGrade && <div><dt className="inline font-medium">Note minimale : </dt><dd className="inline">{u.minimumGrade}</dd></div>}
-                                      {u.admissionRequirements && <div className="sm:col-span-2"><dt className="inline font-medium">Admission : </dt><dd className="inline">{u.admissionRequirements}</dd></div>}
+                                      {u.requiredLanguage && <div><dt className="inline font-medium">{t('catalog.language')} : </dt><dd className="inline">{u.requiredLanguage} {u.requiredLanguageLevel}</dd></div>}
+                                      {u.minimumGrade && <div><dt className="inline font-medium">{t('catalog.min_grade')} : </dt><dd className="inline">{u.minimumGrade}</dd></div>}
+                                      {u.admissionRequirements && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.admission')} : </dt><dd className="inline">{u.admissionRequirements}</dd></div>}
                                     </dl>
                                     <div className="flex gap-3 mt-3 text-sm">
-                                      {u.website && <a href={externalHref(u.website)} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary underline">Site officiel ↗</a>}
-                                      {u.applicationUrl && <a href={externalHref(u.applicationUrl)} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary underline">Candidater ↗</a>}
+                                      {u.website && <a href={externalHref(u.website)} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary underline">{t('catalog.website')} ↗</a>}
+                                      {u.applicationUrl && <a href={externalHref(u.applicationUrl)} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary underline">{t('catalog.apply')} ↗</a>}
                                     </div>
                                   </article>
                                 );
@@ -884,13 +914,13 @@ const StudyPlanner: React.FC = () => {
                 {isVocational && (
                   <div data-testid="vocational-offers">
                     <h3 className="font-semibold text-gray-900 mb-3">
-                      Offres d'Ausbildung ({offersInCities.length}{project.cities.length ? ' dans vos villes' : ''})
+                      {project.cities.length ? t('catalog.ausbildung_in_cities', { count: offersInCities.length }) : t('catalog.ausbildung', { count: offersInCities.length })}
                     </h3>
                     {offersInCities.length === 0 ? (
                       <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-4">
                         {offersForDomain.length
-                          ? `Aucune offre dans ces villes ; ${offersForDomain.length} ailleurs en ${countryLabel} : retirez une ville pour les voir.`
-                          : `Aucune offre référencée pour ce domaine en ${countryLabel} pour l'instant. Enregistrez votre projet : un conseiller vous orientera.`}
+                          ? t('catalog.ausbildung_elsewhere', { count: offersForDomain.length, country: countryLabel })
+                          : t('catalog.ausbildung_none', { country: countryLabel })}
                       </p>
                     ) : (
                       <div className="space-y-3">
@@ -905,20 +935,20 @@ const StudyPlanner: React.FC = () => {
                                 </div>
                                 <button type="button" onClick={() => toggleOffer(o)} aria-pressed={picked}
                                   className={`px-3 py-1.5 rounded-lg text-sm font-medium ${picked ? 'bg-primary text-white' : 'border border-primary text-primary hover:bg-primary/10'}`}>
-                                  {picked ? '★ Retenue' : '☆ Retenir'}
+                                  {picked ? `★ ${t('catalog.kept')}` : `☆ ${t('catalog.keep')}`}
                                 </button>
                               </div>
                               <p className="text-sm text-gray-700 mt-2">{o.occupation}</p>
                               <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600">
-                                {o.durationMonths && <div><dt className="inline font-medium">Durée : </dt><dd className="inline">{o.durationMonths} mois</dd></div>}
-                                {o.languageLevel && <div><dt className="inline font-medium">Allemand : </dt><dd className="inline">{o.languageLevel}</dd></div>}
-                                {o.salary && <div className="sm:col-span-2"><dt className="inline font-medium">Rémunération : </dt><dd className="inline">{o.salary}</dd></div>}
-                                {!!o.startDates?.length && <div className="sm:col-span-2"><dt className="inline font-medium">Rentrées : </dt><dd className="inline">{o.startDates.join(', ')}</dd></div>}
-                                {!!o.documents?.length && <div className="sm:col-span-2"><dt className="inline font-medium">Documents : </dt><dd className="inline">{o.documents.join(' ; ')}</dd></div>}
+                                {o.durationMonths && <div><dt className="inline font-medium">{t('catalog.duration')} : </dt><dd className="inline">{t('catalog.months', { count: o.durationMonths })}</dd></div>}
+                                {o.languageLevel && <div><dt className="inline font-medium">{t('catalog.german')} : </dt><dd className="inline">{o.languageLevel}</dd></div>}
+                                {o.salary && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.salary')} : </dt><dd className="inline">{o.salary}</dd></div>}
+                                {!!o.startDates?.length && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.intakes')} : </dt><dd className="inline">{o.startDates.join(', ')}</dd></div>}
+                                {!!o.documents?.length && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.documents')} : </dt><dd className="inline">{o.documents.join(' ; ')}</dd></div>}
                               </dl>
                               {o.applicationUrl && (
                                 <a href={externalHref(o.applicationUrl)} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-sm text-secondary hover:text-primary underline">
-                                  Site de l'employeur ↗
+                                  {t('catalog.employer_site')} ↗
                                 </a>
                               )}
                             </article>
@@ -931,37 +961,36 @@ const StudyPlanner: React.FC = () => {
 
                 {/* Démarches : visa, reconnaissance, candidature */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InfoCard title="Visa et démarches">
+                  <InfoCard title={t('catalog.visa_title')}>
                     {!project.profile.nationality ? (
-                      <p>Indiquez votre nationalité (étape 1) pour voir la fiche visa.</p>
+                      <p>{t('catalog.visa_need_nationality')}</p>
                     ) : project.profile.nationality === project.destination ? (
-                      <p>Pas de visa nécessaire : vous êtes ressortissant de ce pays.</p>
+                      <p>{t('catalog.visa_national')}</p>
                     ) : visa?.requirements ? (
                       <>
                         <p>{visa.message}</p>
-                        {visa.requirements.costs?.processingTime && <p><span className="font-medium">Délai :</span> {visa.requirements.costs.processingTime}</p>}
-                        {visa.requirements.costs?.cost && <p><span className="font-medium">Coût :</span> {visa.requirements.costs.cost} {visa.requirements.costs.currency ?? ''}</p>}
+                        {visa.requirements.costs?.processingTime && <p><span className="font-medium">{t('catalog.delay')} :</span> {visa.requirements.costs.processingTime}</p>}
+                        {visa.requirements.costs?.cost && <p><span className="font-medium">{t('catalog.cost')} :</span> {visa.requirements.costs.cost} {visa.requirements.costs.currency ?? ''}</p>}
                         {!!visa.requirements.documents?.list?.length && (
                           <ul className="list-disc pl-5">{visa.requirements.documents.list.slice(0, 8).map((d: string) => <li key={d}>{d}</li>)}</ul>
                         )}
-                        {visa.embassy && <p><span className="font-medium">Où déposer :</span> {visa.embassy.name}{visa.embassy.city ? ` — ${visa.embassy.city}` : ''}</p>}
+                        {visa.embassy && <p><span className="font-medium">{t('catalog.where_to_apply')} :</span> {visa.embassy.name}{visa.embassy.city ? ` — ${visa.embassy.city}` : ''}</p>}
                       </>
                     ) : visa ? (
-                      <p>Pas encore de fiche visa publiée de {originLabel(project.profile.nationality)} vers {countryLabel}. Les sites officiels ci-dessous font foi.</p>
+                      <p>{t('catalog.visa_missing', { from: originLabel(project.profile.nationality, lang), to: countryLabel })}</p>
                     ) : (
-                      <p>Recherche de la fiche visa…</p>
+                      <p>{t('catalog.visa_loading')}</p>
                     )}
                     {residenceDiffers && (
                       <p className="bg-white rounded-lg border border-gray-200 p-3">
-                        Vous résidez en/au <strong>{originLabel(project.profile.residence)}</strong> : la demande de visa se dépose en principe
-                        auprès de la représentation de {countryLabel} compétente pour votre pays de résidence, avec votre titre de séjour en cours de validité.
+                        {t('catalog.residence_note', { residence: originLabel(project.profile.residence, lang), country: countryLabel })}
                       </p>
                     )}
                     {guide && <LinkList links={guide.visa} />}
                   </InfoCard>
 
-                  <InfoCard title="Reconnaissance du diplôme">
-                    {project.profile.diploma && <p>Votre diplôme : <strong>{project.profile.diploma}</strong></p>}
+                  <InfoCard title={t('catalog.recognition_title')}>
+                    {project.profile.diploma && <p>{t('catalog.your_diploma')} : <strong>{tv(project.profile.diploma)}</strong></p>}
                     {recognition.length ? (
                       <ul className="space-y-2">
                         {recognition.slice(0, 3).map(r => (
@@ -972,16 +1001,16 @@ const StudyPlanner: React.FC = () => {
                         ))}
                       </ul>
                     ) : (
-                      <p>Aucun organisme de reconnaissance référencé dans le catalogue pour ce pays.</p>
+                      <p>{t('catalog.recognition_none')}</p>
                     )}
                     {guide && <LinkList links={guide.recognition} />}
-                    {guide && (<><p className="font-medium pt-2">Candidature</p><LinkList links={guide.application} /></>)}
+                    {guide && (<><p className="font-medium pt-2">{t('catalog.application')}</p><LinkList links={guide.application} /></>)}
                   </InfoCard>
                 </div>
 
                 {/* Langue et logement */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InfoCard title={`Cours de langue${destinationLanguage ? ` (${destinationLanguage.toLowerCase()})` : ''}`}>
+                  <InfoCard title={`${t('catalog.language_courses')}${destinationLanguage ? ` (${tv(destinationLanguage).toLowerCase()})` : ''}`}>
                     {relevantCenters.length ? (
                       <ul className="space-y-2">
                         {relevantCenters.slice(0, 4).map(c => {
@@ -990,40 +1019,40 @@ const StudyPlanner: React.FC = () => {
                             <li key={c.id}>
                               <span className="font-medium">{c.name}</span> <span className="text-gray-500">— {c.city}</span>
                               <span className="block text-xs text-gray-500">
-                                {[levels.join(' '), c.examsPrepared?.slice(0, 3).join(', '), c.priceFrom ? `dès ${c.priceFrom} € / ${c.priceUnit ?? 'cours'}` : ''].filter(Boolean).join(' · ')}
+                                {[levels.join(' '), c.examsPrepared?.slice(0, 3).join(', '), c.priceFrom ? t('catalog.price_from', { price: c.priceFrom, unit: c.priceUnit ?? t('catalog.course') }) : ''].filter(Boolean).join(' · ')}
                               </span>
                             </li>
                           );
                         })}
                       </ul>
                     ) : (
-                      <p>Aucun centre de langue référencé pour ce pays.</p>
+                      <p>{t('catalog.language_none')}</p>
                     )}
-                    <Link to="/services/language-center" className="text-secondary hover:text-primary underline">Tous les centres de langue →</Link>
+                    <Link to="/services/language-center" className="text-secondary hover:text-primary underline">{t('catalog.all_language_centers')} →</Link>
                   </InfoCard>
 
-                  <InfoCard title="Logement">
+                  <InfoCard title={t('catalog.housing')}>
                     {project.cities.length > 0 && housingInCities.length === 0 && accommodations.length > 0 && (
-                      <p>Pas de logement référencé dans vos villes ; voici d'autres offres en {countryLabel}.</p>
+                      <p>{t('catalog.housing_elsewhere', { country: countryLabel })}</p>
                     )}
                     {housingToShow.length ? (
                       <ul className="space-y-2">
                         {housingToShow.slice(0, 4).map(a => (
                           <li key={a.id}>
                             <span className="font-medium">{a.name}</span> <span className="text-gray-500">— {a.city}</span>
-                            {a.pricePerMonth != null && <span className="block text-xs text-gray-500">≈ {a.pricePerMonth} {a.currency ?? 'EUR'} / mois (indicatif)</span>}
+                            {a.pricePerMonth != null && <span className="block text-xs text-gray-500">{t('catalog.rent', { price: a.pricePerMonth, currency: a.currency ?? 'EUR' })}</span>}
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p>Aucun logement étudiant référencé pour ce pays.</p>
+                      <p>{t('catalog.housing_none')}</p>
                     )}
-                    <Link to="/services/student-accommodation" className="text-secondary hover:text-primary underline">Tous les logements →</Link>
+                    <Link to="/services/student-accommodation" className="text-secondary hover:text-primary underline">{t('catalog.all_housing')} →</Link>
                   </InfoCard>
                 </div>
 
                 {resources.length > 0 && (
-                  <InfoCard title="Ressources officielles utiles">
+                  <InfoCard title={t('catalog.resources')}>
                     <ul className="space-y-1">
                       {resources.map(r => (
                         <li key={r.id}>
@@ -1040,8 +1069,8 @@ const StudyPlanner: React.FC = () => {
           </Section>
 
           {/* 4. Services */}
-          <Section step={4} title="Vos services" subtitle="Ce sur quoi MIDZO vous accompagne.">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Services">
+          <Section step={4} title={t('services.title')} subtitle={t('services.subtitle')}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label={t('services.title')}>
               {STUDY_SERVICES.map(s => {
                 const active = project.services.includes(s.id);
                 return (
@@ -1050,10 +1079,10 @@ const StudyPlanner: React.FC = () => {
                       className="mt-1 rounded text-primary focus:ring-primary" />
                     <span className="flex-1">
                       <span className="flex items-baseline justify-between gap-2">
-                        <span className="font-semibold text-gray-900">{s.label}</span>
+                        <span className="font-semibold text-gray-900">{t(`service.${s.id}.label`, { defaultValue: s.label })}</span>
                         {priceOf(s.code) != null && <span className="text-sm font-semibold text-primary whitespace-nowrap">{formatMoney(priceOf(s.code)!)}</span>}
                       </span>
-                      <span className="block text-xs text-gray-500">{s.code} · {s.description}</span>
+                      <span className="block text-xs text-gray-500">{s.code} · {t(`service.${s.id}.description`, { defaultValue: s.description })}</span>
                     </span>
                   </label>
                 );
@@ -1065,25 +1094,25 @@ const StudyPlanner: React.FC = () => {
               <button type="button" onClick={() => setShowTourism(!showTourism)} aria-expanded={showTourism}
                 className="w-full flex items-center justify-between px-4 py-3 text-left">
                 <span>
-                  <span className="font-semibold text-gray-900">Ajouter un séjour touristique (Mix)</span>
+                  <span className="font-semibold text-gray-900">{t('services.mix_title')}</span>
                   <span className="block text-xs text-gray-500">
                     {project.tourismServices.length
-                      ? `${project.tourismServices.length} service(s) tourisme ajouté(s) — les packages Mix sont proposés`
-                      : 'Découvrir le pays avant ou après la rentrée : les packages Mix combinent études et tourisme.'}
+                      ? t('services.mix_added', { count: project.tourismServices.length })
+                      : t('services.mix_hint')}
                   </span>
                 </span>
                 <span className="text-gray-400">{showTourism ? '−' : '+'}</span>
               </button>
               {showTourism && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 px-4 pb-4" role="group" aria-label="Services tourisme">
-                  {(pricing?.services ?? []).filter(t => t.family === 'tourism').map(t => {
-                    const active = project.tourismServices.includes(t.code);
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 px-4 pb-4" role="group" aria-label={t('services.tourism')}>
+                  {(pricing?.services ?? []).filter(sv => sv.family === 'tourism').map(sv => {
+                    const active = project.tourismServices.includes(sv.code);
                     return (
-                      <label key={t.code} className={`flex items-start gap-2 p-3 rounded-lg border cursor-pointer text-sm ${active ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
-                        <input type="checkbox" checked={active} onChange={() => update({ tourismServices: toggle(project.tourismServices, t.code) })}
+                      <label key={sv.code} className={`flex items-start gap-2 p-3 rounded-lg border cursor-pointer text-sm ${active ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
+                        <input type="checkbox" checked={active} onChange={() => update({ tourismServices: toggle(project.tourismServices, sv.code) })}
                           className="mt-0.5 rounded text-primary focus:ring-primary" />
-                        <span className="flex-1">{t.name}</span>
-                        <span className="text-primary font-semibold whitespace-nowrap">{formatMoney(t.price_cents)}</span>
+                        <span className="flex-1">{serviceName(sv)}</span>
+                        <span className="text-primary font-semibold whitespace-nowrap">{formatMoney(sv.price_cents)}</span>
                       </label>
                     );
                   })}
@@ -1091,15 +1120,15 @@ const StudyPlanner: React.FC = () => {
               )}
             </div>
             <textarea value={project.notes} onChange={e => update({ notes: e.target.value })} rows={3}
-              aria-label="Précisions pour le conseiller" placeholder="Précisions pour le conseiller (budget, contraintes, questions…)"
+              aria-label={t('services.notes_label')} placeholder={t('services.notes_placeholder')}
               className={`${fieldClass} mt-4`} />
           </Section>
 
           {/* 5. Prix et package */}
-          <Section step={5} title="Prix et package" id="sp-package"
-            subtitle="Nous comparons le prix à la carte et nos packages, et vous conseillons l'offre la moins chère.">
+          <Section step={5} title={t('price.title')} id="sp-package" subtitle={t('price.subtitle')}>
             <PricingStep pricing={pricing} pricingError={pricingError} codes={codes} choice={project.price}
-              onChange={price => update({ price })} requestedSlug={requestedSlug} />
+              onChange={price => update({ price })} requestedSlug={requestedSlug}
+              residence={project.profile.residence} firstPurchase={firstPurchase} />
           </Section>
         </div>
 
@@ -1107,31 +1136,31 @@ const StudyPlanner: React.FC = () => {
         <aside className="space-y-4 lg:sticky lg:top-6 self-start">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between gap-2 mb-4">
-              <h2 className="font-bold text-gray-900">Mon projet</h2>
+              <h2 className="font-bold text-gray-900">{t('summary.title')}</h2>
               <span data-testid="project-status" className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`}>{status.label}</span>
             </div>
             <dl className="text-sm space-y-2">
-              <div><dt className="text-gray-500">Destination{project.destinations.length > 1 ? 's' : ''}</dt><dd className="font-medium text-gray-900" data-testid="summary-destinations">{destinationsLabel(project, countryLabel) || '—'}</dd></div>
-              <div><dt className="text-gray-500">Niveau</dt><dd className="font-medium text-gray-900">{levelLabel(project.level) || '—'}</dd></div>
-              <div><dt className="text-gray-500">Domaine</dt><dd className="font-medium text-gray-900">
-                {[...DOMAINS.filter(d => project.domains.includes(d.id)).map(d => d.label), project.fieldQuery].filter(Boolean).join(', ') || '—'}
+              <div><dt className="text-gray-500">{t('summary.destinations', { count: project.destinations.length })}</dt><dd className="font-medium text-gray-900" data-testid="summary-destinations">{(isFr ? destinationsLabel(project, countryLabel) : syncedDestinations(project).map(d => countryName(d.country, lang, d.label)).join(', ')) || '—'}</dd></div>
+              <div><dt className="text-gray-500">{t('summary.level')}</dt><dd className="font-medium text-gray-900">{project.level ? t(`level.${project.level}.label`, { defaultValue: levelLabel(project.level) }) : '—'}</dd></div>
+              <div><dt className="text-gray-500">{t('summary.domain')}</dt><dd className="font-medium text-gray-900">
+                {[...DOMAINS.filter(d => project.domains.includes(d.id)).map(d => t(`domain.${d.id}`, { defaultValue: d.label })), project.fieldQuery].filter(Boolean).join(', ') || '—'}
               </dd></div>
-              <div><dt className="text-gray-500">Villes</dt><dd className="font-medium text-gray-900">
+              <div><dt className="text-gray-500">{t('project.cities')}</dt><dd className="font-medium text-gray-900">
                 {syncedDestinations(project).filter(d => d.cities.length)
-                  .map(d => `${d.cities.join(', ')}${project.destinations.length > 1 ? ` (${d.label})` : ''}`).join(' ; ') || '—'}
+                  .map(d => `${d.cities.join(', ')}${project.destinations.length > 1 ? ` (${isFr ? d.label : countryName(d.country, lang, d.label)})` : ''}`).join(' ; ') || '—'}
               </dd></div>
-              <div><dt className="text-gray-500">Rentrée</dt><dd className="font-medium text-gray-900">{project.startMonth || '—'}</dd></div>
-              <div><dt className="text-gray-500">Services ({project.services.length})</dt><dd className="font-medium text-gray-900">
-                {STUDY_SERVICES.filter(s => project.services.includes(s.id)).map(s => s.label).join(', ') || '—'}
+              <div><dt className="text-gray-500">{t('summary.start')}</dt><dd className="font-medium text-gray-900">{project.startMonth || '—'}</dd></div>
+              <div><dt className="text-gray-500">{t('summary.services', { count: project.services.length })}</dt><dd className="font-medium text-gray-900">
+                {STUDY_SERVICES.filter(s => project.services.includes(s.id)).map(s => t(`service.${s.id}.label`, { defaultValue: s.label })).join(', ') || '—'}
               </dd></div>
-              <div><dt className="text-gray-500">Présélection ({project.shortlist.length})</dt><dd className="font-medium text-gray-900">
+              <div><dt className="text-gray-500">{t('summary.shortlist', { count: project.shortlist.length })}</dt><dd className="font-medium text-gray-900">
                 {project.shortlist.map(s => s.name).join(' ; ') || '—'}
               </dd></div>
-              <div><dt className="text-gray-500">Offre et prix</dt><dd className="font-medium text-gray-900" data-testid="summary-package">
-                {liveSnapshot ? snapshotLabel(liveSnapshot) : '—'}
+              <div><dt className="text-gray-500">{t('summary.offer')}</dt><dd className="font-medium text-gray-900" data-testid="summary-package">
+                {liveSnapshot ? snapshotLabel(liveSnapshot, t) : '—'}
               </dd></div>
               {project.offerShortlist.length > 0 && (
-                <div><dt className="text-gray-500">Offres Ausbildung ({project.offerShortlist.length})</dt><dd className="font-medium text-gray-900">
+                <div><dt className="text-gray-500">{t('summary.ausbildung', { count: project.offerShortlist.length })}</dt><dd className="font-medium text-gray-900">
                   {project.offerShortlist.map(o => `${o.employer} (${o.city})`).join(' ; ')}
                 </dd></div>
               )}
@@ -1144,41 +1173,46 @@ const StudyPlanner: React.FC = () => {
               </p>
             )}
 
-            {!canSave && <p className="mt-4 text-xs text-gray-500">À compléter : {missing.join(', ')}.</p>}
+            {!canSave && <p className="mt-4 text-xs text-gray-500">{t('summary.to_complete', { list: missing.join(', ') })}</p>}
 
             <div className="mt-4 space-y-2">
               <button type="button" onClick={save} disabled={saving || sending || paying} data-testid="save-project"
                 className="w-full py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-50">
-                {saving ? 'Enregistrement…' : user ? 'Enregistrer mon projet' : 'Enregistrer mes choix'}
+                {saving ? t('actions.saving') : user ? t('actions.save_project') : t('actions.save_choices')}
               </button>
               <button type="button" onClick={sendRequest} disabled={saving || sending || paying} data-testid="send-request"
                 className="w-full py-3 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary/5 disabled:opacity-50">
-                {sending ? 'Envoi…' : project.requestSentAt ? 'Renvoyer ma demande' : "Demander un accompagnement"}
+                {sending ? t('actions.sending') : project.requestSentAt ? t('actions.resend') : t('actions.request')}
               </button>
               <TermsCheckbox checked={acceptTerms} onChange={setAcceptTerms} />
-              <button type="button" onClick={pay} disabled={saving || sending || paying || !acceptTerms} data-testid="pay-online"
+              <button type="button" onClick={() => pay()} data-testid="pay-online"
+                disabled={saving || sending || paying || !acceptTerms || (project.price.offerId === 'consultation' && !project.price.consultationSlot)}
                 className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-50">
-                {paying ? 'Ouverture du paiement…' : 'Payer en ligne (carte bancaire)'}
+                {paying ? t('actions.paying') : user ? t('actions.pay') : t('actions.login_and_pay')}
               </button>
+              {!user && <p className="text-xs text-gray-500 text-center">{t('actions.pay_login_hint')}</p>}
+              {project.price.offerId === 'consultation' && !project.price.consultationSlot && (
+                <p className="text-xs text-amber-700 text-center">{t('actions.pick_slot')}</p>
+              )}
               <Link to="/dashboard" className="block text-center w-full py-2 text-sm text-secondary hover:text-primary underline">
-                Ouvrir mon dashboard
+                {t('actions.dashboard')}
               </Link>
             </div>
 
             {(needsAccount || !user) && (
               <div className="mt-4 rounded-xl bg-blue-50 border border-blue-100 p-4 text-sm text-blue-900">
-                <p className="font-medium mb-2">Sans compte, vos choix restent sur cet appareil.</p>
-                <p className="mb-3">Un compte gratuit permet de les retrouver partout et d'envoyer votre demande.</p>
+                <p className="font-medium mb-2">{t('account.title')}</p>
+                <p className="mb-3">{t('account.text')}</p>
                 <div className="flex gap-2">
-                  <Link to={`/register?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg bg-secondary text-white font-medium">Créer un compte</Link>
-                  <Link to={`/login?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg border border-secondary text-secondary font-medium">Se connecter</Link>
+                  <Link to={`/register?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg bg-secondary text-white font-medium">{t('account.register')}</Link>
+                  <Link to={`/login?redirect=${redirect}`} className="flex-1 text-center py-2 rounded-lg border border-secondary text-secondary font-medium">{t('account.login')}</Link>
                 </div>
               </div>
             )}
 
             {(project.tripId || project.destination) && (
               <button type="button" onClick={startNew} className="mt-4 w-full text-xs text-gray-500 hover:text-red-600">
-                Commencer un nouveau projet
+                {t('actions.new_project')}
               </button>
             )}
           </div>

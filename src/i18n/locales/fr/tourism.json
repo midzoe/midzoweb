@@ -1,0 +1,93 @@
+{
+  "hero": {
+    "title": "Composez votre voyage",
+    "text": "Choisissez une destination, vos dates et les services dont vous avez besoin : nous calculons le prix à la carte, le comparons à nos packages et vous conseillons l'offre la plus avantageuse."
+  },
+  "travelers": {
+    "title": "Vos voyageurs",
+    "subtitle": "La nationalité détermine les formalités (visa).",
+    "count": "Voyageurs"
+  },
+  "trip": {
+    "title": "Votre voyage",
+    "subtitle": "Destination, étapes, dates et envies.",
+    "destinations": "Destinations",
+    "destinations_hint": "Choisissez un ou plusieurs pays : ils forment votre itinéraire, dans l'ordre ci-dessous.",
+    "loading": "Chargement des destinations…",
+    "itinerary": "Votre itinéraire",
+    "cities_tbd": "villes à préciser",
+    "nights_in": "Nuits en {{country}}",
+    "nights_word": "nuits",
+    "nights_one": "{{count}} nuit",
+    "nights_other": "{{count}} nuits",
+    "move_up": "Monter {{country}}",
+    "move_down": "Descendre {{country}}",
+    "remove_stop": "Retirer {{country}} de l’itinéraire",
+    "nights_mismatch": "Les étapes totalisent {{planned}} pour {{total}} entre vos dates.",
+    "cities": "Villes / étapes",
+    "add_stop": "Ajouter une étape",
+    "add_city_placeholder": "Ajouter une ville (ex. Nairobi)",
+    "pick_destination_first": "Choisissez d’abord une destination",
+    "start": "Départ",
+    "end": "Retour",
+    "nights_on_site": "{{nights}} sur place",
+    "interests": "Envies"
+  },
+  "dates": {
+    "past": "La date de départ est passée.",
+    "order": "La date de retour précède la date de départ."
+  },
+  "missing": {
+    "destination": "la destination",
+    "start": "la date de départ"
+  },
+  "catalog": {
+    "pick_destination": "Choisissez une destination pour afficher les informations.",
+    "info_for": "Informations pour",
+    "select_destination": "Sélectionnez une destination à l'étape 2.",
+    "best_time": "Meilleure période",
+    "budget": "Budget sur place",
+    "per_day": "{{budget}} / jour",
+    "currency": "Monnaie",
+    "languages": "Langues",
+    "direct_flights": "Vols directs depuis",
+    "visa_need_nationality": "Indiquez la nationalité des voyageurs (étape 1).",
+    "visa_national": "Pas de visa nécessaire pour les ressortissants de ce pays.",
+    "visa_fallback": "Pas de fiche visa tourisme détaillée pour cet itinéraire. Repère général pour les voyageurs africains :",
+    "visa_check_embassy": "à vérifier auprès de l’ambassade",
+    "visa_delay": "délai : {{delay}}",
+    "nothing": "Rien de référencé pour {{country}} pour l'instant : le conseiller vous proposera des options.",
+    "stays": "Hébergements",
+    "restaurants": "Restaurants",
+    "sites": "Sites touristiques",
+    "programs": "Programmes (safari, sport…)",
+    "events": "Événements"
+  },
+  "services": {
+    "subtitle": "Prix à l'unité de la grille MIDZO, par dossier de voyage.",
+    "notes_placeholder": "Précisions pour le conseiller (budget, style de voyage, contraintes…)"
+  },
+  "price": {
+    "subtitle": "À la carte ou package Tourism : nous vous conseillons le moins cher."
+  },
+  "summary": {
+    "title": "Mon voyage",
+    "dates": "Dates"
+  },
+  "actions": {
+    "save_trip": "Enregistrer mon voyage",
+    "request": "Demander ce voyage",
+    "new_trip": "Composer un nouveau voyage"
+  },
+  "fb": {
+    "circuit_loaded": "Circuit « {{title}} » chargé : ajustez les dates, les étapes et les services.",
+    "not_found": "Ce voyage est introuvable dans votre compte.",
+    "load_error": "Impossible de charger ce voyage. Réessayez plus tard.",
+    "saved_device": "Voyage enregistré sur cet appareil. Créez un compte (ou connectez-vous) pour le retrouver partout et envoyer votre demande.",
+    "storage_blocked": "Votre navigateur bloque l'enregistrement local. Créez un compte pour sauvegarder votre voyage.",
+    "saved_account": "Voyage enregistré dans votre compte. Retrouvez-le dans votre dashboard.",
+    "login_to_send": "Pour envoyer une demande, connectez-vous ou créez un compte : votre voyage est conservé.",
+    "pick_service_send": "Choisissez au moins un service (ou la consultation) avant d’envoyer votre demande.",
+    "request_failed": "L'envoi de la demande a échoué. Votre voyage est enregistré ; réessayez dans un instant."
+  }
+}

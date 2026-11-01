@@ -17,11 +17,13 @@ import {
   BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
 import { formatMoney, useCurrency } from '../pricing/currency';
+import { useTierText } from '../pricing/tierText';
+import { countryName } from '../data/africanCountries';
 
 const HERO = {
-  fr: { a: 'Vivez votre', b: 'plus beau voyage', text: 'Safaris, villes, plages et grands événements : composez un voyage sur mesure, dans un ou plusieurs pays, avec un conseiller Midzo.', badge: 'Prix transparents : services à l’unité ou packages, calculés en ligne', plan: 'Composer mon voyage', circuits: 'Voir les circuits types', destinations: 'Nos destinations', destinationsText: 'Chaque destination a son guide : meilleure saison, budget sur place, visa et circuits.', guide: 'Lire le guide', explore: 'Explorez plus', reviewsTitle: 'Avis clients vérifiés', reviewsText: 'Les avis de nos clients ayant voyagé ou étudié avec Midzo, publiés après relecture.', reviewsCta: 'Lire les avis', circuitsTitle: 'Circuits types', circuitsText: 'Des itinéraires prêts à personnaliser, avec le prix de l’accompagnement calculé en ligne.', circuitsCta: 'Voir les circuits' },
-  en: { a: 'Live your', b: 'greatest journey', text: 'Safaris, cities, beaches and major events: build a tailor-made trip, in one or several countries, with a Midzo advisor.', badge: 'Transparent prices: single services or packages, calculated online', plan: 'Plan my trip', circuits: 'See sample tours', destinations: 'Our destinations', destinationsText: 'Each destination has its guide: best season, on-site budget, visa and tours.', guide: 'Read the guide', explore: 'Explore more', reviewsTitle: 'Verified customer reviews', reviewsText: 'Reviews from customers who travelled or studied with Midzo, published after checking.', reviewsCta: 'Read reviews', circuitsTitle: 'Sample tours', circuitsText: 'Ready-to-customise itineraries, with the support price calculated online.', circuitsCta: 'See tours' },
-  de: { a: 'Erleben Sie Ihre', b: 'schönste Reise', text: 'Safaris, Städte, Strände und große Events: Planen Sie eine individuelle Reise in einem oder mehreren Ländern, mit einem Midzo-Berater.', badge: 'Transparente Preise: Einzelleistungen oder Pakete, online berechnet', plan: 'Meine Reise planen', circuits: 'Beispielreisen ansehen', destinations: 'Unsere Reiseziele', destinationsText: 'Jedes Reiseziel hat seinen Reiseführer: beste Reisezeit, Budget vor Ort, Visum und Rundreisen.', guide: 'Zum Reiseführer', explore: 'Mehr entdecken', reviewsTitle: 'Geprüfte Kundenbewertungen', reviewsText: 'Bewertungen von Kunden, die mit Midzo gereist sind oder studiert haben – nach Prüfung veröffentlicht.', reviewsCta: 'Bewertungen lesen', circuitsTitle: 'Beispielreisen', circuitsText: 'Fertige Routen zum Anpassen, mit online berechnetem Begleitpreis.', circuitsCta: 'Rundreisen ansehen' },
+  fr: { a: 'Vivez votre', b: 'plus beau voyage', text: 'Safaris, villes, plages et grands événements : composez un voyage sur mesure, dans un ou plusieurs pays, avec un conseiller Midzo.', badge: 'Prix transparents : services à l’unité ou packages, calculés en ligne', plan: 'Composer mon voyage', circuits: 'Voir les circuits types', destinations: 'Nos destinations', destinationsText: 'Chaque destination a son guide : meilleure saison, budget sur place, visa et circuits.', guide: 'Lire le guide', explore: 'Explorez plus', reviewsTitle: 'Avis clients vérifiés', reviewsText: 'Les avis de nos clients ayant voyagé ou étudié avec Midzo, publiés après relecture.', reviewsCta: 'Lire les avis', circuitsTitle: 'Circuits types', circuitsText: 'Des itinéraires prêts à personnaliser, avec le prix de l’accompagnement calculé en ligne.', circuitsCta: 'Voir les circuits', back: "← Retour à Midzo", quizTitle: "Quel voyageur êtes-vous ?", quizText: "Découvrez l'expérience Midzo Tourism faite pour vous en 30 secondes.", q1t: "Aventurier d'événements", q1d: "Vivez les plus grands événements mondiaux", q2t: "Explorateur de nature", q2d: "Safari, grands espaces : découvrez l'Afrique sauvage", q3t: "Passionné de sport", q3d: "Marathons, Grand Chelem, votre sport préféré", q4t: "Voyageur simple", q4d: "Vol + hôtel, facile et à bon prix", tipLabel: "Conseil :", tip: "Pas sûr ? Composez votre voyage sur mesure.", tipCta: "Composer mon voyage", expTitle: "Choisissez votre expérience", expText: "Des plus grands événements mondiaux aux derniers coins sauvages de la Terre", discover: "Découvrir", tiersTitle: "Nos packages Tourism", tiersText: "Choisissez vos services : guide, restaurants, vols, événements, hébergement, itinéraire, guide local, accueil à l'aéroport…", tiersValue: "Pris séparément, les {n} services valent {value}.", tierCta: "Composer ce voyage", customCta: "Construire mon voyage personnalisé", news: "Inspiration & actualités", studyQ: "Besoin d'études ou de formation ?", studyTitle: "Retour à Midzo — Études & formations", studyCta: "← Retour à l’accueil Midzo" },
+  en: { a: 'Live your', b: 'greatest journey', text: 'Safaris, cities, beaches and major events: build a tailor-made trip, in one or several countries, with a Midzo advisor.', badge: 'Transparent prices: single services or packages, calculated online', plan: 'Plan my trip', circuits: 'See sample tours', destinations: 'Our destinations', destinationsText: 'Each destination has its guide: best season, on-site budget, visa and tours.', guide: 'Read the guide', explore: 'Explore more', reviewsTitle: 'Verified customer reviews', reviewsText: 'Reviews from customers who travelled or studied with Midzo, published after checking.', reviewsCta: 'Read reviews', circuitsTitle: 'Sample tours', circuitsText: 'Ready-to-customise itineraries, with the support price calculated online.', circuitsCta: 'See tours', back: "← Back to Midzo", quizTitle: "What kind of traveller are you?", quizText: "Find the Midzo Tourism experience made for you in 30 seconds.", q1t: "Event adventurer", q1d: "Live the world's biggest events", q2t: "Nature explorer", q2d: "Safari and wide open spaces: discover wild Africa", q3t: "Sports fan", q3d: "Marathons, Grand Slams, your favourite sport", q4t: "Simple traveller", q4d: "Flight + hotel, easy and affordable", tipLabel: "Tip:", tip: "Not sure? Build your own tailor-made trip.", tipCta: "Plan my trip", expTitle: "Choose your experience", expText: "From the world's biggest events to the last wild corners of the Earth", discover: "Discover", tiersTitle: "Our Tourism packages", tiersText: "Choose your services: guide, restaurants, flights, events, accommodation, itinerary, local guide, airport pick-up…", tiersValue: "Bought separately, the {n} services are worth {value}.", tierCta: "Plan this trip", customCta: "Build my tailor-made trip", news: "Inspiration & news", studyQ: "Looking to study or train?", studyTitle: "Back to Midzo — Study & training", studyCta: "← Back to the Midzo home page" },
+  de: { a: 'Erleben Sie Ihre', b: 'schönste Reise', text: 'Safaris, Städte, Strände und große Events: Planen Sie eine individuelle Reise in einem oder mehreren Ländern, mit einem Midzo-Berater.', badge: 'Transparente Preise: Einzelleistungen oder Pakete, online berechnet', plan: 'Meine Reise planen', circuits: 'Beispielreisen ansehen', destinations: 'Unsere Reiseziele', destinationsText: 'Jedes Reiseziel hat seinen Reiseführer: beste Reisezeit, Budget vor Ort, Visum und Rundreisen.', guide: 'Zum Reiseführer', explore: 'Mehr entdecken', reviewsTitle: 'Geprüfte Kundenbewertungen', reviewsText: 'Bewertungen von Kunden, die mit Midzo gereist sind oder studiert haben – nach Prüfung veröffentlicht.', reviewsCta: 'Bewertungen lesen', circuitsTitle: 'Beispielreisen', circuitsText: 'Fertige Routen zum Anpassen, mit online berechnetem Begleitpreis.', circuitsCta: 'Rundreisen ansehen', back: "← Zurück zu Midzo", quizTitle: "Welcher Reisetyp sind Sie?", quizText: "Finden Sie in 30 Sekunden das passende Midzo-Tourism-Erlebnis.", q1t: "Event-Abenteurer", q1d: "Erleben Sie die größten Events der Welt", q2t: "Naturentdecker", q2d: "Safari und Weite: Entdecken Sie das wilde Afrika", q3t: "Sportbegeistert", q3d: "Marathons, Grand Slams, Ihr Lieblingssport", q4t: "Einfach reisen", q4d: "Flug + Hotel, einfach und günstig", tipLabel: "Tipp:", tip: "Unsicher? Planen Sie Ihre individuelle Reise.", tipCta: "Meine Reise planen", expTitle: "Wählen Sie Ihr Erlebnis", expText: "Von den größten Events der Welt bis zu den letzten wilden Winkeln der Erde", discover: "Entdecken", tiersTitle: "Unsere Tourism-Pakete", tiersText: "Wählen Sie Ihre Leistungen: Reiseführer, Restaurants, Flüge, Events, Unterkunft, Route, lokaler Guide, Flughafenabholung…", tiersValue: "Einzeln gebucht sind die {n} Leistungen {value} wert.", tierCta: "Diese Reise planen", customCta: "Meine individuelle Reise planen", news: "Inspiration & Neuigkeiten", studyQ: "Studium oder Ausbildung geplant?", studyTitle: "Zurück zu Midzo — Studium & Ausbildung", studyCta: "← Zurück zur Midzo-Startseite" },
 };
 
 export const destinationSlug = (name: string) => name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
@@ -45,6 +47,8 @@ const TourismHome = () => {
   const { pricing } = usePricing();
   const tourismTiers = (pricing?.packages ?? []).filter(p => p.family === 'tourism');
   const tourismServicesValue = (pricing?.services ?? []).filter(sv => sv.family === 'tourism').reduce((n, sv) => n + sv.price_cents, 0);
+  const tourismServiceCount = (pricing?.services ?? []).filter(sv => sv.family === 'tourism').length;
+  const tierText = useTierText(pricing?.services);
 
   const getTitle = (item: NewsItem) =>
     lang === 'fr' ? item.titleFr : lang === 'de' ? item.titleDe : item.title;
@@ -79,7 +83,7 @@ const TourismHome = () => {
       <div className="bg-white border-b border-slate-100/50 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <Link to="/" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors duration-200">
-            ← Retour à Midzo
+            {hx.back}
           </Link>
         </div>
       </div>
@@ -97,7 +101,7 @@ const TourismHome = () => {
 
         <div className="relative h-full flex flex-col items-center justify-center text-center px-4">
           <div className="mb-6 inline-block bg-gold-500/15 border border-gold-400/40 rounded-full px-6 py-2 backdrop-blur-sm">
-            <span className="text-gold-300 font-semibold text-sm tracking-wide">✨ MIDZO TOURISM</span>
+            <span className="text-gold-300 font-semibold text-sm tracking-wide">MIDZO TOURISM</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 leading-tight tracking-tight">
@@ -139,18 +143,18 @@ const TourismHome = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-8 border border-slate-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-bold text-slate-900">Quel voyageur êtes-vous?</h2>
+              <h2 className="text-3xl font-bold text-slate-900">{hx.quizTitle}</h2>
               <button onClick={() => setShowQuiz(false)} className="text-xl text-slate-400 hover:text-slate-600 font-light">✕</button>
             </div>
 
-            <p className="text-slate-600 mb-8">Découvrez l'expérience Midzo Tourism parfaite pour vous en 30 secondes.</p>
+            <p className="text-slate-600 mb-8">{hx.quizText}</p>
 
             <div className="space-y-3">
               {[
-                { Icon: CalendarIcon, title: 'Aventurier d\'Événements', desc: 'Vivez les plus grands événements mondiaux', cta: '/services/tourism-events' },
-                { Icon: GlobeAltIcon, title: 'Explorateur de Nature', desc: 'Safari, wilderness, découvrez l\'Afrique vierge', cta: '/services/tourism-safari' },
-                { Icon: TrophyIcon, title: 'Passionné de Sport', desc: 'Marathons, Grand Slams, votre sport préféré', cta: '/services/tourism-sports' },
-                { Icon: PaperAirplaneIcon, title: 'Voyageur Simple', desc: 'Vol + hôtel, facile et à bon prix', cta: '/services/tourism-partners' }
+                { Icon: CalendarIcon, title: hx.q1t, desc: hx.q1d, cta: '/services/tourism-events' },
+                { Icon: GlobeAltIcon, title: hx.q2t, desc: hx.q2d, cta: '/services/tourism-safari' },
+                { Icon: TrophyIcon, title: hx.q3t, desc: hx.q3d, cta: '/services/tourism-sports' },
+                { Icon: PaperAirplaneIcon, title: hx.q4t, desc: hx.q4d, cta: '/services/tourism-partners' }
               ].map((type, i) => (
                 <Link
                   key={i}
@@ -170,9 +174,9 @@ const TourismHome = () => {
             </div>
 
             <div className="mt-8 p-4 bg-slate-50 border border-slate-200 rounded-lg">
-              <p className="text-sm text-slate-700"><strong>Conseil:</strong> Pas sûr? Utilisez notre Trip Builder pour customiser 100% votre voyage.</p>
+              <p className="text-sm text-slate-700"><strong>{hx.tipLabel}</strong> {hx.tip}</p>
               <Link to="/tourism/plan" className="inline-block mt-3 px-6 py-2 bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors duration-200">
-                Aller au Trip Builder
+                {hx.tipCta}
               </Link>
             </div>
           </div>
@@ -184,10 +188,10 @@ const TourismHome = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
-              Choisissez Votre Expérience
+              {hx.expTitle}
             </h2>
             <p className="text-xl text-slate-600 font-light">
-              Des plus grands événements mondiaux aux derniers coins sauvages de la Terre
+              {hx.expText}
             </p>
           </div>
 
@@ -215,7 +219,7 @@ const TourismHome = () => {
                       </div>
                       <p className="text-white/80 text-sm mb-4 font-light line-clamp-3">{cat.subline}</p>
                       <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-semibold group-hover:bg-white/30 transition-colors duration-200">
-                        Découvrir <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
+                        {hx.discover} <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
                       </div>
                     </div>
                   </div>
@@ -236,7 +240,7 @@ const TourismHome = () => {
               {destinations.map((d: any) => (
                 <Link key={d.id ?? d.name} to={`/destination/${destinationSlug(d.name)}`}
                   className="group rounded-xl bg-white border border-slate-200 p-4 hover:border-gold-400 hover:shadow transition">
-                  <p className="text-lg font-semibold text-slate-900">{d.flag} {lang === 'fr' ? (d.nameFr || d.name) : d.name}</p>
+                  <p className="text-lg font-semibold text-slate-900">{d.flag} {lang === 'fr' ? (d.nameFr || d.name) : countryName(d.name, lang, d.name)}</p>
                   {d.bestTime && <p className="text-xs text-slate-500 mt-1">{d.bestTime}</p>}
                   <span className="text-sm text-gold-700 font-medium mt-2 inline-block group-hover:translate-x-1 transition-transform">{hx.guide} →</span>
                 </Link>
@@ -250,10 +254,10 @@ const TourismHome = () => {
       <div className="py-24 bg-gradient-to-br from-gold-50 to-slate-50 border-y border-gold-200" data-testid="tourism-tiers">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-slate-900">Nos packages Tourism</h2>
+            <h2 className="text-4xl font-bold text-slate-900">{hx.tiersTitle}</h2>
             <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
-              Choisissez vos services : guide, restaurants, vols, événements, hébergement, itinéraire, guide local, accueil à l'aéroport…
-              {tourismServicesValue > 0 && ` Pris séparément, les 10 services valent ${formatMoney(tourismServicesValue)}.`}
+              {hx.tiersText}
+              {tourismServicesValue > 0 && ` ${hx.tiersValue.replace('{n}', String(tourismServiceCount)).replace('{value}', formatMoney(tourismServicesValue))}`}
             </p>
           </div>
 
@@ -261,16 +265,16 @@ const TourismHome = () => {
             {tourismTiers.map(tier => (
               <div key={tier.id} className="bg-white rounded-lg overflow-hidden shadow-sm border border-slate-100 p-6 flex flex-col">
                 <h3 className="font-semibold text-slate-900 text-lg">{tier.name}</h3>
-                <p className="text-sm text-slate-500 mb-4">{tier.service_label}</p>
+                <p className="text-sm text-slate-500 mb-4">{tierText(tier).label}</p>
                 <span className="text-3xl font-bold text-gold-600">{formatMoney(tier.price_from_cents, tier.currency)}</span>
                 <ul className="mt-4 space-y-1 text-sm text-slate-600 flex-1">
-                  {(tier.features ?? []).map(f => <li key={f}>• {f}</li>)}
+                  {tierText(tier).features.map(f => <li key={f}>• {f}</li>)}
                 </ul>
                 <Link
                   to={`/tourism/plan?package=${encodeURIComponent(tier.slug ?? '')}`}
                   className="mt-6 block text-center w-full py-3 bg-gold-500 hover:bg-gold-600 text-slate-900 font-semibold rounded-lg transition-colors duration-200"
                 >
-                  Composer ce voyage
+                  {hx.tierCta}
                 </Link>
               </div>
             ))}
@@ -281,7 +285,7 @@ const TourismHome = () => {
               to="/tourism/plan"
               className="inline-block px-8 py-4 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors duration-200"
             >
-              Construire Mon Voyage Personnalisé
+              {hx.customCta}
             </Link>
           </div>
         </div>
@@ -291,7 +295,7 @@ const TourismHome = () => {
       <div className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-4xl font-bold text-slate-900 mb-12 text-center tracking-tight">
-            Inspiration & Actualités
+            {hx.news}
           </h2>
 
           {newsLoading && (
@@ -357,13 +361,13 @@ const TourismHome = () => {
       {/* CTA Final — Back to Midzo */}
       <div className="py-20 bg-gradient-to-r from-slate-900 to-slate-800 text-white border-t border-slate-700">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="mb-4 text-slate-300 font-light">Besoin d'études ou formation?</p>
-          <h2 className="text-3xl font-bold mb-6 tracking-tight">Retour à Midzo — Études & Formations</h2>
+          <p className="mb-4 text-slate-300 font-light">{hx.studyQ}</p>
+          <h2 className="text-3xl font-bold mb-6 tracking-tight">{hx.studyTitle}</h2>
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-900 font-semibold rounded-lg hover:bg-slate-50 transition-colors duration-200"
           >
-            ← Retour à Midzo Principal
+            {hx.studyCta}
           </Link>
         </div>
       </div>

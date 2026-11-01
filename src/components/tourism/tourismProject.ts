@@ -121,10 +121,16 @@ export function stopsLabel(project: TourismProject, countryLabel?: string): stri
 }
 
 /** « Kenya (Nairobi, Masai Mara · 5 nuits) → Tanzanie (Zanzibar · 4 nuits) » */
-export function itineraryText(project: TourismProject): string {
+/**
+ * « Kenya (Nairobi · 3 nuits) → Rwanda ». Sans options : en français (message au conseiller) ;
+ * l'affichage passe le nom du pays et les nuits dans la langue du site.
+ */
+export function itineraryText(project: TourismProject, opts: { country?: (st: TourismStop) => string; nights?: (n: number) => string } = {}): string {
   return syncedStops(project).map(st => {
-    const details = [st.cities.join(', '), st.nights ? `${st.nights} nuit${st.nights > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
-    return details ? `${st.label} (${details})` : st.label;
+    const nights = st.nights ? (opts.nights ? opts.nights(st.nights) : `${st.nights} nuit${st.nights > 1 ? 's' : ''}`) : '';
+    const label = opts.country ? opts.country(st) : st.label;
+    const details = [st.cities.join(', '), nights].filter(Boolean).join(' · ');
+    return details ? `${label} (${details})` : label;
   }).join(' → ');
 }
 

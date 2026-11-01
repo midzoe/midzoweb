@@ -34,6 +34,8 @@ interface QuoteSnapshot {
   discount_cents?: number;
   total_cents?: number;
   currency?: string;
+  /** Consultation : créneau réservé (« samedi 8 novembre 2026 à 18:00, heure d'Allemagne (17:00 à Dakar) »). */
+  consultation_slot_label?: string;
 }
 
 interface PurchaseRow {
@@ -390,6 +392,9 @@ const AdminPayments: React.FC = () => {
                           {(row.installments ?? 1) > 1 ? ` · ${row.installments_paid ?? 0}/${row.installments} échéances` : ''}
                           {row.reference ? ` · réf. ${row.reference}` : ''}
                         </p>
+                        {row.quote?.consultation_slot_label && (
+                          <p className="text-xs font-medium text-stone-600">Rendez-vous : {row.quote.consultation_slot_label}</p>
+                        )}
                         {row.method && row.method !== 'stripe' && (row.installments_paid ?? 0) < (row.installments ?? 1) && (
                           <button type="button" onClick={() => addInstallment(row)} className="text-xs text-primary underline">+1 échéance reçue</button>
                         )}

@@ -1,0 +1,101 @@
+{
+  "hero": {
+    "title": "Plan your trip",
+    "text": "Choose a destination, your dates and the services you need: we calculate the à la carte price, compare it with our packages and recommend the best offer."
+  },
+  "travelers": {
+    "title": "Your travellers",
+    "subtitle": "Nationality determines the formalities (visa).",
+    "count": "Travellers"
+  },
+  "trip": {
+    "title": "Your trip",
+    "subtitle": "Destination, stops, dates and wishes.",
+    "destinations": "Destinations",
+    "destinations_hint": "Choose one or more countries: they form your itinerary, in the order below.",
+    "loading": "Loading destinations…",
+    "itinerary": "Your itinerary",
+    "cities_tbd": "cities to be decided",
+    "nights_in": "Nights in {{country}}",
+    "nights_word": "nights",
+    "nights_one": "{{count}} night",
+    "nights_other": "{{count}} nights",
+    "move_up": "Move {{country}} up",
+    "move_down": "Move {{country}} down",
+    "remove_stop": "Remove {{country}} from the itinerary",
+    "nights_mismatch": "The stops add up to {{planned}} for {{total}} between your dates.",
+    "cities": "Cities / stops",
+    "add_stop": "Add a stop",
+    "add_city_placeholder": "Add a city (e.g. Nairobi)",
+    "pick_destination_first": "Choose a destination first",
+    "start": "Departure",
+    "end": "Return",
+    "nights_on_site": "{{nights}} on site",
+    "interests": "Interests"
+  },
+  "dates": {
+    "past": "The departure date is in the past.",
+    "order": "The return date is before the departure date."
+  },
+  "missing": {
+    "destination": "the destination",
+    "start": "the departure date"
+  },
+  "catalog": {
+    "pick_destination": "Choose a destination to see the information.",
+    "info_for": "Information for",
+    "select_destination": "Select a destination in step 2.",
+    "best_time": "Best time to go",
+    "budget": "Budget on site",
+    "per_day": "{{budget}} / day",
+    "currency": "Currency",
+    "languages": "Languages",
+    "direct_flights": "Direct flights from",
+    "visa_need_nationality": "Enter the travellers’ nationality (step 1).",
+    "visa_national": "No visa needed for nationals of this country.",
+    "visa_fallback": "No detailed tourist visa sheet for this itinerary. General guide for African travellers:",
+    "visa_check_embassy": "check with the embassy",
+    "visa_delay": "processing time: {{delay}}",
+    "nothing": "Nothing listed for {{country}} yet: your advisor will suggest options.",
+    "stays": "Accommodation",
+    "restaurants": "Restaurants",
+    "sites": "Sights",
+    "programs": "Programmes (safari, sport…)",
+    "events": "Events"
+  },
+  "services": {
+    "subtitle": "Unit prices from the Midzo price list, per travel file.",
+    "notes_placeholder": "Notes for the advisor (budget, travel style, constraints…)"
+  },
+  "price": {
+    "subtitle": "À la carte or Tourism package: we recommend the cheapest."
+  },
+  "summary": {
+    "title": "My trip",
+    "dates": "Dates"
+  },
+  "actions": {
+    "save_trip": "Save my trip",
+    "request": "Request this trip",
+    "new_trip": "Plan a new trip"
+  },
+  "fb": {
+    "circuit_loaded": "Tour “{{title}}” loaded: adjust the dates, stops and services.",
+    "not_found": "This trip cannot be found in your account.",
+    "load_error": "This trip could not be loaded. Please try again later.",
+    "saved_device": "Trip saved on this device. Create an account (or log in) to find it anywhere and send your request.",
+    "storage_blocked": "Your browser blocks local storage. Create an account to save your trip.",
+    "saved_account": "Trip saved in your account. Find it in your dashboard.",
+    "login_to_send": "To send a request, log in or create an account: your trip is kept.",
+    "pick_service_send": "Choose at least one service (or the consultation) before sending your request.",
+    "request_failed": "Sending the request failed. Your trip is saved; please try again shortly."
+  },
+  "interests": {
+    "Safari & nature": "Safari & nature",
+    "Plage & détente": "Beach & relaxation",
+    "Culture & patrimoine": "Culture & heritage",
+    "Sport & événements": "Sport & events",
+    "Gastronomie": "Food & gastronomy",
+    "Shopping & ville": "Shopping & city"
+  }
+}

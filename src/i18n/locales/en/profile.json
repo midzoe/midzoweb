@@ -13,7 +13,8 @@
     "education": "Education",
     "occupation": "Occupation",
     "languages": "Languages",
-    "interests": "Interests"
+    "interests": "Interests",
+    "residence": "Country of residence"
   },
   "add_language": "Add Language",
   "add_interest": "Add Interest",
@@ -44,5 +45,8 @@
     "delete_text": "Your account, projects, trips, notifications and file are permanently deleted. Payments already made remain due under our terms.",
     "delete_button": "Permanently delete my account",
     "delete_confirm": "Permanently delete your account and all your data? This cannot be undone."
-  }
+  },
+  "premium_title": "Go Premium",
+  "premium_text": "Get automatic visa alerts, personalised recommendations and dedicated follow-up of your trips.",
+  "premium_cta": "Discover Premium"
 }

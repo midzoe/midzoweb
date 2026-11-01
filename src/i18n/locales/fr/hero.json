@@ -7,7 +7,7 @@
   "value_1_title": "Un conseiller dédié",
   "value_1_description": "Un conseiller suit votre dossier : chaque étape, chaque message et la prochaine action sont visibles dans votre espace.",
   "value_2_title": "Des prix publics",
-  "value_2_description": "Chaque service a un prix affiché ; le site calcule l’offre la moins chère et vous pouvez payer en 1, 3, 6 ou 12 fois.",
+  "value_2_description": "Chaque service a un prix affiché ; le site calcule l’offre la moins chère et vous pouvez payer en 1, 2 ou 3 fois.",
   "value_3_title": "Des informations vérifiées",
   "value_3_description": "Universités, visas, ambassades, logements : un catalogue tenu à jour, avec les liens officiels.",
   "journey_title": "Votre Voyage Mondial Commence Ici",
@@ -34,5 +34,12 @@
   "tourism_teaser_kicker": "Envie de voyager ?",
   "tourism_teaser_title": "Découvrez Midzo Tourism",
   "tourism_teaser_text": "Safaris, grandes villes, plages et événements : des circuits types à personnaliser et un voyage composé sur mesure.",
-  "tourism_teaser_cta": "Entrer dans Midzo Tourism"
+  "tourism_teaser_cta": "Entrer dans Midzo Tourism",
+  "orientation_title": "Orientation",
+  "orientation_text": "Besoin de conseils avant votre grand projet ? L’orientation vous guide dans les décisions clés — études, carrière ou business.",
+  "orientation_cta": "Découvrir l’orientation",
+  "orientation_paths": "3 parcours",
+  "orientation_school": "Orientation études",
+  "orientation_career": "Orientation carrière",
+  "orientation_training": "Orientation formation"
 }

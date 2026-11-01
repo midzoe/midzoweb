@@ -92,7 +92,7 @@ const RecordPaymentModal: React.FC<{ userId?: number; userLabel?: string; onClos
         <Field label="Offre réglée" required><TextInput aria-label="Offre réglée" value={label} onChange={e => setLabel(e.target.value)} placeholder="Ex. Study Plus" /></Field>
         <Field label="Paiement en">
           <Select aria-label="Nombre d’échéances" value={installments} onChange={e => setInstallments(Number(e.target.value))}>
-            {[1, 3, 6, 12].map(n => <option key={n} value={n}>{n === 1 ? '1 fois' : `${n} fois`}</option>)}
+            {[1, 2, 3].map(n => <option key={n} value={n}>{`${n} fois`}</option>)}
           </Select>
         </Field>
         <Field label="Montant total (€)" required><TextInput aria-label="Montant total" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} /></Field>

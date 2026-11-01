@@ -94,3 +94,45 @@ export const VISA_ORIGIN_COUNTRIES: CountryOption[] =
 export function isVisaOriginCountry(value: string): boolean {
   return VISA_ORIGIN_VALUES.has(value);
 }
+
+/**
+ * Code ISO des pays manipulés par les parcours (noms anglais en base) : sert à afficher
+ * le nom du pays dans la langue du site via `Intl.DisplayNames`.
+ */
+const ISO: Record<string, string> = {
+  'South Africa': 'ZA', Algeria: 'DZ', Angola: 'AO', Benin: 'BJ', Botswana: 'BW', 'Burkina Faso': 'BF', Burundi: 'BI',
+  Cameroon: 'CM', 'Cape Verde': 'CV', 'Central African Republic': 'CF', Comoros: 'KM', 'Republic of the Congo': 'CG',
+  'DR Congo': 'CD', "Côte d'Ivoire": 'CI', Djibouti: 'DJ', Egypt: 'EG', Eritrea: 'ER', Eswatini: 'SZ', Ethiopia: 'ET',
+  Gabon: 'GA', Gambia: 'GM', Ghana: 'GH', Guinea: 'GN', 'Guinea-Bissau': 'GW', 'Equatorial Guinea': 'GQ', Kenya: 'KE',
+  Lesotho: 'LS', Liberia: 'LR', Libya: 'LY', Madagascar: 'MG', Malawi: 'MW', Mali: 'ML', Morocco: 'MA', Mauritius: 'MU',
+  Mauritania: 'MR', Mozambique: 'MZ', Namibia: 'NA', Niger: 'NE', Nigeria: 'NG', Uganda: 'UG', Rwanda: 'RW',
+  'São Tomé and Príncipe': 'ST', Senegal: 'SN', Seychelles: 'SC', 'Sierra Leone': 'SL', Somalia: 'SO', Sudan: 'SD',
+  'South Sudan': 'SS', Tanzania: 'TZ', Chad: 'TD', Togo: 'TG', Tunisia: 'TN', Zambia: 'ZM', Zimbabwe: 'ZW',
+  Germany: 'DE', Belgium: 'BE', Canada: 'CA', China: 'CN', Spain: 'ES', 'United States': 'US', France: 'FR', Italy: 'IT',
+  Luxembourg: 'LU', Netherlands: 'NL', Portugal: 'PT', 'United Kingdom': 'GB', Sweden: 'SE', Switzerland: 'CH',
+  Austria: 'AT', Ireland: 'IE', Poland: 'PL', Czechia: 'CZ', 'Czech Republic': 'CZ', Hungary: 'HU', Finland: 'FI',
+  Denmark: 'DK', Norway: 'NO', Turkey: 'TR', Japan: 'JP', 'South Korea': 'KR', Australia: 'AU', Malta: 'MT',
+  Afghanistan: 'AF', Albania: 'AL', Argentina: 'AR', Armenia: 'AM', Azerbaijan: 'AZ', Bahrain: 'BH', Bangladesh: 'BD',
+  Belarus: 'BY', Bolivia: 'BO', Bosnia: 'BA', Brazil: 'BR', Bulgaria: 'BG', Cambodia: 'KH', Chile: 'CL', Colombia: 'CO',
+  Congo: 'CG', 'Costa Rica': 'CR', Croatia: 'HR', Cuba: 'CU', 'Dominican Republic': 'DO', Ecuador: 'EC', 'El Salvador': 'SV',
+  Georgia: 'GE', Greece: 'GR', Guatemala: 'GT', Haiti: 'HT', Honduras: 'HN', Iceland: 'IS', India: 'IN', Indonesia: 'ID',
+  Iran: 'IR', Iraq: 'IQ', Israel: 'IL', Jamaica: 'JM', Jordan: 'JO', Kazakhstan: 'KZ', Kosovo: 'XK', Kuwait: 'KW', Laos: 'LA',
+  Latvia: 'LV', Lebanon: 'LB', Lithuania: 'LT', Malaysia: 'MY', Mexico: 'MX', Moldova: 'MD', Mongolia: 'MN', Myanmar: 'MM',
+  Nepal: 'NP', 'New Zealand': 'NZ', Nicaragua: 'NI', 'North Korea': 'KP', Oman: 'OM', Pakistan: 'PK', Palestine: 'PS',
+  Panama: 'PA', Paraguay: 'PY', Peru: 'PE', Philippines: 'PH', Qatar: 'QA', Romania: 'RO', Russia: 'RU', 'Saudi Arabia': 'SA',
+  Serbia: 'RS', Singapore: 'SG', Slovakia: 'SK', Slovenia: 'SI', 'Sri Lanka': 'LK', Syria: 'SY', Taiwan: 'TW', Thailand: 'TH',
+  Ukraine: 'UA', 'United Arab Emirates': 'AE', Uruguay: 'UY', Uzbekistan: 'UZ', Venezuela: 'VE', Vietnam: 'VN', Yemen: 'YE',
+  'Ivory Coast': 'CI', Estonia: 'EE', Cyprus: 'CY',
+};
+
+/** Nom d'un pays (nom anglais en base) dans la langue demandée ; `fallback` sinon. */
+export function countryName(value: string, lang: string, fallback?: string): string {
+  const code = ISO[value];
+  if (code) {
+    try {
+      const name = new Intl.DisplayNames([lang], { type: 'region' }).of(code);
+      if (name && name !== code) return name;
+    } catch { /* navigateur sans Intl.DisplayNames */ }
+  }
+  return fallback ?? value;
+}

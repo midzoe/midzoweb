@@ -50,6 +50,7 @@ const navGroups: {
       { href: '/admin/client-trips', label: 'Dossiers clients', icon: BriefcaseIcon },
       { href: '/admin/reviews', label: 'Avis clients', icon: StarIcon },
       { href: '/admin/payments', label: 'Paiements', icon: CreditCardIcon },
+      { href: '/admin/consultations', label: 'Consultations', icon: CalendarDaysIcon },
       { href: '/admin/validation', label: 'File de validation', icon: ShieldCheckIcon },
     ],
   },

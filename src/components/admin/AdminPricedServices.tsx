@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AdminCRUD, { FieldDef } from './AdminCRUD';
+import { INSTALLMENTS } from '../../pricing/paymentRules';
 import { apiService } from '../../services/api';
 import { Card, PrimaryButton, TextInput } from './ui';
 
@@ -24,7 +25,6 @@ const toPayload = (data: any) => {
   return { ...rest, priceCents: Number.isFinite(euros) ? Math.round(euros * 100) : undefined };
 };
 
-const INSTALLMENTS = [1, 3, 6, 12];
 
 /** Services voyage : prix par dossier, N voyageurs inclus, +X % par voyageur supplémentaire. */
 const TravelerPolicy: React.FC = () => {
@@ -88,8 +88,8 @@ const PaymentDiscounts: React.FC = () => {
   return (
     <Card className="p-6 mt-8">
       <h2 className="font-display text-lg font-semibold text-stone-800">Remises selon le mode de paiement</h2>
-      <p className="text-sm text-stone-500 mt-1">Pourcentage appliqué au montant de l'offre (0 à 50 %).</p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+      <p className="text-sm text-stone-500 mt-1">Pourcentage appliqué au montant de l'offre (0 à 50 %), au premier achat du client seulement. Paiement en plusieurs fois impossible depuis l'Afrique.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
         {INSTALLMENTS.map(n => (
           <label key={n} className="text-sm text-stone-700">
             {n === 1 ? 'En 1 fois' : `En ${n} fois`} (%)

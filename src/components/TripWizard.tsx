@@ -994,7 +994,6 @@ const TripWizard: React.FC<TripWizardProps> = ({ isOpen, onClose, onSave }) => {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-primary">✨</span>
                   What should we call your trip?
                 </div>
               </label>

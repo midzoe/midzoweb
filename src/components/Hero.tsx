@@ -188,26 +188,26 @@ const Hero = () => {
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-8">
                 <div className="flex-1">
                   <div className="text-6xl md:text-7xl mb-6">🧭</div>
-                  <h3 className="text-3xl md:text-4xl font-bold mb-3">Orientation</h3>
+                  <h3 className="text-3xl md:text-4xl font-bold mb-3">{t('orientation_title')}</h3>
                   <p className="text-lg md:text-xl mb-8 text-purple-50 max-w-2xl">
-                    Besoin de conseils avant votre grand projet? Orientation vous guide à travers les décisions clés — études, carrière ou business.
+                    {t('orientation_text')}
                   </p>
 
                   <Link
                     to="/services#orientation"
                     className="inline-flex items-center gap-2 bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition"
                   >
-                    Découvrir l'Orientation <span>→</span>
+                    {t('orientation_cta')} <span>→</span>
                   </Link>
                 </div>
 
                 {/* Info box */}
                 <div className="bg-purple-500/20 backdrop-blur-sm rounded-xl p-6 md:p-8 text-center border border-purple-400/30 md:min-w-max">
-                  <p className="text-sm text-purple-100 mb-3 font-medium">3 Parcours</p>
+                  <p className="text-sm text-purple-100 mb-3 font-medium">{t('orientation_paths')}</p>
                   <ul className="space-y-2 text-sm text-purple-100">
-                    <li>🏫 Orientation École</li>
-                    <li>💼 Orientation Carrière</li>
-                    <li>📚 Orientation Formation</li>
+                    <li>🏫 {t('orientation_school')}</li>
+                    <li>💼 {t('orientation_career')}</li>
+                    <li>📚 {t('orientation_training')}</li>
                   </ul>
                 </div>
               </div>

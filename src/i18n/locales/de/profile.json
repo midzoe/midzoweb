@@ -13,7 +13,8 @@
     "education": "Bildung",
     "occupation": "Beruf",
     "languages": "Sprachen",
-    "interests": "Interessen"
+    "interests": "Interessen",
+    "residence": "Wohnsitzland"
   },
   "add_language": "Sprache Hinzufügen",
   "add_interest": "Interesse Hinzufügen",
@@ -44,5 +45,8 @@
     "delete_text": "Ihr Konto, Ihre Projekte, Reisen, Benachrichtigungen und Ihre Akte werden endgültig gelöscht. Bereits geleistete Zahlungen bleiben gemäß unseren Bedingungen geschuldet.",
     "delete_button": "Mein Konto endgültig löschen",
     "delete_confirm": "Ihr Konto und alle Ihre Daten endgültig löschen? Dies kann nicht rückgängig gemacht werden."
-  }
+  },
+  "premium_title": "Zu Premium wechseln",
+  "premium_text": "Erhalten Sie automatische Visumhinweise, persönliche Empfehlungen und eine eigene Betreuung Ihrer Reisen.",
+  "premium_cta": "Premium entdecken"
 }

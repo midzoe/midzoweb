@@ -7,7 +7,7 @@
   "value_1_title": "A dedicated advisor",
   "value_1_description": "An advisor follows your file: each step, each message and the next action are visible in your space.",
   "value_2_title": "Public prices",
-  "value_2_description": "Each service has a displayed price; the site finds the cheapest offer and you can pay in 1, 3, 6 or 12 instalments.",
+  "value_2_description": "Each service has a displayed price; the site finds the cheapest offer and you can pay in 1, 2 or 3 instalments.",
   "value_3_title": "Checked information",
   "value_3_description": "Universities, visas, embassies, housing: an up-to-date catalogue with official links.",
   "journey_title": "Your Global Journey Starts Here",
@@ -34,5 +34,12 @@
   "tourism_teaser_kicker": "Feel like travelling?",
   "tourism_teaser_title": "Discover Midzo Tourism",
   "tourism_teaser_text": "Safaris, big cities, beaches and events: sample tours to customise and tailor-made trips.",
-  "tourism_teaser_cta": "Enter Midzo Tourism"
+  "tourism_teaser_cta": "Enter Midzo Tourism",
+  "orientation_title": "Guidance",
+  "orientation_text": "Need advice before your big project? Our guidance helps you with the key decisions — study, career or business.",
+  "orientation_cta": "Discover guidance",
+  "orientation_paths": "3 paths",
+  "orientation_school": "Study guidance",
+  "orientation_career": "Career guidance",
+  "orientation_training": "Training guidance"
 }

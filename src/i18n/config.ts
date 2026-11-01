@@ -50,6 +50,18 @@ import packagesEN from './locales/en/packages.json';
 import packagesFR from './locales/fr/packages.json';
 import packagesDE from './locales/de/packages.json';
 
+import studyEN from './locales/en/study.json';
+import studyFR from './locales/fr/study.json';
+import studyDE from './locales/de/study.json';
+
+import tourismEN from './locales/en/tourism.json';
+import tourismFR from './locales/fr/tourism.json';
+import tourismDE from './locales/de/tourism.json';
+
+import uiEN from './locales/en/ui.json';
+import uiFR from './locales/fr/ui.json';
+import uiDE from './locales/de/ui.json';
+
 const resources = {
   en: {
     common: commonEN,
@@ -65,6 +77,9 @@ const resources = {
     profile: profileEN,
     premium: premiumEN,
     packages: packagesEN,
+    study: studyEN,
+    tourism: tourismEN,
+    ui: uiEN,
   },
   fr: {
     common: commonFR,
@@ -80,6 +95,9 @@ const resources = {
     profile: profileFR,
     premium: premiumFR,
     packages: packagesFR,
+    study: studyFR,
+    tourism: tourismFR,
+    ui: uiFR,
   },
   de: {
     common: commonDE,
@@ -95,6 +113,9 @@ const resources = {
     profile: profileDE,
     premium: premiumDE,
     packages: packagesDE,
+    study: studyDE,
+    tourism: tourismDE,
+    ui: uiDE,
   },
 };
 
@@ -106,7 +127,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'navbar', 'hero', 'footer', 'services', 'dashboard', 'forms', 'countries', 'about', 'contact', 'profile', 'premium', 'packages'],
+    ns: ['common', 'navbar', 'hero', 'footer', 'services', 'dashboard', 'forms', 'countries', 'about', 'contact', 'profile', 'premium', 'packages', 'study', 'tourism', 'ui'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

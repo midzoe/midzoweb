@@ -6,6 +6,7 @@ import { apiService } from '../services/api';
 import Newsletter from './Newsletter';
 import AccountSecurity from './AccountSecurity';
 import { ALL_COUNTRIES } from '../data/countryNames';
+import { countryName } from '../data/africanCountries';
 import {
   UserIcon,
   EnvelopeIcon,
@@ -45,7 +46,7 @@ const Profile: React.FC = () => {
 const ProfileContent: React.FC = () => {
   const { user: authUser, updateUserLocally } = useAuth();
   const user = authUser!;
-  const { t } = useTranslation('profile');
+  const { t, i18n } = useTranslation('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
@@ -213,26 +214,26 @@ const ProfileContent: React.FC = () => {
                           <select value={formData.nationality}
                             onChange={e => setFormData({ ...formData, nationality: e.target.value })}
                             className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                            <option value="">— Nationalité —</option>
-                            {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            <option value="">— {t('fields.nationality')} —</option>
+                            {ALL_COUNTRIES.map(c => <option key={c} value={c}>{countryName(c, i18n.language, c)}</option>)}
                           </select>
-                        ) : <span className="text-gray-900">{formData.nationality || '—'}</span>}
+                        ) : <span className="text-gray-900">{formData.nationality ? countryName(formData.nationality, i18n.language, formData.nationality) : '—'}</span>}
                       </div>
                     </div>
 
                     {/* Country of residence */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Pays de résidence</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('fields.residence')}</label>
                       <div className="mt-1 flex items-center">
                         <GlobeAltIcon className="h-5 w-5 text-gray-400 mr-2 shrink-0" />
                         {isEditing ? (
                           <select value={formData.country_of_residence}
                             onChange={e => setFormData({ ...formData, country_of_residence: e.target.value })}
                             className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                            <option value="">— Pays de résidence —</option>
-                            {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            <option value="">— {t('fields.residence')} —</option>
+                            {ALL_COUNTRIES.map(c => <option key={c} value={c}>{countryName(c, i18n.language, c)}</option>)}
                           </select>
-                        ) : <span className="text-gray-900">{formData.country_of_residence || '—'}</span>}
+                        ) : <span className="text-gray-900">{formData.country_of_residence ? countryName(formData.country_of_residence, i18n.language, formData.country_of_residence) : '—'}</span>}
                       </div>
                     </div>
                   </div>
@@ -337,12 +338,10 @@ const ProfileContent: React.FC = () => {
                 <StarIcon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold mb-1">Passez en Premium</h3>
-                <p className="text-white/90 text-sm mb-3">
-                  Accédez aux alertes visa automatiques, aux recommandations personnalisées et à un suivi dédié de vos voyages.
-                </p>
+                <h3 className="text-lg font-bold mb-1">{t('premium_title')}</h3>
+                <p className="text-white/90 text-sm mb-3">{t('premium_text')}</p>
                 <Link to="/packages" className="inline-block px-4 py-2 bg-white text-orange-600 font-semibold rounded-lg text-sm hover:bg-white/90">
-                  Découvrir Premium
+                  {t('premium_cta')}
                 </Link>
               </div>
             </div>

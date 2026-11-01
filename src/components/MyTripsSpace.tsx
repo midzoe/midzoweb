@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -23,30 +24,28 @@ interface Readiness { ready: boolean; done: number; total: number; missing: { ki
 
 const SERVICE_TYPES = ['flight', 'accommodation', 'visa', 'insurance', 'bank', 'language'];
 
+/** Libellé enregistré avec le service (en français, comme le reste du dossier côté conseiller). */
 const SERVICE_LABELS: Record<string, string> = {
   flight: 'Vol', accommodation: 'Logement', visa: 'Visa', insurance: 'Assurance', bank: 'Compte bancaire', language: 'Cours de langue',
-};
-const STATUS_LABELS: Record<string, string> = {
-  planning: 'En préparation', upcoming: 'À venir', ongoing: 'En cours', completed: 'Terminé',
 };
 // Fiches de projet enregistrées par les parcours Études / Tourisme : du JSON, pas une prestation.
 const RECORD_LABELS: Record<string, string> = { study_project: 'Projet d’études', tourism_project: 'Projet de voyage' };
 
-const statusLabel = (s: string) => STATUS_LABELS[s] ?? s;
 const visibleServices = (t: Trip) => (t.services || []).filter(s => !RECORD_LABELS[s.type] && s.status !== 'cancelled');
-const projectKind = (t: Trip) => (t.services || []).map(s => RECORD_LABELS[s.type]).find(Boolean);
+const projectKind = (t: Trip) => (t.services || []).map(s => (RECORD_LABELS[s.type] ? s.type : null)).find(Boolean);
 
 const MyTripsSpace: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation('ui');
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-3xl mx-auto px-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Mon espace voyage</h1>
-          <p className="text-gray-500 mt-2">Connectez-vous pour créer vos voyages, suivre vos services et votre checklist de départ.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('trips.title')}</h1>
+          <p className="text-gray-500 mt-2">{t('trips.login_text')}</p>
           <div className="flex justify-center gap-3 mt-6">
-            <Link to="/login?redirect=%2Fmy-trips" className="px-5 py-2.5 rounded-xl border border-primary text-primary font-medium">Se connecter</Link>
-            <Link to="/register?redirect=%2Fmy-trips" className="px-5 py-2.5 rounded-xl bg-primary text-white font-medium">Créer un compte</Link>
+            <Link to="/login?redirect=%2Fmy-trips" className="px-5 py-2.5 rounded-xl border border-primary text-primary font-medium">{t('study:account.login')}</Link>
+            <Link to="/register?redirect=%2Fmy-trips" className="px-5 py-2.5 rounded-xl bg-primary text-white font-medium">{t('study:account.register')}</Link>
           </div>
         </div>
       </div>
@@ -56,6 +55,10 @@ const MyTripsSpace: React.FC = () => {
 };
 
 const TripSpace: React.FC = () => {
+  const { t, i18n } = useTranslation('ui');
+  const statusLabel = (s: string) => t(`trips.status_${s}`, { defaultValue: s });
+  const serviceTypeLabel = (type: string) => t(`trips.service_${type}`, { defaultValue: SERVICE_LABELS[type] ?? type });
+  const date = (iso: string) => new Date(iso).toLocaleDateString(i18n.language);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [history, setHistory] = useState<Trip[]>([]);
   const [nextTrip, setNextTrip] = useState<Trip | null>(null);
@@ -129,56 +132,56 @@ const TripSpace: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        <h1 className="text-4xl font-bold text-primary">Mon espace voyage</h1>
+        <h1 className="text-4xl font-bold text-primary">{t('trips.title')}</h1>
 
         {/* 7.7 — Prochain départ */}
         <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">Prochain départ</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">{t('trips.next')}</h2>
           {nextTrip ? (
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-primary">{nextTrip.title}</p>
                 <p className="text-sm text-gray-500">
-                  {nextTrip.startDate ? new Date(nextTrip.startDate).toLocaleDateString() : '—'} ·{' '}
+                  {nextTrip.startDate ? date(nextTrip.startDate) : '—'} ·{' '}
                   {(nextTrip.destinations || []).map(d => d.city || d.country).join(' → ')}
                 </p>
               </div>
-              <button onClick={() => openTrip(nextTrip.id)} className="text-sm bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">Ouvrir</button>
+              <button onClick={() => openTrip(nextTrip.id)} className="text-sm bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">{t('trips.open')}</button>
             </div>
-          ) : <p className="text-gray-500">Aucun départ à venir. Créez un voyage ci-dessous.</p>}
+          ) : <p className="text-gray-500">{t('trips.no_next')}</p>}
         </section>
 
         {/* 7.8 — Assistant : nouveau trip multi-destination */}
         <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Nouveau voyage</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">{t('trips.new')}</h2>
           <div className="grid md:grid-cols-2 gap-4 mb-4">
-            <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Titre du voyage" className="border-gray-300 rounded-md" />
+            <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder={t('trips.trip_title')} className="border-gray-300 rounded-md" />
             <input type="date" value={newStart} onChange={e => setNewStart(e.target.value)} className="border-gray-300 rounded-md" />
           </div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Destinations</p>
+          <p className="text-sm font-medium text-gray-700 mb-2">{t('tourism:trip.destinations')}</p>
           {newDests.map((d, i) => (
             <div key={i} className="grid grid-cols-2 gap-3 mb-2">
-              <input value={d.country} onChange={e => { const c = [...newDests]; c[i] = { ...c[i], country: e.target.value }; setNewDests(c); }} placeholder="Pays" className="border-gray-300 rounded-md" />
-              <input value={d.city ?? ''} onChange={e => { const c = [...newDests]; c[i] = { ...c[i], city: e.target.value }; setNewDests(c); }} placeholder="Ville" className="border-gray-300 rounded-md" />
+              <input value={d.country} onChange={e => { const c = [...newDests]; c[i] = { ...c[i], country: e.target.value }; setNewDests(c); }} placeholder={t('lc.country')} className="border-gray-300 rounded-md" />
+              <input value={d.city ?? ''} onChange={e => { const c = [...newDests]; c[i] = { ...c[i], city: e.target.value }; setNewDests(c); }} placeholder={t('lc.city')} className="border-gray-300 rounded-md" />
             </div>
           ))}
           <div className="flex gap-3 mt-3">
-            <button onClick={() => setNewDests([...newDests, { country: '', city: '' }])} className="text-sm text-primary border border-primary px-3 py-1.5 rounded-md">+ Destination</button>
-            <button onClick={createTrip} className="text-sm bg-primary text-white px-4 py-1.5 rounded-md hover:bg-primary/90">Créer le voyage</button>
+            <button onClick={() => setNewDests([...newDests, { country: '', city: '' }])} className="text-sm text-primary border border-primary px-3 py-1.5 rounded-md">+ {t('trips.destination')}</button>
+            <button onClick={createTrip} className="text-sm bg-primary text-white px-4 py-1.5 rounded-md hover:bg-primary/90">{t('trips.create')}</button>
           </div>
         </section>
 
         {/* Mes voyages */}
         <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Mes voyages</h2>
-          {loading ? <p className="text-gray-500">Chargement…</p> : (
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">{t('trips.mine')}</h2>
+          {loading ? <p className="text-gray-500">{t('trips.loading')}</p> : (
             <div className="grid md:grid-cols-2 gap-4">
               {trips.length ? trips.map(tr => (
                 <button key={tr.id} onClick={() => openTrip(tr.id)} className={`text-left border rounded-lg p-4 hover:shadow ${selected?.id === tr.id ? 'border-primary ring-1 ring-primary' : 'border-gray-200'}`}>
                   <p className="font-medium text-primary">{tr.title}</p>
                   <p className="text-sm text-gray-500">{statusLabel(tr.status)} · {(tr.destinations || []).map(d => d.city || d.country).join(' → ')}</p>
                 </button>
-              )) : <p className="text-gray-500">Aucun voyage pour l'instant.</p>}
+              )) : <p className="text-gray-500">{t('trips.none')}</p>}
             </div>
           )}
         </section>
@@ -189,25 +192,25 @@ const TripSpace: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">{selected.title}</h2>
-                {selected.createdByAdminId && <p className="text-xs text-emerald-700 mt-1">Préparé par votre conseiller MIDZO</p>}
+                {selected.createdByAdminId && <p className="text-xs text-emerald-700 mt-1">{t('trips.by_advisor')}</p>}
                 {projectKind(selected) && (
                   <p className="text-xs text-gray-500 mt-1">
-                    {projectKind(selected)} — à modifier depuis votre <Link to="/dashboard" className="text-primary underline">dashboard</Link>.
+                    {t(`trips.record_${projectKind(selected)}`)} — {t('trips.edit_from')} <Link to="/dashboard" className="text-primary underline">dashboard</Link>.
                   </p>
                 )}
               </div>
               <button onClick={async () => {
-                if (!window.confirm(`Supprimer « ${selected.title} » et tous ses services ? Cette action est définitive.`)) return;
+                if (!window.confirm(t('trips.delete_confirm', { title: selected.title }))) return;
                 await apiService.deleteTrip(selected.id); setSelected(null); await loadAll();
-              }} className="text-sm text-red-600">Supprimer</button>
+              }} className="text-sm text-red-600">{t('projects.delete')}</button>
             </div>
 
             {/* Services dynamiques */}
             <div className="mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-2">Services</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t('projects.services')}</p>
               <div className="flex flex-wrap gap-2 mb-3">
                 {SERVICE_TYPES.map(tp => (
-                  <button key={tp} onClick={() => addService(tp)} className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full">+ {SERVICE_LABELS[tp]}</button>
+                  <button key={tp} onClick={() => addService(tp)} className="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full">+ {serviceTypeLabel(tp)}</button>
                 ))}
               </div>
               <div className="space-y-2">
@@ -215,9 +218,9 @@ const TripSpace: React.FC = () => {
                   <label key={svc.id} className="flex items-center gap-3 text-sm">
                     <input type="checkbox" checked={svc.status === 'done'} onChange={() => toggleService(svc)} />
                     <span className={svc.status === 'done' ? 'line-through text-gray-400' : ''}>{svc.label}</span>
-                    {svc.status === 'in_progress' && <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">en cours</span>}
+                    {svc.status === 'in_progress' && <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">{t('trips.in_progress')}</span>}
                     {svc.note && <span className="text-xs text-gray-600 italic" data-testid="service-note">— {svc.note}</span>}
-                    {svc.documentUrl && <a href={svc.documentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">document</a>}
+                    {svc.documentUrl && <a href={svc.documentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">{t('trips.document')}</a>}
                   </label>
                 ))}
               </div>
@@ -226,10 +229,10 @@ const TripSpace: React.FC = () => {
             {/* 7.9 — Checklist « prêt avant départ » */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-700">Checklist de préparation</p>
+                <p className="text-sm font-medium text-gray-700">{t('trips.checklist')}</p>
                 {readiness && (
                   <span className={`text-xs px-2 py-1 rounded-full ${readiness.ready ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {readiness.ready ? 'Tout est prêt ✓' : `${readiness.done}/${readiness.total} prêt`}
+                    {readiness.ready ? `${t('trips.all_ready')} ✓` : t('trips.ready_count', { done: readiness.done, total: readiness.total })}
                   </span>
                 )}
               </div>
@@ -247,8 +250,8 @@ const TripSpace: React.FC = () => {
                 ))}
               </div>
               <div className="flex gap-2">
-                <input value={newItemLabel} onChange={e => setNewItemLabel(e.target.value)} placeholder="Nouvel élément…" className="flex-1 border-gray-300 rounded-md text-sm" />
-                <button onClick={async () => { await addChecklist(newItemLabel); setNewItemLabel(''); }} className="text-sm bg-primary text-white px-3 py-1.5 rounded-md">Ajouter</button>
+                <input value={newItemLabel} onChange={e => setNewItemLabel(e.target.value)} placeholder={t('trips.new_item')} className="flex-1 border-gray-300 rounded-md text-sm" />
+                <button onClick={async () => { await addChecklist(newItemLabel); setNewItemLabel(''); }} className="text-sm bg-primary text-white px-3 py-1.5 rounded-md">{t('study:common.add')}</button>
               </div>
             </div>
           </section>
@@ -257,21 +260,21 @@ const TripSpace: React.FC = () => {
         {/* 7.6/7.7 — Historique + activités récentes */}
         <div className="grid md:grid-cols-2 gap-6">
           <section className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Historique de voyage</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">{t('trips.history')}</h2>
             {history.length ? history.map(tr => (
               <div key={tr.id} className="border-b border-gray-100 py-2 text-sm">
                 <span className="font-medium">{tr.title}</span>
-                <span className="text-gray-400"> · {tr.endDate ? new Date(tr.endDate).toLocaleDateString() : '—'}</span>
+                <span className="text-gray-400"> · {tr.endDate ? date(tr.endDate) : '—'}</span>
               </div>
-            )) : <p className="text-gray-500 text-sm">Aucun voyage passé.</p>}
+            )) : <p className="text-gray-500 text-sm">{t('trips.no_history')}</p>}
           </section>
           <section className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Activités récentes</h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">{t('trips.activities')}</h2>
             {activities.length ? activities.slice(0, 8).map((a, i) => (
               <div key={i} className="border-b border-gray-100 py-2 text-sm text-gray-600">
                 {a.label} <span className="text-gray-400">· {a.tripTitle}</span>
               </div>
-            )) : <p className="text-gray-500 text-sm">Aucune activité récente.</p>}
+            )) : <p className="text-gray-500 text-sm">{t('trips.no_activities')}</p>}
           </section>
         </div>
       </div>

@@ -7,7 +7,7 @@
   "value_1_title": "Ein persönlicher Berater",
   "value_1_description": "Ein Berater betreut Ihre Akte: jeder Schritt, jede Nachricht und die nächste Aktion sind in Ihrem Bereich sichtbar.",
   "value_2_title": "Öffentliche Preise",
-  "value_2_description": "Jede Leistung hat einen angezeigten Preis; die Website findet das günstigste Angebot, Zahlung in 1, 3, 6 oder 12 Raten.",
+  "value_2_description": "Jede Leistung hat einen angezeigten Preis; die Website findet das günstigste Angebot, Zahlung in 1, 2 oder 3 Raten.",
   "value_3_title": "Geprüfte Informationen",
   "value_3_description": "Universitäten, Visa, Botschaften, Unterkünfte: ein aktueller Katalog mit offiziellen Links.",
   "journey_title": "Ihre Globale Reise Beginnt Hier",
@@ -34,5 +34,12 @@
   "tourism_teaser_kicker": "Lust auf Reisen?",
   "tourism_teaser_title": "Midzo Tourism entdecken",
   "tourism_teaser_text": "Safaris, Metropolen, Strände und Events: Beispielreisen zum Anpassen und individuelle Reisen.",
-  "tourism_teaser_cta": "Zu Midzo Tourism"
+  "tourism_teaser_cta": "Zu Midzo Tourism",
+  "orientation_title": "Orientierung",
+  "orientation_text": "Brauchen Sie Rat vor Ihrem großen Projekt? Unsere Orientierung begleitet Sie bei den wichtigen Entscheidungen — Studium, Karriere oder Business.",
+  "orientation_cta": "Orientierung entdecken",
+  "orientation_paths": "3 Wege",
+  "orientation_school": "Studienorientierung",
+  "orientation_career": "Karriereorientierung",
+  "orientation_training": "Ausbildungsorientierung"
 }

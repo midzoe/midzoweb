@@ -13,6 +13,7 @@ function fetchPricing(): Promise<PricingData> {
       services: r?.services ?? [],
       packages: r?.packages ?? [],
       payment_options: r?.payment_options ?? [],
+      traveler_policy: r?.traveler_policy,
     })).catch(err => {
       cache = null; // une panne ne doit pas figer la page : on réessaiera au prochain montage
       throw err;

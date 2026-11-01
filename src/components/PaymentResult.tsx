@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +19,7 @@ interface Confirmed {
 /** Retour de Stripe : /payment/success?session_id=… (confirmation serveur) ou /payment/cancel. */
 const PaymentResult: React.FC<{ outcome: 'success' | 'cancel' }> = ({ outcome }) => {
   useCurrency();
+  const { t } = useTranslation('ui');
   const [params] = useSearchParams();
   const { user } = useAuth();
   const [state, setState] = useState<'loading' | 'paid' | 'pending' | 'error'>(outcome === 'success' ? 'loading' : 'error');
@@ -47,36 +49,36 @@ const PaymentResult: React.FC<{ outcome: 'success' | 'cancel' }> = ({ outcome })
 
   if (outcome === 'cancel') {
     return (
-      <Shell icon={<XCircleIcon className="h-12 w-12 text-gray-400" />} title="Paiement annulé">
-        <p>Aucun montant n’a été débité. Votre projet reste enregistré : vous pouvez payer plus tard ou demander un accompagnement.</p>
+      <Shell icon={<XCircleIcon className="h-12 w-12 text-gray-400" />} title={t('pay.cancel_title')}>
+        <p>{t('pay.cancel_text')}</p>
         <Actions />
       </Shell>
     );
   }
-  if (state === 'loading') return <Shell title="Confirmation du paiement…"><p>Nous vérifions votre paiement auprès de Stripe.</p></Shell>;
+  if (state === 'loading') return <Shell title={t('pay.loading_title')}><p>{t('pay.loading_text')}</p></Shell>;
   if (state === 'error') {
     return (
-      <Shell icon={<XCircleIcon className="h-12 w-12 text-red-400" />} title="Paiement introuvable">
-        <p>{user ? 'Nous n’avons pas pu vérifier ce paiement. S’il a été débité, il apparaîtra dans votre dashboard d’ici quelques minutes.' : 'Connectez-vous pour voir la confirmation de votre paiement.'}</p>
+      <Shell icon={<XCircleIcon className="h-12 w-12 text-red-400" />} title={t('pay.error_title')}>
+        <p>{user ? t('pay.error_text') : t('pay.error_login')}</p>
         <Actions />
       </Shell>
     );
   }
   const plan = purchase && purchase.installments > 1
-    ? `${purchase.installments} échéances de ${formatMoney(Math.round(purchase.amount_cents / purchase.installments), purchase.currency)} (1re réglée)`
+    ? t('pay.plan', { count: purchase.installments, amount: formatMoney(Math.round(purchase.amount_cents / purchase.installments), purchase.currency) })
     : null;
   return (
-    <Shell icon={<CheckCircleIcon className="h-12 w-12 text-emerald-500" />} title={state === 'paid' ? 'Paiement confirmé' : 'Paiement en cours de confirmation'}>
+    <Shell icon={<CheckCircleIcon className="h-12 w-12 text-emerald-500" />} title={state === 'paid' ? t('pay.paid_title') : t('pay.pending_title')}>
       {purchase && (
         <dl className="text-sm text-left bg-gray-50 rounded-xl p-4 space-y-1 my-4" data-testid="payment-summary">
-          <div className="flex justify-between gap-4"><dt className="text-gray-500">Offre</dt><dd className="font-medium">{purchase.offer_label ?? '—'}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-gray-500">Montant</dt><dd className="font-medium">{formatMoney(purchase.amount_cents, purchase.currency)}</dd></div>
-          {plan && <div className="flex justify-between gap-4"><dt className="text-gray-500">Paiement</dt><dd className="font-medium">{plan}</dd></div>}
+          <div className="flex justify-between gap-4"><dt className="text-gray-500">{t('pay.offer')}</dt><dd className="font-medium">{purchase.offer_label ?? '—'}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-gray-500">{t('pay.amount')}</dt><dd className="font-medium">{formatMoney(purchase.amount_cents, purchase.currency)}</dd></div>
+          {plan && <div className="flex justify-between gap-4"><dt className="text-gray-500">{t('pay.payment')}</dt><dd className="font-medium">{plan}</dd></div>}
         </dl>
       )}
       <p>{state === 'paid'
-        ? 'Votre dossier est ouvert : un conseiller MIDZO vous contacte et suit chaque étape. Vous recevez aussi un email de confirmation.'
-        : 'Stripe finalise la transaction : elle apparaîtra dans votre dashboard d’ici quelques minutes.'}</p>
+        ? t('pay.paid_text')
+        : t('pay.pending_text')}</p>
       <Actions />
     </Shell>
   );
@@ -92,11 +94,14 @@ const Shell: React.FC<{ icon?: React.ReactNode; title: string; children: React.R
   </div>
 );
 
-const Actions = () => (
-  <div className="flex flex-wrap justify-center gap-3 mt-6">
-    <Link to="/dashboard" className="px-5 py-2.5 rounded-xl bg-primary text-white font-medium">Mon dashboard</Link>
-    <Link to="/contact" className="px-5 py-2.5 rounded-xl border border-primary text-primary font-medium">Contacter un conseiller</Link>
-  </div>
-);
+const Actions = () => {
+  const { t } = useTranslation('ui');
+  return (
+    <div className="flex flex-wrap justify-center gap-3 mt-6">
+      <Link to="/dashboard" className="px-5 py-2.5 rounded-xl bg-primary text-white font-medium">{t('pay.dashboard')}</Link>
+      <Link to="/contact" className="px-5 py-2.5 rounded-xl border border-primary text-primary font-medium">{t('pay.contact')}</Link>
+    </div>
+  );
+};
 
 export default PaymentResult;

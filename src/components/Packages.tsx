@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  AcademicCapIcon, SunIcon, SparklesIcon, CheckIcon, ArrowRightIcon,
+  AcademicCapIcon, SunIcon, AdjustmentsHorizontalIcon, CheckIcon, ArrowRightIcon,
   DocumentCheckIcon, BuildingLibraryIcon, ChatBubbleLeftRightIcon, HomeIcon,
   PaperAirplaneIcon, HomeModernIcon, MapIcon, UserGroupIcon,
   ShieldCheckIcon, LifebuoyIcon, GlobeAltIcon, Squares2X2Icon, HeartIcon,
@@ -10,7 +10,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { goToCheckout } from '../pricing/checkout';
+import { goToCheckout, loginToPayHref, RESUME_PAY_PARAM } from '../pricing/checkout';
+import ConsultationSlotPicker from '../pricing/ConsultationSlotPicker';
+import { useTierText } from '../pricing/tierText';
+import { useServiceName } from '../pricing/PricingStep';
+import { INSTALLMENTS } from '../pricing/paymentRules';
 import TermsCheckbox from './legal/TermsCheckbox';
 import { usePricing } from '../pricing/usePricing';
 import { paymentPlan } from '../pricing/pricingEngine';
@@ -123,7 +127,7 @@ const TRUST = [
   { icon: ShieldCheckIcon, key: 'trust_security' },
   { icon: LifebuoyIcon, key: 'trust_support' },
   { icon: GlobeAltIcon, key: 'trust_network' },
-  { icon: SparklesIcon, key: 'trust_flexible' },
+  { icon: AdjustmentsHorizontalIcon, key: 'trust_flexible' },
   { icon: HeartIcon, key: 'trust_mission' },
 ];
 
@@ -144,6 +148,9 @@ function formatPrice(cents: number, currency: string, locale: string): string {
     return `${(cents / 100).toFixed(hasCents ? 2 : 0)} ${currency}`;
   }
 }
+
+/** Créneau de consultation choisi, gardé le temps d'une connexion. */
+const SLOT_KEY = 'midzo_consultation_slot';
 
 const Packages: React.FC = () => {
   useCurrency();
@@ -188,16 +195,36 @@ const Packages: React.FC = () => {
   }, []);
 
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [payingConsultation, setPayingConsultation] = useState(false);
   const [payError, setPayError] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
-  // Consultation : seule offre réglable directement depuis la grille (sans sélection de services).
-  const payConsultation = async () => {
+  const [slot, setSlot] = useState<string | null>(() => {
+    try { return localStorage.getItem(SLOT_KEY); } catch { return null; }
+  });
+  const chooseSlot = (value: string | null) => {
+    setSlot(value);
+    try { if (value) localStorage.setItem(SLOT_KEY, value); else localStorage.removeItem(SLOT_KEY); } catch { /* stockage bloqué */ }
+  };
+  // Consultation : seule offre réglable directement depuis la grille (sans sélection de services),
+  // sur un créneau choisi. Sans compte : connexion, puis retour ici et reprise du paiement.
+  const payConsultation = async (termsAccepted = acceptTerms) => {
+    if (!user) { navigate(loginToPayHref('/packages')); return; }
     setPayingConsultation(true);
     setPayError('');
-    const error = await goToCheckout({ codes: [], offerId: 'consultation', installments: 1, acceptTerms });
+    const error = await goToCheckout({ codes: [], offerId: 'consultation', installments: 1, consultationSlot: slot, acceptTerms: termsAccepted });
     if (error) { setPayError(error); setPayingConsultation(false); }
   };
+  useEffect(() => {
+    if (searchParams.get(RESUME_PAY_PARAM) !== '1' || !user || !slot) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete(RESUME_PAY_PARAM);
+    setSearchParams(next, { replace: true });
+    setAcceptTerms(true);
+    payConsultation(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, searchParams]);
 
   const byFamily = useMemo(() => {
     const groups: Record<string, ShowcasePackage[]> = { study: [], tourism: [], mix: [], consultation: [] };
@@ -213,6 +240,8 @@ const Packages: React.FC = () => {
 
   const priceOf = (p: ShowcasePackage) => formatPrice(p.price_from_cents, p.currency, i18n.language) + (localEquivalent(p.price_from_cents) ? ` (${localEquivalent(p.price_from_cents)})` : '');
   const { pricing } = usePricing();
+  const tierText = useTierText(pricing?.services);
+  const serviceName = useServiceName();
   const paymentExample = packages.find(p => p.slug === 'mix-xxl') ?? packages.find(p => p.family !== 'consultation');
 
   /**
@@ -384,15 +413,15 @@ const Packages: React.FC = () => {
                     )}
 
                     <h3 className="font-display text-2xl font-semibold text-stone-900">{p.name}</h3>
-                    {p.service_label && (
+                    {tierText(p).label && (
                       <p className={`mt-1.5 text-xs font-semibold uppercase tracking-[0.14em] ${theme.softText}`}>
-                        {p.service_label}
+                        {tierText(p).label}
                       </p>
                     )}
-                    {p.tagline && <p className="mt-3 text-sm leading-relaxed text-stone-500">{p.tagline}</p>}
+                    {tierText(p).tagline && <p className="mt-3 text-sm leading-relaxed text-stone-500">{tierText(p).tagline}</p>}
 
                     <ul className="mt-5 space-y-2.5 border-t border-stone-100 pt-5">
-                      {p.features.map(feature => (
+                      {tierText(p).features.map(feature => (
                         <li key={feature} className="flex items-start gap-2 text-sm text-stone-700">
                           <CheckIcon className={`mt-0.5 h-4 w-4 shrink-0 ${theme.text}`} />
                           <span className="leading-snug">{feature}</span>
@@ -441,8 +470,8 @@ const Packages: React.FC = () => {
         {/* ── Consultation personnalisée ─────────────────────────────────── */}
         {consultation && (
           <section className="mt-16">
-            <div className="grid grid-cols-1 gap-6 rounded-3xl border-2 border-dashed border-stone-300 bg-white/70 p-8 lg:grid-cols-[1.4fr_1fr] lg:items-center lg:p-10">
-              <div>
+            <div className="grid grid-cols-1 gap-6 rounded-3xl border-2 border-dashed border-stone-300 bg-white/70 p-6 sm:p-8 lg:grid-cols-[1fr_1.3fr] lg:items-center lg:p-10">
+              <div className="min-w-0">
                 <p className="font-display text-sm uppercase tracking-[0.22em] text-gold-600">
                   {t('consultation_eyebrow')}
                 </p>
@@ -451,7 +480,7 @@ const Packages: React.FC = () => {
                 </h2>
                 <p className="mt-3 max-w-xl text-stone-600">{t('consultation_text')}</p>
                 <ul className="mt-5 grid gap-2 sm:grid-cols-2">
-                  {consultation.features.map(feature => (
+                  {tierText(consultation).features.map(feature => (
                     <li key={feature} className="flex items-start gap-2 text-sm text-stone-700">
                       <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-gold-600" />
                       <span className="leading-snug">{feature}</span>
@@ -460,7 +489,7 @@ const Packages: React.FC = () => {
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-stone-200 bg-white p-6 text-center shadow-card">
+              <div className="min-w-0 rounded-2xl border border-stone-200 bg-white p-5 text-center shadow-card sm:p-6">
                 <CalendarDaysIcon className="mx-auto h-8 w-8 text-gold-600" />
                 <p className="mt-4 font-display text-4xl font-semibold tabular-nums text-stone-900">
                   {formatMoney(consultation.price_from_cents, consultation.currency)}
@@ -468,24 +497,16 @@ const Packages: React.FC = () => {
                 <p className="mt-1 text-xs uppercase tracking-[0.16em] text-stone-400">
                   {t('consultation_note')}
                 </p>
-                <Link
-                  to={chooseHref(consultation)}
-                  className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-colors ${THEME.consultation.button}`}
-                >
-                  {t('consultation_cta')}
+                <p className="mt-2 text-xs text-stone-500">{t('consultation_refund')}</p>
+                <div className="mt-5 text-left">
+                  <ConsultationSlotPicker value={slot} onChange={chooseSlot} />
+                </div>
+                <div className="mt-4 text-left"><TermsCheckbox id="accept-terms-consultation" checked={acceptTerms} onChange={setAcceptTerms} /></div>
+                <button type="button" onClick={() => payConsultation()} disabled={payingConsultation || !acceptTerms || !slot} data-testid="pay-consultation"
+                  className={`mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition-colors disabled:opacity-50 ${THEME.consultation.button}`}>
+                  {payingConsultation ? t('pay_opening') : user ? t('consultation_pay') : t('consultation_pay_login')}
                   <ArrowRightIcon className="h-4 w-4" />
-                </Link>
-                {user ? (
-                  <>
-                  <div className="mt-3"><TermsCheckbox id="accept-terms-consultation" checked={acceptTerms} onChange={setAcceptTerms} /></div>
-                  <button type="button" onClick={payConsultation} disabled={payingConsultation || !acceptTerms} data-testid="pay-consultation"
-                    className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50">
-                    {payingConsultation ? t('pay_opening') : t('consultation_pay')}
-                  </button>
-                  </>
-                ) : (
-                  <Link to="/login?redirect=%2Fpackages" className="mt-2 block text-center text-xs text-stone-500 underline">{t('consultation_pay_login')}</Link>
-                )}
+                </button>
                 {payError && <p role="alert" className="mt-2 text-xs text-red-600">{payError}</p>}
               </div>
             </div>
@@ -526,7 +547,7 @@ const Packages: React.FC = () => {
                         {list.map(sv => (
                           <tr key={sv.code} className="border-b border-stone-100">
                             <td className="px-4 py-2 text-stone-400 w-12">{sv.code}</td>
-                            <td className="px-2 py-2 text-stone-700">{sv.name}</td>
+                            <td className="px-2 py-2 text-stone-700">{serviceName(sv)}</td>
                             <td className="px-4 py-2 text-right font-semibold tabular-nums text-stone-900 whitespace-nowrap">{formatMoney(sv.price_cents, sv.currency)}</td>
                           </tr>
                         ))}
@@ -550,13 +571,13 @@ const Packages: React.FC = () => {
             <p className="mt-1 text-sm text-stone-600">
               {t('payment_text', { example: paymentExample.name, price: formatMoney(paymentExample.price_from_cents, paymentExample.currency) })}
             </p>
-            <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {pricing.payment_options.map(opt => {
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {pricing.payment_options.filter(opt => INSTALLMENTS.includes(opt.installments)).map(opt => {
                 const plan = paymentPlan(paymentExample.price_from_cents, opt);
                 return (
                   <div key={opt.installments} className="rounded-2xl border border-stone-200 bg-white p-5 text-center shadow-card">
                     <p className="text-sm font-semibold text-stone-800">{opt.installments === 1 ? t('payment_once') : t('payment_n', { n: opt.installments })}</p>
-                    <p className="mt-1 text-xs font-semibold text-emerald-700">{t('payment_discount', { pct: opt.discount_pct })}</p>
+                    {opt.discount_pct > 0 && <p className="mt-1 text-xs font-semibold text-emerald-700">{t('payment_discount', { pct: opt.discount_pct })}</p>}
                     <p className="mt-3 font-display text-2xl font-semibold tabular-nums text-stone-900">
                       {opt.installments === 1 ? formatMoney(plan.totalCents) : `${opt.installments} × ${formatMoney(plan.perInstallmentCents)}`}
                     </p>
@@ -565,6 +586,7 @@ const Packages: React.FC = () => {
                 );
               })}
             </div>
+            <p className="mt-3 text-xs text-stone-500" data-testid="payment-rules">{t('payment_rules')}</p>
           </section>
         )}
       </div>

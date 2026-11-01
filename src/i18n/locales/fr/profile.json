@@ -13,7 +13,8 @@
     "education": "Formation",
     "occupation": "Profession",
     "languages": "Langues",
-    "interests": "Intérêts"
+    "interests": "Intérêts",
+    "residence": "Pays de résidence"
   },
   "add_language": "Ajouter une Langue",
   "add_interest": "Ajouter un Intérêt",
@@ -44,5 +45,8 @@
     "delete_text": "Votre compte, vos projets, voyages, notifications et votre dossier sont définitivement supprimés. Les paiements déjà effectués restent dus selon nos conditions.",
     "delete_button": "Supprimer définitivement mon compte",
     "delete_confirm": "Supprimer définitivement votre compte et toutes vos données ? Cette action est irréversible."
-  }
+  },
+  "premium_title": "Passez en Premium",
+  "premium_text": "Accédez aux alertes visa automatiques, aux recommandations personnalisées et à un suivi dédié de vos voyages.",
+  "premium_cta": "Découvrir Premium"
 }
