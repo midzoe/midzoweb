@@ -4,6 +4,8 @@ import { Bars3Icon, XMarkIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import CurrencySelect from './CurrencySelect';
 import { useAuth } from '../context/AuthContext';
+import { contentState } from '../i18n/contentTranslation';
+import { SITE_LANGUAGES } from '../i18n/languages';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,9 +20,13 @@ const Navbar = () => {
   };
 
   const handleLanguageChange = (lang: string) => {
+    const changed = (i18n.resolvedLanguage || i18n.language || '').slice(0, 2) !== lang;
     i18n.changeLanguage(lang);
     localStorage.setItem('midzo_language', lang);
     setIsLanguageOpen(false);
+    // Le contenu du catalogue déjà affiché est dans l'ancienne langue : on recharge la page
+    // (les formulaires gardent leur brouillon sur l'appareil).
+    if (changed && contentState.loaded) window.location.reload();
   };
 
   const navigation = [
@@ -36,11 +42,8 @@ const Navbar = () => {
     navigation.push({ name: t('dashboard'), href: '/dashboard' });
   }
 
-  const languages = [
-    { code: 'en', name: t('language_en') },
-    { code: 'fr', name: t('language_fr') },
-    { code: 'de', name: t('language_de') },
-  ];
+  // Langues du site : src/i18n/languages.ts (nom traduit s'il existe, sinon nom dans la langue).
+  const languages = SITE_LANGUAGES.map(l => ({ code: l.code, name: t(`language_${l.code}`, { defaultValue: l.label }) }));
 
   return (
     <nav className="bg-white shadow-lg">

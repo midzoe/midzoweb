@@ -1,3 +1,5 @@
+import { contentState, siteLang } from '../i18n/contentTranslation';
+
 const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'https://midzobackend.vercel.app/api';
 
 /**
@@ -31,7 +33,12 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // Lecture publique : le serveur renvoie le contenu du catalogue dans la langue du site
+    // (`locale`, distinct du `lang` que certaines routes utilisent déjà). Admin : texte d'origine.
+    const method = (options.method ?? 'GET').toUpperCase();
+    const publicRead = method === 'GET' && !endpoint.startsWith('/admin');
+    if (publicRead) contentState.loaded = true;
+    const url = `${API_BASE_URL}${endpoint}${publicRead ? `${endpoint.includes('?') ? '&' : '?'}locale=${siteLang()}` : ''}`;
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -1300,6 +1307,19 @@ class ApiService {
   /** Admin : horaires de consultation (heure d'Allemagne) et rendez-vous à venir. */
   async adminGetConsultations() {
     return this.request<any>('/admin/consultations');
+  }
+  /** Admin : état de la traduction DeepL du catalogue, et relecture / correction des traductions. */
+  async adminGetTranslationStatus() {
+    return this.request<any>('/admin/translations');
+  }
+  async adminGetTranslationEntries(params: { lang: string; q?: string; manual?: boolean; page?: number }) {
+    return this.request<any>(`/admin/translations/entries${buildQuery({ lang: params.lang, q: params.q, manual: params.manual ? '1' : undefined, page: params.page })}`);
+  }
+  async adminUpdateTranslation(id: number, text: string) {
+    return this.request<any>(`/admin/translations/entries/${id}`, { method: 'PUT', body: JSON.stringify({ text }) });
+  }
+  async adminResetTranslation(id: number) {
+    return this.request<any>(`/admin/translations/entries/${id}`, { method: 'DELETE' });
   }
   async adminUpdateConsultationAvailability(availability: object) {
     return this.request<any>('/admin/consultations', { method: 'PUT', body: JSON.stringify({ availability }) });

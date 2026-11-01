@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { useCountries } from '../../hooks/useCountries';
+import { de, enUS, fr } from 'date-fns/locale';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
 import ActionButton from '../common/ActionButton';
+import { FilterSelect, useCatalog, CatalogEmpty } from '../common/catalogKit';
 
 // Offres d'emploi servies par le backend (Job).
 interface Job {
@@ -25,101 +26,46 @@ interface Job {
   postedAt?: string;
 }
 
+const DATE_LOCALES = { fr, de, en: enUS };
+
 /** « il y a 2 jours » à partir de la date de publication renvoyée par l'API. */
-const postedLabel = (postedAt?: string) => {
+const postedLabel = (postedAt: string | undefined, lang: string) => {
   if (!postedAt) return '';
   const date = new Date(postedAt);
-  return isNaN(date.getTime()) ? '' : formatDistanceToNow(date, { addSuffix: true });
+  return isNaN(date.getTime()) ? '' : formatDistanceToNow(date, { addSuffix: true, locale: DATE_LOCALES[lang as keyof typeof DATE_LOCALES] ?? fr });
 };
 
 const JobsFinder: React.FC = () => {
+  const { t, lang, val, duration, options, countryOptions, colon } = useCatalog();
   const [location, setLocation] = useState<string>("");
   const [jobType, setJobType] = useState<string>("");
   const [experience, setExperience] = useState<string>("");
-  const [industry, setIndustry] = useState<string>("");
 
-  const { countries: allCountries } = useCountries();
-  const jobTypes = ["Full-time", "Part-time", "Contract", "Remote"];
-  const experienceLevels = ["Entry Level", "1-3 years", "3-5 years", "5+ years"];
-  const industries = ["Technology", "Marketing", "Finance", "Healthcare", "Education"];
-
-  const { items: filteredJobs, loading, error } = useApiList<Job>(
-    () => apiService.getJobs({ country: location, type: jobType }),
-    [location, jobType],
-    { errorMessage: 'Unable to load job offers. Please try again later.' }
+  // Tout le catalogue est chargé une fois : les menus ne proposent que ce qui existe.
+  const { items: jobs, loading, error } = useApiList<Job>(
+    () => apiService.getJobs({}),
+    [],
+    { errorMessage: t('common.error') }
   );
+
+  const filteredJobs = useMemo(() => jobs.filter(j =>
+    (!location || j.country === location) && (!jobType || j.type === jobType) && (!experience || j.experience === experience)
+  ), [jobs, location, jobType, experience]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Jobs Finder</h1>
+        <h1 className="text-4xl font-bold text-primary mb-8">{t('jobs.title')}</h1>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
-              </label>
-              <select
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Locations</option>
-                {allCountries.map(country => (
-                  <option key={country} value={country}>{country}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Job Type
-              </label>
-              <select
-                value={jobType}
-                onChange={(e) => setJobType(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Types</option>
-                {jobTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Experience Level
-              </label>
-              <select
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Levels</option>
-                {experienceLevels.map(level => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Industry
-              </label>
-              <select
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Industries</option>
-                {industries.map(ind => (
-                  <option key={ind} value={ind}>{ind}</option>
-                ))}
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FilterSelect label={t('common.country')} all={t('common.all_countries')} value={location} onChange={setLocation}
+              options={countryOptions(jobs.map(j => j.country))} />
+            <FilterSelect label={t('jobs.job_type')} all={t('common.all_types')} value={jobType} onChange={setJobType}
+              options={options(jobs.map(j => j.type))} />
+            <FilterSelect label={t('jobs.experience')} all={t('jobs.all_levels')} value={experience} onChange={setExperience}
+              options={options(jobs.map(j => j.experience), v => (v === 'Entry Level' ? val(v) : duration(v)))} />
           </div>
         </div>
 
@@ -127,7 +73,7 @@ const JobsFinder: React.FC = () => {
         {loading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-gray-600">Loading job offers...</p>
+            <p className="mt-2 text-gray-600">{t('common.loading')}</p>
           </div>
         )}
         {error && (
@@ -150,33 +96,33 @@ const JobsFinder: React.FC = () => {
                     </div>
                     {job.postedAt && (
                       <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                        {postedLabel(job.postedAt)}
+                        {postedLabel(job.postedAt, lang)}
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <p className="text-gray-600 mb-4">{job.description}</p>
                       <div className="space-y-2">
                         <p className="text-sm text-gray-600">
-                          <span className="font-medium">Location:</span> {job.location}
+                          <span className="font-medium">{colon(t('jobs.location'))}</span> {job.location}
                         </p>
                         <p className="text-sm text-gray-600">
-                          <span className="font-medium">Type:</span> {job.type}
+                          <span className="font-medium">{colon(t('jobs.job_type'))}</span> {val(job.type)}
                         </p>
                         <p className="text-sm text-gray-600">
-                          <span className="font-medium">Salary:</span> {job.salary}
+                          <span className="font-medium">{colon(t('jobs.salary'))}</span> {job.salary}
                         </p>
                         <p className="text-sm text-gray-600">
-                          <span className="font-medium">Experience:</span> {job.experience}
+                          <span className="font-medium">{colon(t('jobs.experience'))}</span> {job.experience === 'Entry Level' ? val(job.experience) : duration(job.experience)}
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-2">Requirements</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">{t('common.requirements')}</h4>
                         <ul className="list-disc list-inside space-y-1 text-gray-600">
                           {(job.requirements ?? []).map((req, idx) => (
                             <li key={idx}>{req}</li>
@@ -184,7 +130,7 @@ const JobsFinder: React.FC = () => {
                         </ul>
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-2">Benefits</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">{t('jobs.benefits')}</h4>
                         <ul className="list-disc list-inside space-y-1 text-gray-600">
                           {(job.benefits ?? []).map((benefit, idx) => (
                             <li key={idx}>{benefit}</li>
@@ -196,7 +142,7 @@ const JobsFinder: React.FC = () => {
 
                   <div className="mt-6 flex justify-end space-x-4">
                     <ActionButton href={job.applyUrl} service={`Candidature — ${job.title} (${job.company})`} className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
-                      Apply Now
+                      {t('jobs.apply')}
                     </ActionButton>
                   </div>
                 </div>
@@ -204,7 +150,7 @@ const JobsFinder: React.FC = () => {
             ))
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500 text-lg">No jobs found matching your criteria. Please adjust your filters.</p>
+              <CatalogEmpty total={jobs.length} service="Offres d’emploi" className="text-gray-500 text-lg" />
             </div>
           )}
         </div>

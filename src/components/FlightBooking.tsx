@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useCountries } from '../hooks/useCountries';
+import React, { useMemo, useState } from 'react';
 import { useApiList } from '../hooks/useApiList';
 import { apiService } from '../services/api';
 import ActionButton from './common/ActionButton';
+import { amountOf, bucketOf, FilterSelect, presentBuckets, useCatalog, CatalogEmpty } from './common/catalogKit';
 
 // Vols servis par le backend (Flight, audience = "general").
 interface Flight {
@@ -23,7 +23,10 @@ interface Flight {
   image?: string;
 }
 
+const PRICE_EDGES = [200, 500, 1000];
+
 const FlightBooking: React.FC = () => {
+  const { t, val, duration, options, countryOptions, money, bucketOptions, colon } = useCatalog();
   const [tripType, setTripType] = useState<'roundtrip' | 'oneway'>('roundtrip');
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
@@ -31,32 +34,38 @@ const FlightBooking: React.FC = () => {
   const [returnDate, setReturnDate] = useState<string>("");
   const [passengers, setPassengers] = useState<string>("1");
   const [cabinClass, setCabinClass] = useState<string>("");
-  const [purpose, setPurpose] = useState<string>("");
   const [priceRange, setPriceRange] = useState<string>("");
   const [stops, setStops] = useState<string>("");
 
-  const { countries: allCities } = useCountries();
-  const cabinClasses = ["Economy", "Premium Economy", "Business", "First"];
-  const purposes = ["Tourism", "Business", "Study", "Professional"];
-  const priceRanges = ["Under $200", "$200-$500", "$500-$1000", "Above $1000"];
-  const stopOptions = ["Non-stop", "1 Stop", "2+ Stops"];
-
-  // Départ, destination et classe sont filtrés côté serveur (mêmes critères qu'avant).
-  const { items: filteredFlights, loading, error } = useApiList<Flight>(
-    () => apiService.getFlights({
-      audience: 'general',
-      from,
-      to,
-      type: cabinClass,
-    }),
-    [from, to, cabinClass],
-    { errorMessage: 'Unable to load flights. Please try again later.' }
+  // Tout le catalogue est chargé une fois : les menus ne proposent que ce qui existe.
+  const { items: flights, loading, error } = useApiList<Flight>(
+    () => apiService.getFlights({ audience: 'general' }),
+    [],
+    { errorMessage: t('common.error') }
   );
+
+  const stopKey = (n: number) => (n >= 2 ? '2+' : String(n));
+  const stopLabel = (k: string) => (k === '0' ? t('flights.nonstop') : k === '2+' ? t('flights.stops_more') : t('flights.stop_count', { count: Number(k) }));
+  const currency = /£/.test(flights[0]?.price ?? '') ? 'GBP' : /€/.test(flights[0]?.price ?? '') ? 'EUR' : 'USD';
+
+  const filteredFlights = useMemo(() => flights.filter(f =>
+    (!from || f.fromCountry === from)
+    && (!to || f.toCountry === to)
+    && (!cabinClass || f.type === cabinClass)
+    && (!priceRange || bucketOf(amountOf(f.price), PRICE_EDGES) === priceRange)
+    && (!stops || stopKey(f.stops) === stops)
+  ), [flights, from, to, cabinClass, priceRange, stops]);
+
+  // Dates et voyageurs ne filtrent pas le catalogue : ils accompagnent la demande de réservation.
+  const requestDetails = [
+    departDate && `${departDate}${tripType === 'roundtrip' && returnDate ? ` → ${returnDate}` : ''}`,
+    `${passengers} passager${Number(passengers) > 1 ? 's' : ''}`,
+  ].filter(Boolean).join(', ');
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Flight Booking</h1>
+        <h1 className="text-4xl font-bold text-primary mb-8">{t('flights.title')}</h1>
 
         {/* Search Panel */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -70,7 +79,7 @@ const FlightBooking: React.FC = () => {
                     : 'bg-gray-100 text-gray-600'
                 }`}
               >
-                Round Trip
+                {t('flights.roundtrip')}
               </button>
               <button
                 onClick={() => setTripType('oneway')}
@@ -80,48 +89,22 @@ const FlightBooking: React.FC = () => {
                     : 'bg-gray-100 text-gray-600'
                 }`}
               >
-                One Way
+                {t('flights.oneway')}
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  From
-                </label>
-                <select
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-                >
-                  <option value="">Select Departure</option>
-                  {allCities.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
+              <FilterSelect label={t('flights.from')} all={t('flights.all_departures')} value={from} onChange={setFrom}
+                options={countryOptions(flights.map(f => f.fromCountry))} />
+              <FilterSelect label={t('flights.to')} all={t('flights.all_destinations')} value={to} onChange={setTo}
+                options={countryOptions(flights.map(f => f.toCountry))} />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  To
-                </label>
-                <select
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-                >
-                  <option value="">Select Destination</option>
-                  {allCities.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Depart Date
+                <label htmlFor="flight-depart" className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('flights.depart_date')}
                 </label>
                 <input
+                  id="flight-depart"
                   type="date"
                   value={departDate}
                   onChange={(e) => setDepartDate(e.target.value)}
@@ -131,12 +114,14 @@ const FlightBooking: React.FC = () => {
 
               {tripType === 'roundtrip' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Return Date
+                  <label htmlFor="flight-return" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('flights.return_date')}
                   </label>
                   <input
+                    id="flight-return"
                     type="date"
                     value={returnDate}
+                    min={departDate || undefined}
                     onChange={(e) => setReturnDate(e.target.value)}
                     className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
                   />
@@ -146,91 +131,37 @@ const FlightBooking: React.FC = () => {
           </div>
 
           {/* Advanced Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Passengers
+              <label htmlFor="flight-passengers" className="block text-sm font-medium text-gray-700 mb-2">
+                {t('flights.passengers')}
               </label>
               <select
+                id="flight-passengers"
                 value={passengers}
                 onChange={(e) => setPassengers(e.target.value)}
                 className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
               >
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                  <option key={num} value={num}>{num} Passenger{num > 1 ? 's' : ''}</option>
+                  <option key={num} value={num}>{t('flights.passenger_count', { count: num })}</option>
                 ))}
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cabin Class
-              </label>
-              <select
-                value={cabinClass}
-                onChange={(e) => setCabinClass(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Any Class</option>
-                {cabinClasses.map(cls => (
-                  <option key={cls} value={cls}>{cls}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Purpose
-              </label>
-              <select
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Select Purpose</option>
-                {purposes.map(p => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price Range
-              </label>
-              <select
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Any Price</option>
-                {priceRanges.map(range => (
-                  <option key={range} value={range}>{range}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Stops
-              </label>
-              <select
-                value={stops}
-                onChange={(e) => setStops(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Any Stops</option>
-                {stopOptions.map(option => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
+            <FilterSelect label={t('flights.cabin')} all={t('flights.all_classes')} value={cabinClass} onChange={setCabinClass}
+              options={options(flights.map(f => f.type))} />
+            <FilterSelect label={t('common.price_range')} all={t('common.all_prices')} value={priceRange} onChange={setPriceRange}
+              options={bucketOptions(presentBuckets(flights.map(f => amountOf(f.price)), PRICE_EDGES), n => money(n, currency))} />
+            <FilterSelect label={t('flights.stops')} all={t('flights.all_stops')} value={stops} onChange={setStops}
+              options={['0', '1', '2+'].filter(k => flights.some(f => stopKey(f.stops) === k)).map(k => ({ value: k, label: stopLabel(k) }))} />
           </div>
+
+          <p className="mt-4 text-sm text-gray-500">{t('flights.hint')}</p>
 
           {/* Les filtres s'appliquent en direct : le bouton amène aux résultats. */}
           <button type="button" onClick={() => document.getElementById('flight-results')?.scrollIntoView({ behavior: 'smooth' })}
-            className="mt-6 w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors">
-            Search Flights
+            className="mt-4 w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors">
+            {t('flights.search')}
           </button>
         </div>
 
@@ -238,7 +169,7 @@ const FlightBooking: React.FC = () => {
         {loading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-gray-600">Loading flights...</p>
+            <p className="mt-2 text-gray-600">{t('common.loading')}</p>
           </div>
         )}
         {error && (
@@ -272,33 +203,33 @@ const FlightBooking: React.FC = () => {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-xl font-bold text-primary">{flight.airline}</h3>
-                        <p className="text-gray-600">{flight.type}</p>
+                        <p className="text-gray-600">{val(flight.type)}</p>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        flight.stops === 0 
-                          ? 'bg-green-100 text-green-800' 
+                        flight.stops === 0
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {flight.stops === 0 ? 'Non-stop' : `${flight.stops} Stop${flight.stops > 1 ? 's' : ''}`}
+                        {flight.stops === 0 ? t('flights.nonstop') : t('flights.stop_count', { count: flight.stops })}
                       </span>
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       <div>
-                        <p className="text-sm text-gray-500">Departure</p>
+                        <p className="text-sm text-gray-500">{t('flights.departure')}</p>
                         <p className="font-semibold">{flight.departure}</p>
                         <p className="text-gray-600">{flight.fromCity}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-sm text-gray-500">Duration</p>
-                        <p className="font-semibold">{flight.duration}</p>
+                        <p className="text-sm text-gray-500">{t('flights.duration')}</p>
+                        <p className="font-semibold">{duration(flight.duration)}</p>
                         <div className="relative">
                           <div className="border-t border-gray-300 absolute w-full top-1/2"></div>
                           <div className="relative z-10 bg-white inline-block px-2">✈️</div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-500">Arrival</p>
+                        <p className="text-sm text-gray-500">{t('flights.arrival')}</p>
                         <p className="font-semibold">{flight.arrival}</p>
                         <p className="text-gray-600">{flight.toCity}</p>
                       </div>
@@ -314,10 +245,10 @@ const FlightBooking: React.FC = () => {
 
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-gray-600">
-                        <span className="font-medium">Baggage:</span> {flight.baggage}
+                        <span className="font-medium">{colon(t('flights.baggage'))}</span> {flight.baggage}
                       </div>
-                      <ActionButton href={(flight as any).link} service={`Vol — ${flight.airline}`} className="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary/90 transition-colors">
-                        Book Now
+                      <ActionButton href={(flight as any).link} service={`Vol — ${flight.airline} (${flight.fromCity} → ${flight.toCity}) — ${requestDetails}`} className="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary/90 transition-colors">
+                        {t('flights.book')}
                       </ActionButton>
                     </div>
                   </div>
@@ -326,7 +257,7 @@ const FlightBooking: React.FC = () => {
             ))
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500 text-lg">No flights found matching your criteria. Please adjust your filters.</p>
+              <CatalogEmpty total={flights.length} service="Réservation de vol" className="text-gray-500 text-lg" />
             </div>
           )}
         </div>

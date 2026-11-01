@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiService } from '../../services/api';
 import { formatMoney, useCurrency } from '../../pricing/currency';
+import { useCatalog } from '../common/catalogKit';
 
 /**
  * Événements : uniquement ceux publiés en admin, à venir, dates vérifiées. Plus aucun événement
@@ -32,7 +33,9 @@ const TourismEvents: React.FC = () => {
     }).catch(() => setEvents([]));
   }, []);
 
-  const countries = useMemo(() => [...new Set((events ?? []).map(e => e.country).filter(Boolean))].sort(), [events]);
+  // Pays en base en anglais : affichés et triés dans la langue du site.
+  const { country: countryLabel, countryOptions, val, colon } = useCatalog();
+  const countries = useMemo(() => countryOptions((events ?? []).map(e => e.country)), [events, countryOptions]);
   const shown = (events ?? []).filter(e => !country || e.country === country);
   const dates = (e: any) => [e.startDate, e.endDate].filter(Boolean).map((d: string) => new Date(d).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' })).join(' → ');
 
@@ -51,7 +54,7 @@ const TourismEvents: React.FC = () => {
             {countries.length > 1 && (
               <select aria-label={t.all} value={country} onChange={e => setCountry(e.target.value)} className="mb-6 border-gray-300 rounded-md">
                 <option value="">{t.all}</option>
-                {countries.map(c => <option key={c} value={c}>{c}</option>)}
+                {countries.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             )}
             <div className="space-y-4" data-testid="events-list">
@@ -59,14 +62,14 @@ const TourismEvents: React.FC = () => {
                 <article key={e.id} className="bg-white rounded-2xl border border-slate-200 p-6">
                   <div className="flex flex-wrap justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-orange-600 font-semibold">{[e.subcategory, e.country, e.city].filter(Boolean).join(' · ')}</p>
+                      <p className="text-xs uppercase tracking-wide text-orange-600 font-semibold">{[e.subcategory && val(e.subcategory), e.country && countryLabel(e.country), e.city].filter(Boolean).join(' · ')}</p>
                       <h2 className="text-xl font-bold text-slate-900 mt-1">{e.title}</h2>
                       <p className="text-sm text-slate-500 mt-1">{dates(e)}</p>
                     </div>
                     <p className="text-sm font-semibold text-slate-800">{e.priceFrom ? `${t.from} ${formatMoney(Math.round(e.priceFrom * 100))}` : t.onQuote}</p>
                   </div>
                   {e.description && <p className="text-slate-700 mt-3">{e.description}</p>}
-                  {e.offerIncludes?.length > 0 && <p className="text-sm text-slate-600 mt-3"><strong>{t.includes} :</strong> {e.offerIncludes.join(' · ')}</p>}
+                  {e.offerIncludes?.length > 0 && <p className="text-sm text-slate-600 mt-3"><strong>{colon(t.includes)}</strong> {e.offerIncludes.map((x: string) => val(x)).join(' · ')}</p>}
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Link to={`/tourism/plan?country=${encodeURIComponent(e.country ?? '')}`} className="px-4 py-2 rounded-lg bg-orange-500 text-white text-sm font-semibold">{t.plan}</Link>
                     {e.link && <a href={e.link} target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-lg border border-slate-300 text-sm text-slate-700">{t.official} ↗</a>}

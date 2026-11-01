@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { apiService } from '../../services/api';
 import { useTranslation } from 'react-i18next';
 import { isVisaOriginCountry, africanCountryLabel, countryName } from '../../data/africanCountries';
+import { useCatalog } from '../common/catalogKit';
 
 /**
  * Story 5.4 → 5.14 : centres de langue servis par le backend.
@@ -125,6 +126,8 @@ const deriveFacets = (list: LanguageCenter[]): Facets => {
 const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> = ({ center, highlightLevel }) => {
   const [open, setOpen] = useState(false);
   const { t, lang, countryLabel, languageLabel } = useLc();
+  // Villes et formats sont saisis en français en base : traduits à l'affichage.
+  const { val } = useCatalog();
   const price = formatPrice(center, t, lang);
   // Le niveau visé par l'étudiant redirigé : on signale les centres qui le couvrent.
   const coversLevel = !!highlightLevel && (center.levelsOffered ?? []).includes(highlightLevel);
@@ -140,7 +143,7 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
           <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
             {countryLabel(center.country)}
           </span>
-          {center.city && <span className="text-xs text-gray-500">{center.city}</span>}
+          {center.city && <span className="text-xs text-gray-500">{val(center.city)}</span>}
           {isVisaOriginCountry(center.country) && (
             <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
               {t('lc.before_departure')}
@@ -173,7 +176,7 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
         {(center.courseTypes?.length || center.examsPrepared?.length) && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {(center.courseTypes ?? []).map(ct => (
-              <span key={ct} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">{ct}</span>
+              <span key={ct} className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">{val(ct)}</span>
             ))}
             {(center.examsPrepared ?? []).map(e => (
               <span key={e} className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] text-indigo-600">{e}</span>
@@ -284,6 +287,7 @@ const CenterCard: React.FC<{ center: LanguageCenter; highlightLevel?: string }> 
 const LanguageCenterPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { t, countryLabel, languageLabel } = useLc();
+  const { options: catalogOptions } = useCatalog();
 
   // Contexte de redirection (niveau insuffisant) — optionnel.
   const redirectLanguage = searchParams.get('language') ?? '';
@@ -482,7 +486,7 @@ const LanguageCenterPage: React.FC = () => {
               <label htmlFor="lc-city" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.city')}</label>
               <select id="lc-city" value={city} onChange={e => setCity(e.target.value)} className={selectCls}>
                 <option value="">{t('lc.all_cities')}</option>
-                {cityOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                {catalogOptions(cityOptions).map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
 
@@ -498,7 +502,7 @@ const LanguageCenterPage: React.FC = () => {
               <label htmlFor="lc-format" className="block text-sm font-medium text-gray-700 mb-1.5">{t('lc.format')}</label>
               <select id="lc-format" value={courseType} onChange={e => setCourseType(e.target.value)} className={selectCls}>
                 <option value="">{t('lc.all_formats')}</option>
-                {(facets?.courseTypes ?? []).map(ct => <option key={ct} value={ct}>{ct}</option>)}
+                {catalogOptions(facets?.courseTypes ?? []).map(ct => <option key={ct.value} value={ct.value}>{ct.label}</option>)}
               </select>
             </div>
 

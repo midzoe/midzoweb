@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useCountries } from '../../hooks/useCountries';
+import React, { useMemo, useState } from 'react';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
 import ActionButton from '../common/ActionButton';
+import { amountOf, bucketOf, FilterSelect, presentBuckets, useCatalog, CatalogEmpty } from '../common/catalogKit';
 
 // Sites touristiques servis par le backend (TouristSite).
 interface TouristSite {
@@ -19,76 +19,44 @@ interface TouristSite {
   features?: string[];
 }
 
+const LABEL = 'block text-sm font-medium text-slate-700 mb-2';
+const PRICE_EDGES = [10, 25];
+/** Entrée gratuite : « Free », « Gratuit » ou 0. */
+const priceAmount = (price?: string) => (price && /free|gratuit|kostenlos/i.test(price) ? 0 : amountOf(price));
+
 const TouristSites: React.FC = () => {
+  const { t, val, options, countryOptions, money, bucketOptions, colon } = useCatalog();
   const [location, setLocation] = useState<string>("");
   const [category, setCategory] = useState<string>("");
   const [priceRange, setPriceRange] = useState<string>("");
 
-  const { countries: allCountries } = useCountries();
-  const categories = ["Landmarks", "Historical", "Religious Sites", "Museums", "Parks", "Entertainment"];
-  const priceRanges = ["Free", "Under €10", "€10-€25", "Above €25"];
-
-  const { items: filteredSites, loading, error } = useApiList<TouristSite>(
-    () => apiService.getTouristSites({ country: location, category }),
-    [location, category],
-    { errorMessage: 'Unable to load tourist sites. Please try again later.' }
+  // Tout le catalogue est chargé une fois : les menus ne proposent que ce qui existe.
+  const { items: sites, loading, error } = useApiList<TouristSite>(
+    () => apiService.getTouristSites({}),
+    [],
+    { errorMessage: t('common.error') }
   );
+
+  const filteredSites = useMemo(() => sites.filter(s =>
+    (!location || s.country === location)
+    && (!category || s.category === category)
+    && (!priceRange || bucketOf(priceAmount(s.price), PRICE_EDGES, true) === priceRange)
+  ), [sites, location, category, priceRange]);
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-gold-600 mb-8">Tourist Sites</h1>
+        <h1 className="text-4xl font-bold text-gold-600 mb-8">{t('sites.title')}</h1>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Location
-              </label>
-              <select
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Locations</option>
-                {allCountries.map(country => (
-                  <option key={country} value={country}>{country}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Categories</option>
-                {categories.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Price Range
-              </label>
-              <select
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Ranges</option>
-                {priceRanges.map(range => (
-                  <option key={range} value={range}>{range}</option>
-                ))}
-              </select>
-            </div>
+            <FilterSelect labelClassName={LABEL} label={t('common.country')} all={t('common.all_countries')} value={location} onChange={setLocation}
+              options={countryOptions(sites.map(s => s.country))} />
+            <FilterSelect labelClassName={LABEL} label={t('common.category')} all={t('common.all_categories')} value={category} onChange={setCategory}
+              options={options(sites.map(s => s.category))} />
+            <FilterSelect labelClassName={LABEL} label={t('common.price')} all={t('common.all_prices')} value={priceRange} onChange={setPriceRange}
+              options={bucketOptions(presentBuckets(sites.map(s => priceAmount(s.price)), PRICE_EDGES, true), n => money(n))} />
           </div>
         </div>
 
@@ -96,7 +64,7 @@ const TouristSites: React.FC = () => {
         {loading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
-            <p className="mt-2 text-slate-600">Loading tourist sites...</p>
+            <p className="mt-2 text-slate-600">{t('common.loading')}</p>
           </div>
         )}
         {error && (
@@ -116,37 +84,43 @@ const TouristSites: React.FC = () => {
                   <p className="text-slate-600 mb-4">{site.location}</p>
                   <div className="space-y-2">
                     <p className="text-sm text-slate-600">
-                      <span className="font-medium">Category:</span>{" "}
-                      {site.category}
+                      <span className="font-medium">{colon(t('common.category'))}</span>{" "}
+                      {val(site.category)}
                     </p>
-                    <p className="text-sm text-slate-600">
-                      <span className="font-medium">Description:</span>{" "}
-                      {site.description}
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      <span className="font-medium">Price:</span>{" "}
-                      {site.price}
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      <span className="font-medium">Features:</span>{" "}
-                      {(site.features ?? []).join(", ")}
-                    </p>
+                    {site.description && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-medium">{colon(t('common.description'))}</span>{" "}
+                        {site.description}
+                      </p>
+                    )}
+                    {site.price && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-medium">{colon(t('common.price'))}</span>{" "}
+                        {priceAmount(site.price) === 0 ? t('common.free') : site.price}
+                      </p>
+                    )}
+                    {(site.features ?? []).length > 0 && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-medium">{colon(t('common.features'))}</span>{" "}
+                        {(site.features ?? []).join(", ")}
+                      </p>
+                    )}
                     {site.rating != null && (
                       <p className="text-sm text-slate-600">
-                        <span className="font-medium">Rating:</span>{" "}
-                        {site.rating}/5.0 ({site.reviews} reviews)
+                        <span className="font-medium">{colon(t('common.rating'))}</span>{" "}
+                        {site.rating}/5 ({t('common.reviews', { count: site.reviews ?? 0 })})
                       </p>
                     )}
                   </div>
                   <ActionButton href={(site as any).link} service={`Site touristique — ${site.name}`} className="mt-4 w-full bg-gold-500 text-white py-2 px-4 rounded-md hover:bg-gold-500/90 transition-colors">
-                    Book Tickets
+                    {t('sites.tickets')}
                   </ActionButton>
                 </div>
               </div>
             ))
           ) : (
             <div className="col-span-full text-center py-8">
-              <p className="text-slate-500 text-lg">No tourist sites found matching your criteria. Please adjust your filters.</p>
+              <CatalogEmpty total={sites.length} service="Sites touristiques" className="text-slate-500 text-lg" />
             </div>
           )}
         </div>

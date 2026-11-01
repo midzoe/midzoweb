@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useCountries } from '../../hooks/useCountries';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
 import ActionButton from '../common/ActionButton';
+import { FilterSelect, useCatalog, CatalogEmpty } from '../common/catalogKit';
 
 // Banques et comptes étudiants servis par le backend (Bank + BankAccountType).
 interface BankAccountType {
@@ -39,35 +39,37 @@ const firstAmount = (fee?: string): number | null => {
 };
 
 const BankAccount: React.FC = () => {
+  const { t, countryOptions, country: countryLabel, colon } = useCatalog();
   const [country, setCountry] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [monthlyFee, setMonthlyFee] = useState<string>("");
   const [cardType, setCardType] = useState<string>("");
 
-  const { countries: allCountries } = useCountries();
-
-  // Le pays filtre côté serveur ; carte, frais et recherche portent sur les comptes
-  // imbriqués, donc affinés ici.
-  const { items: banks, loading, error } = useApiList<Bank>(
-    () => apiService.getBanks({ country }),
-    [country],
-    { errorMessage: 'Unable to load bank offers. Please try again later.' }
+  // Tout le catalogue est chargé une fois : le menu des pays ne propose que ceux qui ont
+  // des banques. Pays, carte, frais et recherche sont filtrés ici.
+  const { items: allBanks, loading, error } = useApiList<Bank>(
+    () => apiService.getBanks(),
+    [],
+    { errorMessage: t('common.error') }
   );
+  const banks = country ? allBanks.filter(b => b.country === country) : allBanks;
 
   // Les cartes varient selon le pays (Girocard, UnionPay, Interac…) et chaque banque décrit
   // la sienne à sa façon (« Carte de débit Visa », « Girocard + Visa Debit »). Le filtre porte
   // donc sur le réseau, pas sur le libellé exact — sinon la liste compterait autant d'options
-  // que de fiches. Ceux qui ne relèvent d'aucun réseau connu tombent dans « Other ».
+  // que de fiches. Ceux qui ne relèvent d'aucun réseau connu tombent dans « Autre ».
   const NETWORKS = ['Visa', 'Mastercard', 'Girocard', 'Interac', 'UnionPay', 'Maestro'];
   const NO_CARD = 'Sans carte';
+
+  // Le libellé de la carte est traduit (DeepL) : « sans carte » se reconnaît dans les trois langues.
+  const noCard = (label: string) => /sans carte|no card|without (a )?card|ohne karte|keine karte/i.test(label);
 
   const cardLabels = banks.flatMap(b => (b.accountTypes ?? []).map(a => (a.cardType ?? '').trim())).filter(Boolean);
   const matchesNetwork = (label: string, network: string) =>
     network === 'Other'
-      ? !label.toLowerCase().includes(NO_CARD.toLowerCase()) &&
-        !NETWORKS.some(n => label.toLowerCase().includes(n.toLowerCase()))
+      ? !noCard(label) && !NETWORKS.some(n => label.toLowerCase().includes(n.toLowerCase()))
       : network === NO_CARD
-        ? label.toLowerCase().includes(NO_CARD.toLowerCase())
+        ? noCard(label)
         : label.toLowerCase().includes(network.toLowerCase());
 
   const cardTypes = [...NETWORKS, NO_CARD, 'Other'].filter(n => cardLabels.some(l => matchesNetwork(l, n)));
@@ -98,73 +100,38 @@ const BankAccount: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Student Bank Account</h1>
+        <h1 className="text-4xl font-bold text-primary mb-8">{t('bank.title')}</h1>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country
-              </label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Countries</option>
-                {allCountries.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
+            <FilterSelect label={t('common.country')} all={t('common.all_countries')} value={country}
+              onChange={v => { setCountry(v); setCardType(''); }}
+              options={countryOptions(allBanks.map(b => b.country))} />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search
+              <label htmlFor="bank-search" className="block text-sm font-medium text-gray-700 mb-2">
+                {t('common.search')}
               </label>
               <input
+                id="bank-search"
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Bank, account or requirement…"
+                placeholder={t('bank.search_ph')}
                 className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Monthly Fee
-              </label>
-              <select
-                value={monthlyFee}
-                onChange={(e) => setMonthlyFee(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Ranges</option>
-                <option value="free">No monthly fee</option>
-                <option value="paid">With a monthly fee</option>
-              </select>
-            </div>
+            <FilterSelect label={t('bank.monthly_fee')} all={t('common.all')} value={monthlyFee} onChange={setMonthlyFee}
+              options={[{ value: 'free', label: t('bank.fee_free') }, { value: 'paid', label: t('bank.fee_paid') }]} />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Card Type
-              </label>
-              <select
-                value={cardType}
-                onChange={(e) => setCardType(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Card Types</option>
-                {cardTypes.map(type => (
-                  <option key={type} value={type}>
-                    {/* La valeur reste celle du catalogue ; seul l'affichage est traduit. */}
-                    {type === 'Sans carte' ? 'No card (blocked or deposit account)' : type}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* La valeur reste celle du catalogue ; seul l'affichage est traduit. */}
+            <FilterSelect label={t('bank.card_type')} all={t('bank.all_cards')} value={cardType} onChange={setCardType}
+              options={cardTypes.map(type => ({
+                value: type,
+                label: type === NO_CARD ? t('bank.no_card') : type === 'Other' ? t('bank.other_card') : type,
+              }))} />
           </div>
         </div>
 
@@ -172,7 +139,7 @@ const BankAccount: React.FC = () => {
         {loading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-gray-600">Loading bank offers...</p>
+            <p className="mt-2 text-gray-600">{t('common.loading')}</p>
           </div>
         )}
         {error && (
@@ -198,6 +165,7 @@ const BankAccount: React.FC = () => {
                 )}
                 <div className="p-6">
                   <h3 className="text-2xl font-bold text-primary mb-2">{bank.name}</h3>
+                  <p className="text-sm text-gray-500 mb-2">{countryLabel(bank.country)}</p>
                   <p className="text-gray-600 mb-6">{bank.description}</p>
 
                   <div className="space-y-6">
@@ -214,14 +182,14 @@ const BankAccount: React.FC = () => {
                             // Le libellé porte déjà la période et parfois une condition
                             // (« 0 € jusqu'à 30 ans ») : pas de suffixe « /month » ajouté.
                             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                              Monthly fee: {account.monthlyFee}
+                              {t('bank.fee_label', { fee: account.monthlyFee })}
                             </span>
                           )}
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <h5 className="font-medium text-gray-900 mb-2">Features</h5>
+                            <h5 className="font-medium text-gray-900 mb-2">{t('common.features')}</h5>
                             <ul className="list-disc list-inside space-y-1 text-gray-600">
                               {(account.features ?? []).map((feature, idx) => (
                                 <li key={idx}>{feature}</li>
@@ -231,7 +199,7 @@ const BankAccount: React.FC = () => {
 
                           {(account.studentPerks ?? []).length > 0 && (
                             <div>
-                              <h5 className="font-medium text-gray-900 mb-2">Student Perks</h5>
+                              <h5 className="font-medium text-gray-900 mb-2">{t('bank.perks')}</h5>
                               <ul className="list-disc list-inside space-y-1 text-gray-600">
                                 {account.studentPerks?.map((perk, idx) => (
                                   <li key={idx}>{perk}</li>
@@ -243,7 +211,7 @@ const BankAccount: React.FC = () => {
 
                         <div className="mt-4 grid md:grid-cols-2 gap-4">
                           <div>
-                            <h5 className="font-medium text-gray-900 mb-2">Requirements to open the account</h5>
+                            <h5 className="font-medium text-gray-900 mb-2">{t('bank.open_requirements')}</h5>
                             <ul className="list-disc list-inside space-y-1 text-gray-600">
                               {(account.requirements ?? []).map((req, idx) => (
                                 <li key={idx}>{req}</li>
@@ -253,19 +221,19 @@ const BankAccount: React.FC = () => {
 
                           <div className="space-y-2">
                             <p className="text-gray-600">
-                              <span className="font-medium">Card Type:</span> {account.cardType}
+                              <span className="font-medium">{colon(t('bank.card'))}</span> {account.cardType}
                             </p>
                             <p className="text-gray-600">
-                              <span className="font-medium">Minimum Deposit:</span> {account.minimumDeposit}
+                              <span className="font-medium">{colon(t('bank.min_deposit'))}</span> {account.minimumDeposit}
                             </p>
                             <p className="text-gray-600">
-                              <span className="font-medium">Withdrawal Limit:</span> {account.withdrawalLimit}
+                              <span className="font-medium">{colon(t('bank.withdrawal'))}</span> {account.withdrawalLimit}
                             </p>
                           </div>
                         </div>
 
                         <ActionButton href={(account as any).link} service={`Compte bancaire — ${account.name}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
-                          Open Account
+                          {t('bank.open')}
                         </ActionButton>
                       </div>
                     ))}
@@ -275,7 +243,7 @@ const BankAccount: React.FC = () => {
             ))
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500 text-lg">No banks found matching your criteria. Please adjust your filters.</p>
+              <CatalogEmpty total={allBanks.length} service="Compte bancaire" className="text-gray-500 text-lg" />
             </div>
           )}
         </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { apiService } from '../services/api';
+import { withColon } from './common/catalogKit';
 
 // Story 10.2 (FR34/FR35) : contenu d'orientation études & formations.
 // Le lieu de formation (`location`) n'est renvoyé par le backend qu'aux premium.
@@ -122,7 +123,7 @@ const Orientation: React.FC = () => {
                   {r.description && <p className="text-sm text-gray-600 mb-3 flex-1">{r.description}</p>}
                   {r.location && (
                     <p className="text-sm text-gray-700 mb-2">
-                      <span className="font-medium">{t('resources.location')} :</span> {r.location}
+                      <span className="font-medium">{withColon(t('resources.location'))}</span> {r.location}
                     </p>
                   )}
                   {r.link && (

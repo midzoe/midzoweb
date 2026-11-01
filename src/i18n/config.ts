@@ -2,122 +2,17 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpBackend from 'i18next-http-backend';
+import { FALLBACK_LANG, SITE_LANGS } from './languages';
 
-// Import translation resources
-import commonEN from './locales/en/common.json';
-import navbarEN from './locales/en/navbar.json';
-import heroEN from './locales/en/hero.json';
-import footerEN from './locales/en/footer.json';
-import servicesEN from './locales/en/services.json';
-import dashboardEN from './locales/en/dashboard.json';
-import formsEN from './locales/en/forms.json';
-import countriesEN from './locales/en/countries.json';
-import aboutEN from './locales/en/about.json';
-
-import commonFR from './locales/fr/common.json';
-import navbarFR from './locales/fr/navbar.json';
-import heroFR from './locales/fr/hero.json';
-import footerFR from './locales/fr/footer.json';
-import servicesFR from './locales/fr/services.json';
-import dashboardFR from './locales/fr/dashboard.json';
-import formsFR from './locales/fr/forms.json';
-import countriesFR from './locales/fr/countries.json';
-import aboutFR from './locales/fr/about.json';
-
-import commonDE from './locales/de/common.json';
-import navbarDE from './locales/de/navbar.json';
-import heroDE from './locales/de/hero.json';
-import footerDE from './locales/de/footer.json';
-import servicesDE from './locales/de/services.json';
-import dashboardDE from './locales/de/dashboard.json';
-import formsDE from './locales/de/forms.json';
-import countriesDE from './locales/de/countries.json';
-import aboutDE from './locales/de/about.json';
-
-import contactEN from './locales/en/contact.json';
-import contactFR from './locales/fr/contact.json';
-import contactDE from './locales/de/contact.json';
-
-import profileEN from './locales/en/profile.json';
-import profileFR from './locales/fr/profile.json';
-import profileDE from './locales/de/profile.json';
-
-import premiumEN from './locales/en/premium.json';
-import premiumFR from './locales/fr/premium.json';
-import premiumDE from './locales/de/premium.json';
-
-import packagesEN from './locales/en/packages.json';
-import packagesFR from './locales/fr/packages.json';
-import packagesDE from './locales/de/packages.json';
-
-import studyEN from './locales/en/study.json';
-import studyFR from './locales/fr/study.json';
-import studyDE from './locales/de/study.json';
-
-import tourismEN from './locales/en/tourism.json';
-import tourismFR from './locales/fr/tourism.json';
-import tourismDE from './locales/de/tourism.json';
-
-import uiEN from './locales/en/ui.json';
-import uiFR from './locales/fr/ui.json';
-import uiDE from './locales/de/ui.json';
-
-const resources = {
-  en: {
-    common: commonEN,
-    navbar: navbarEN,
-    hero: heroEN,
-    footer: footerEN,
-    services: servicesEN,
-    dashboard: dashboardEN,
-    forms: formsEN,
-    countries: countriesEN,
-    about: aboutEN,
-    contact: contactEN,
-    profile: profileEN,
-    premium: premiumEN,
-    packages: packagesEN,
-    study: studyEN,
-    tourism: tourismEN,
-    ui: uiEN,
-  },
-  fr: {
-    common: commonFR,
-    navbar: navbarFR,
-    hero: heroFR,
-    footer: footerFR,
-    services: servicesFR,
-    dashboard: dashboardFR,
-    forms: formsFR,
-    countries: countriesFR,
-    about: aboutFR,
-    contact: contactFR,
-    profile: profileFR,
-    premium: premiumFR,
-    packages: packagesFR,
-    study: studyFR,
-    tourism: tourismFR,
-    ui: uiFR,
-  },
-  de: {
-    common: commonDE,
-    navbar: navbarDE,
-    hero: heroDE,
-    footer: footerDE,
-    services: servicesDE,
-    dashboard: dashboardDE,
-    forms: formsDE,
-    countries: countriesDE,
-    about: aboutDE,
-    contact: contactDE,
-    profile: profileDE,
-    premium: premiumDE,
-    packages: packagesDE,
-    study: studyDE,
-    tourism: tourismDE,
-    ui: uiDE,
-  },
-};
+// Textes de l'interface : chaque fichier `locales/<langue>/<namespace>.json` est chargé tout
+// seul — ajouter une langue ou un namespace ne demande plus de toucher à ce fichier.
+const files = import.meta.glob('./locales/*/*.json', { eager: true, import: 'default' }) as Record<string, Record<string, unknown>>;
+const resources: Record<string, Record<string, Record<string, unknown>>> = {};
+for (const [path, content] of Object.entries(files)) {
+  const [, lang, ns] = path.match(/\.\/locales\/([^/]+)\/([^/]+)\.json$/) ?? [];
+  if (lang && ns) (resources[lang] ??= {})[ns] = content;
+}
+const namespaces = Object.keys(resources.fr ?? {});
 
 i18n
   .use(HttpBackend)
@@ -125,9 +20,11 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'en',
+    supportedLngs: SITE_LANGS,
+    nonExplicitSupportedLngs: true,
+    fallbackLng: FALLBACK_LANG,
     defaultNS: 'common',
-    ns: ['common', 'navbar', 'hero', 'footer', 'services', 'dashboard', 'forms', 'countries', 'about', 'contact', 'profile', 'premium', 'packages', 'study', 'tourism', 'ui'],
+    ns: namespaces,
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

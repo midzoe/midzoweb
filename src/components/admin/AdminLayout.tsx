@@ -11,6 +11,7 @@ import {
   BuildingLibraryIcon,
   AcademicCapIcon,
   LanguageIcon,
+  GlobeEuropeAfricaIcon,
   GlobeAmericasIcon,
   CalendarDaysIcon,
   HandRaisedIcon,
@@ -62,6 +63,7 @@ const navGroups: {
       { href: '/admin/news', label: 'Actualités', icon: NewspaperIcon },
       { href: '/admin/blogs', label: 'Blogs', icon: BookOpenIcon },
       { href: '/admin/scraping', label: 'Actus immigration', icon: RssIcon },
+      { href: '/admin/translations', label: 'Traductions', icon: GlobeEuropeAfricaIcon },
     ],
   },
   {

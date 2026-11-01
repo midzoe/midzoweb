@@ -7,7 +7,8 @@
     "name": "Full Name",
     "email": "Email Address",
     "subject": "Subject",
-    "message": "Message"
+    "message": "Message",
+    "subcategory": "Service concerned"
   },
   "placeholders": {
     "name": "Enter your full name",

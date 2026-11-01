@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { BriefcaseIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../services/api';
 import { formatMoney, useCurrency } from '../pricing/currency';
+import { withColon } from './common/catalogKit';
 
 
 interface Dossier {
@@ -49,13 +50,13 @@ const DossierCard: React.FC = () => {
         {status && <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.className}`} data-testid="dossier-status">{status.label}</span>}
       </div>
 
-      {dossier.case?.assigned_to && <p className="text-sm text-gray-600">{t('dossier.advisor')} : <strong>{dossier.case.assigned_to}</strong></p>}
+      {dossier.case?.assigned_to && <p className="text-sm text-gray-600">{withColon(t('dossier.advisor'))} <strong>{dossier.case.assigned_to}</strong></p>}
       {dossier.case?.client_message && (
         <p className="mt-3 text-sm text-gray-800 bg-emerald-50 border border-emerald-100 rounded-lg p-3 whitespace-pre-line" data-testid="dossier-message">
           {dossier.case.client_message}
         </p>
       )}
-      {dossier.case?.next_step && <p className="mt-3 text-sm text-gray-700"><span className="text-gray-500">{t('dossier.next_step')} : </span><strong data-testid="dossier-next-step">{dossier.case.next_step}</strong></p>}
+      {dossier.case?.next_step && <p className="mt-3 text-sm text-gray-700"><span className="text-gray-500">{withColon(t('dossier.next_step'))} </span><strong data-testid="dossier-next-step">{dossier.case.next_step}</strong></p>}
 
       {dossier.services.total > 0 && (
         <div className="mt-4">

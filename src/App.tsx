@@ -41,6 +41,7 @@ import AdminTrainings from './components/admin/AdminTrainings';
 import AdminVocationalTrainings from './components/admin/AdminVocationalTrainings';
 import AdminPricedServices from './components/admin/AdminPricedServices';
 import AdminConsultations from './components/admin/AdminConsultations';
+import AdminTranslations from './components/admin/AdminTranslations';
 import ForgotPassword from './components/ForgotPassword';
 import AdminServiceProviders from './components/admin/AdminServiceProviders';
 import OrientationResources from './components/Orientation';
@@ -153,6 +154,7 @@ function AppContent() {
             <Route path="/admin/pricing" element={<AdminLayout><AdminPricing /></AdminLayout>} />
             <Route path="/admin/price-grid" element={<AdminLayout><AdminPricedServices /></AdminLayout>} />
             <Route path="/admin/consultations" element={<AdminLayout><AdminConsultations /></AdminLayout>} />
+            <Route path="/admin/translations" element={<AdminLayout><AdminTranslations /></AdminLayout>} />
             <Route path="/admin/client-trips" element={<AdminLayout><AdminClientTrips /></AdminLayout>} />
             <Route path="/admin/reviews" element={<AdminLayout><AdminReviews /></AdminLayout>} />
             <Route path="/admin/circuits" element={<AdminLayout><AdminCircuits /></AdminLayout>} />

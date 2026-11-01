@@ -1,3 +1,5 @@
+import { ALL_COUNTRIES } from './countryNames';
+
 /**
  * Les 54 pays d'Afrique, en français, triés alphabétiquement.
  *
@@ -135,4 +137,21 @@ export function countryName(value: string, lang: string, fallback?: string): str
     } catch { /* navigateur sans Intl.DisplayNames */ }
   }
   return fallback ?? value;
+}
+
+/**
+ * Nationalité / pays de résidence d'un projet : l'Afrique d'abord (public Midzo), puis tous
+ * les autres pays — un client de la diaspora doit pouvoir déclarer l'Allemagne ou la France,
+ * dont dépendent les modalités de paiement. Chaque groupe est trié dans la langue du site.
+ */
+export function originCountryGroups(lang: string): { africa: CountryOption[]; others: CountryOption[] } {
+  const label = (value: string, fr?: string) => (lang.startsWith('fr') && fr ? fr : countryName(value, lang, fr ?? value));
+  const sort = (list: CountryOption[]) => list.sort((a, b) => a.label.localeCompare(b.label, lang));
+  const africanCodes = new Set(AFRICAN_COUNTRIES.map(c => ISO[c.value]).filter(Boolean));
+  const africa = sort(AFRICAN_COUNTRIES.map(c => ({ value: c.value, label: label(c.value, c.label) })));
+  // `ALL_COUNTRIES` écrit parfois autrement un pays africain (« Congo ») : exclu par code ISO.
+  const others = sort(ALL_COUNTRIES
+    .filter(name => !africanCodes.has(ISO[name]) && !AFRICAN_COUNTRIES.some(c => c.value === name))
+    .map(name => ({ value: name, label: label(name) })));
+  return { africa, others };
 }

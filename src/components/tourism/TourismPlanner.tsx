@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
-import { AFRICAN_COUNTRIES, countryName } from '../../data/africanCountries';
+import { countryName, originCountryGroups } from '../../data/africanCountries';
 import { Chip, InfoCard, Section, externalHref, fieldClass, toggle } from '../projects/plannerUi';
 import { usePricing } from '../../pricing/usePricing';
 import PricingStep, { useServiceName } from '../../pricing/PricingStep';
@@ -18,6 +18,8 @@ import {
   saveTourismDraft, saveTourismToAccount, tourismSummary, tourismTitle, stopsLabel, syncedStops, itineraryText,
 } from './tourismProject';
 import { formatMoney, useCurrency } from '../../pricing/currency';
+import { withColon } from '../common/catalogKit';
+import { visaVerdict } from '../visa/VisaChecker';
 
 // Parcours « Composer mon voyage » : profil → voyage → ce que propose le catalogue →
 // services (T1..T10) → prix (à la carte, packages Tourism, paiement) → enregistrement / demande.
@@ -37,6 +39,9 @@ const TourismPlanner: React.FC = () => {
   useCurrency();
   const { t, i18n } = useTranslation('tourism');
   const lang = i18n.language?.slice(0, 2) || 'fr';
+  // Même liste que le parcours Study : l'Afrique d'abord, puis tous les autres pays (diaspora).
+  const origins = useMemo(() => originCountryGroups(lang), [lang]);
+  const isKnownOrigin = (value: string) => [...origins.africa, ...origins.others].some(c => c.value === value);
   const isFr = lang === 'fr';
   const st = (key: string, opts?: Record<string, unknown>) => t(`study:${key}`, opts);
   const serviceName = useServiceName();
@@ -180,7 +185,8 @@ const TourismPlanner: React.FC = () => {
     if (!nationality || !project.destination || nationality === project.destination) return;
     let mounted = true;
     apiService.checkTravelRequirements(nationality, project.destination, 'fr', 'Tourisme')
-      .then(r => mounted && setVisa(r))
+      // Verdict dans la langue du site (le serveur ne l'écrit qu'en français et en anglais).
+      .then(r => mounted && setVisa(r ? { ...r, message: visaVerdict(r, nationality, project.destination, lang) } : r))
       .catch(() => mounted && setVisa({ error: true }));
     return () => { mounted = false; };
   }, [project.profile.nationality, project.destination]);
@@ -437,8 +443,9 @@ const TourismPlanner: React.FC = () => {
                 <label htmlFor="tp-nationality" className="block text-sm font-medium text-gray-700 mb-1">{st('profile.nationality')}</label>
                 <select id="tp-nationality" value={project.profile.nationality} onChange={e => update({ profile: { ...project.profile, nationality: e.target.value } })} className={fieldClass}>
                   <option value="">{st('common.choose')}</option>
-                  {AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{countryText(c.value, c.label)}</option>)}
-                  {project.profile.nationality && !AFRICAN_COUNTRIES.some(c => c.value === project.profile.nationality) && (
+                  <optgroup label={st('profile.africa')}>{origins.africa.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  <optgroup label={st('profile.other_countries')}>{origins.others.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  {project.profile.nationality && !isKnownOrigin(project.profile.nationality) && (
                     <option value={project.profile.nationality}>{project.profile.nationality}</option>
                   )}
                 </select>
@@ -447,8 +454,9 @@ const TourismPlanner: React.FC = () => {
                 <label htmlFor="tp-residence" className="block text-sm font-medium text-gray-700 mb-1">{st('profile.residence')}</label>
                 <select id="tp-residence" value={project.profile.residence} onChange={e => update({ profile: { ...project.profile, residence: e.target.value } })} className={fieldClass}>
                   <option value="">{st('common.choose')}</option>
-                  {AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{countryText(c.value, c.label)}</option>)}
-                  {project.profile.residence && !AFRICAN_COUNTRIES.some(c => c.value === project.profile.residence) && (
+                  <optgroup label={st('profile.africa')}>{origins.africa.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  <optgroup label={st('profile.other_countries')}>{origins.others.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  {project.profile.residence && !isKnownOrigin(project.profile.residence) && (
                     <option value={project.profile.residence}>{project.profile.residence}</option>
                   )}
                 </select>
@@ -559,7 +567,7 @@ const TourismPlanner: React.FC = () => {
             subtitle={project.destination ? st('catalog.for', { country: countryLabel }) : t('catalog.pick_destination')}>
             {project.stops.length > 1 && (
               <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label={t('catalog.info_for')}>
-                <span className="text-sm text-gray-500 mr-1">{t('catalog.info_for')} :</span>
+                <span className="text-sm text-gray-500 mr-1">{withColon(t('catalog.info_for'))}</span>
                 {project.stops.map(stop => (
                   <button key={stop.country} type="button" role="tab" aria-selected={stop.country === project.destination}
                     onClick={() => showStop(stop.country)}
@@ -598,7 +606,7 @@ const TourismPlanner: React.FC = () => {
                       : visa?.requirements ? (
                         <>
                           <p>{visa.message}</p>
-                          {visa.requirements.costs?.processingTime && <p><span className="font-medium">{st('catalog.delay')} :</span> {visa.requirements.costs.processingTime}</p>}
+                          {visa.requirements.costs?.processingTime && <p><span className="font-medium">{withColon(st('catalog.delay'))}</span> {visa.requirements.costs.processingTime}</p>}
                         </>
                       ) : (
                         <p data-testid="visa-fallback">

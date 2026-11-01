@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import apiService from '../services/api';
+import { useCatalog } from './common/catalogKit';
 
 interface SubjectCategory {
   id: string;
@@ -10,6 +11,8 @@ interface SubjectCategory {
 
 const Contact: React.FC = () => {
   const { t } = useTranslation('contact');
+  // Sujets servis en anglais par le backend : affichés dans la langue du site, valeur inchangée.
+  const { t: ct, val } = useCatalog();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -167,9 +170,9 @@ const Contact: React.FC = () => {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
                 >
-                  <option value="">Select a subject</option>
+                  <option value="">{ct('contact.choose_subject')}</option>
                   {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
+                    <option key={s.id} value={s.id}>{val(s.name)}</option>
                   ))}
                 </select>
               </div>
@@ -188,7 +191,7 @@ const Contact: React.FC = () => {
                   >
                     <option value="">—</option>
                     {currentSubcategories.map((sub) => (
-                      <option key={String(sub.id)} value={sub.name}>{sub.name}</option>
+                      <option key={String(sub.id)} value={sub.name}>{val(sub.name)}</option>
                     ))}
                   </select>
                 </div>

@@ -7,7 +7,8 @@
     "name": "Vollständiger Name",
     "email": "E-Mail-Adresse",
     "subject": "Betreff",
-    "message": "Nachricht"
+    "message": "Nachricht",
+    "subcategory": "Betroffene Leistung"
   },
   "placeholders": {
     "name": "Geben Sie Ihren vollständigen Namen ein",

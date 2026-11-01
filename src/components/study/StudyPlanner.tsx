@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
-import { AFRICAN_COUNTRIES, CountryOption, countryName } from '../../data/africanCountries';
+import { AFRICAN_COUNTRIES, countryName, originCountryGroups } from '../../data/africanCountries';
 import {
   DOMAINS, FORMATS, LEVELS, STUDY_SERVICES, TEACHING_LANGUAGES,
   StudyProject, University, UniversityMatch, VocationalOffer, projectCodes,
@@ -22,6 +22,9 @@ import TermsCheckbox from '../legal/TermsCheckbox';
 import { computeSnapshot, snapshotLabel } from '../../pricing/priceChoice';
 import { quoteSelection } from '../../pricing/pricingEngine';
 import { formatMoney, useCurrency } from '../../pricing/currency';
+import { useContentLabels } from '../../i18n/contentTranslation';
+import { withColon } from '../common/catalogKit';
+import { visaVerdict } from '../visa/VisaChecker';
 
 // Parcours « MIDZO Study » : profil → projet → ce que dit le catalogue → services
 // → enregistrement (brouillon local sans compte, trip avec compte) → demande.
@@ -64,22 +67,10 @@ interface OrientationResource {
   provider?: string | null; link?: string | null;
 }
 
-/** Pays d'origine / de résidence : l'Afrique d'abord (public MIDZO), puis les autres. */
-const OTHER_COUNTRIES: CountryOption[] = [
-  { value: 'Germany', label: 'Allemagne' }, { value: 'Belgium', label: 'Belgique' },
-  { value: 'Canada', label: 'Canada' }, { value: 'China', label: 'Chine' },
-  { value: 'Spain', label: 'Espagne' }, { value: 'United States', label: 'États-Unis' },
-  { value: 'France', label: 'France' }, { value: 'Italy', label: 'Italie' },
-  { value: 'Luxembourg', label: 'Luxembourg' }, { value: 'Netherlands', label: 'Pays-Bas' },
-  { value: 'Portugal', label: 'Portugal' }, { value: 'United Kingdom', label: 'Royaume-Uni' },
-  { value: 'Sweden', label: 'Suède' }, { value: 'Switzerland', label: 'Suisse' },
-];
-
-const ALL_ORIGINS = [...AFRICAN_COUNTRIES, ...OTHER_COUNTRIES];
-
+/** Nom d'un pays d'origine : libellé français de la liste Afrique en français, sinon `Intl`. */
 function originLabel(value: string, lang = 'fr'): string {
-  const fr = ALL_ORIGINS.find(c => c.value === value)?.label ?? value;
-  return lang.startsWith('fr') ? fr : countryName(value, lang, value);
+  const fr = AFRICAN_COUNTRIES.find(c => c.value === value)?.label;
+  return lang.startsWith('fr') && fr ? fr : countryName(value, lang, value);
 }
 
 /** Langue des centres (« Allemand ») à proposer selon la destination. */
@@ -96,6 +87,9 @@ const StudyPlanner: React.FC = () => {
   useCurrency();
   const { t, i18n } = useTranslation('study');
   const lang = i18n.language?.slice(0, 2) || 'fr';
+  // Nationalité / résidence : l'Afrique d'abord, puis tous les autres pays, triés dans la langue du site.
+  const origins = useMemo(() => originCountryGroups(lang), [lang]);
+  const isKnownOrigin = (value: string) => [...origins.africa, ...origins.others].some(c => c.value === value);
   const isFr = lang === 'fr';
   /** Valeurs enregistrées en français (formats, langues, diplômes…) : traduites à l'affichage. */
   const tv = (value: string) => (isFr ? value : (t('values', { returnObjects: true }) as Record<string, string>)[value] ?? value);
@@ -128,6 +122,9 @@ const StudyPlanner: React.FC = () => {
   // Catalogue
   const [studyCountries, setStudyCountries] = useState<StudyCountry[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
+  // Intitulés des programmes dans la langue du site, à l'affichage seulement (la recherche par
+  // domaine porte sur les intitulés d'origine).
+  const programLabel = useContentLabels(universities.flatMap(u => (u.programs ?? []).map(p => p.name)));
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [languageCenters, setLanguageCenters] = useState<LanguageCenter[]>([]);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
@@ -220,7 +217,8 @@ const StudyPlanner: React.FC = () => {
     if (!nationality || !project.destination || nationality === project.destination) return;
     let mounted = true;
     apiService.checkTravelRequirements(nationality, project.destination, 'fr', 'Étudiant')
-      .then(r => mounted && setVisa(r))
+      // Verdict dans la langue du site (le serveur ne l'écrit qu'en français et en anglais).
+      .then(r => mounted && setVisa(r ? { ...r, message: visaVerdict(r, nationality, project.destination, lang) } : r))
       .catch(() => mounted && setVisa({ error: true }));
     return () => { mounted = false; };
   }, [project.profile.nationality, project.destination]);
@@ -571,9 +569,9 @@ const StudyPlanner: React.FC = () => {
                 <label htmlFor="sp-nationality" className="block text-sm font-medium text-gray-700 mb-1">{t('profile.nationality')}</label>
                 <select id="sp-nationality" value={project.profile.nationality} onChange={e => updateProfile({ nationality: e.target.value })} className={fieldClass}>
                   <option value="">{t('common.choose')}</option>
-                  <optgroup label={t('profile.africa')}>{AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
-                  <optgroup label={t('profile.other_countries')}>{OTHER_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
-                  {project.profile.nationality && !ALL_ORIGINS.some(c => c.value === project.profile.nationality) && (
+                  <optgroup label={t('profile.africa')}>{origins.africa.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  <optgroup label={t('profile.other_countries')}>{origins.others.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  {project.profile.nationality && !isKnownOrigin(project.profile.nationality) && (
                     <option value={project.profile.nationality}>{project.profile.nationality}</option>
                   )}
                 </select>
@@ -582,9 +580,9 @@ const StudyPlanner: React.FC = () => {
                 <label htmlFor="sp-residence" className="block text-sm font-medium text-gray-700 mb-1">{t('profile.residence')}</label>
                 <select id="sp-residence" value={project.profile.residence} onChange={e => updateProfile({ residence: e.target.value })} className={fieldClass}>
                   <option value="">{t('common.choose')}</option>
-                  <optgroup label={t('profile.africa')}>{AFRICAN_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
-                  <optgroup label={t('profile.other_countries')}>{OTHER_COUNTRIES.map(c => <option key={c.value} value={c.value}>{originLabel(c.value, lang)}</option>)}</optgroup>
-                  {project.profile.residence && !ALL_ORIGINS.some(c => c.value === project.profile.residence) && (
+                  <optgroup label={t('profile.africa')}>{origins.africa.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  <optgroup label={t('profile.other_countries')}>{origins.others.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</optgroup>
+                  {project.profile.residence && !isKnownOrigin(project.profile.residence) && (
                     <option value={project.profile.residence}>{project.profile.residence}</option>
                   )}
                 </select>
@@ -754,7 +752,7 @@ const StudyPlanner: React.FC = () => {
             subtitle={project.destination ? `${t('catalog.for', { country: countryLabel })}${level ? ` · ${t(`level.${level.id}.label`, { defaultValue: level.label })}` : ''}` : t('catalog.pick_country')}>
             {project.destinations.length > 1 && (
               <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label={t('catalog.results_for')}>
-                <span className="text-sm text-gray-500 mr-1">{t('catalog.results_for')} :</span>
+                <span className="text-sm text-gray-500 mr-1">{withColon(t('catalog.results_for'))}</span>
                 {project.destinations.map(d => (
                   <button key={d.country} type="button" role="tab" aria-selected={d.country === project.destination}
                     onClick={() => showCountry(d.country)}
@@ -885,16 +883,16 @@ const StudyPlanner: React.FC = () => {
                                     <div className="flex flex-wrap gap-1 mt-3">
                                       {programs.slice(0, 6).map(p => (
                                         <span key={p.id} className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-xs">
-                                          {p.name} ({p.level}){p.teachingLanguages?.length ? ` · ${p.teachingLanguages.join('/')}` : ''}
-                                          {p.formats?.length ? ` · ${p.formats.join(', ')}` : ''}
+                                          {programLabel(p.name)} ({p.level}){p.teachingLanguages?.length ? ` · ${p.teachingLanguages.map(tv).join('/')}` : ''}
+                                          {p.formats?.length ? ` · ${p.formats.map(tv).join(', ')}` : ''}
                                         </span>
                                       ))}
                                       {programs.length > 6 && <span className="text-xs text-gray-500">+{programs.length - 6}</span>}
                                     </div>
                                     <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600">
-                                      {u.requiredLanguage && <div><dt className="inline font-medium">{t('catalog.language')} : </dt><dd className="inline">{u.requiredLanguage} {u.requiredLanguageLevel}</dd></div>}
-                                      {u.minimumGrade && <div><dt className="inline font-medium">{t('catalog.min_grade')} : </dt><dd className="inline">{u.minimumGrade}</dd></div>}
-                                      {u.admissionRequirements && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.admission')} : </dt><dd className="inline">{u.admissionRequirements}</dd></div>}
+                                      {u.requiredLanguage && <div><dt className="inline font-medium">{withColon(t('catalog.language'))} </dt><dd className="inline">{tv(u.requiredLanguage)} {u.requiredLanguageLevel}</dd></div>}
+                                      {u.minimumGrade && <div><dt className="inline font-medium">{withColon(t('catalog.min_grade'))} </dt><dd className="inline">{u.minimumGrade}</dd></div>}
+                                      {u.admissionRequirements && <div className="sm:col-span-2"><dt className="inline font-medium">{withColon(t('catalog.admission'))} </dt><dd className="inline">{u.admissionRequirements}</dd></div>}
                                     </dl>
                                     <div className="flex gap-3 mt-3 text-sm">
                                       {u.website && <a href={externalHref(u.website)} target="_blank" rel="noopener noreferrer" className="text-secondary hover:text-primary underline">{t('catalog.website')} ↗</a>}
@@ -940,11 +938,11 @@ const StudyPlanner: React.FC = () => {
                               </div>
                               <p className="text-sm text-gray-700 mt-2">{o.occupation}</p>
                               <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600">
-                                {o.durationMonths && <div><dt className="inline font-medium">{t('catalog.duration')} : </dt><dd className="inline">{t('catalog.months', { count: o.durationMonths })}</dd></div>}
-                                {o.languageLevel && <div><dt className="inline font-medium">{t('catalog.german')} : </dt><dd className="inline">{o.languageLevel}</dd></div>}
-                                {o.salary && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.salary')} : </dt><dd className="inline">{o.salary}</dd></div>}
-                                {!!o.startDates?.length && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.intakes')} : </dt><dd className="inline">{o.startDates.join(', ')}</dd></div>}
-                                {!!o.documents?.length && <div className="sm:col-span-2"><dt className="inline font-medium">{t('catalog.documents')} : </dt><dd className="inline">{o.documents.join(' ; ')}</dd></div>}
+                                {o.durationMonths && <div><dt className="inline font-medium">{withColon(t('catalog.duration'))} </dt><dd className="inline">{t('catalog.months', { count: o.durationMonths })}</dd></div>}
+                                {o.languageLevel && <div><dt className="inline font-medium">{withColon(t('catalog.german'))} </dt><dd className="inline">{o.languageLevel}</dd></div>}
+                                {o.salary && <div className="sm:col-span-2"><dt className="inline font-medium">{withColon(t('catalog.salary'))} </dt><dd className="inline">{o.salary}</dd></div>}
+                                {!!o.startDates?.length && <div className="sm:col-span-2"><dt className="inline font-medium">{withColon(t('catalog.intakes'))} </dt><dd className="inline">{o.startDates.join(', ')}</dd></div>}
+                                {!!o.documents?.length && <div className="sm:col-span-2"><dt className="inline font-medium">{withColon(t('catalog.documents'))} </dt><dd className="inline">{o.documents.join(' ; ')}</dd></div>}
                               </dl>
                               {o.applicationUrl && (
                                 <a href={externalHref(o.applicationUrl)} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-sm text-secondary hover:text-primary underline">
@@ -969,12 +967,12 @@ const StudyPlanner: React.FC = () => {
                     ) : visa?.requirements ? (
                       <>
                         <p>{visa.message}</p>
-                        {visa.requirements.costs?.processingTime && <p><span className="font-medium">{t('catalog.delay')} :</span> {visa.requirements.costs.processingTime}</p>}
-                        {visa.requirements.costs?.cost && <p><span className="font-medium">{t('catalog.cost')} :</span> {visa.requirements.costs.cost} {visa.requirements.costs.currency ?? ''}</p>}
+                        {visa.requirements.costs?.processingTime && <p><span className="font-medium">{withColon(t('catalog.delay'))}</span> {visa.requirements.costs.processingTime}</p>}
+                        {visa.requirements.costs?.cost && <p><span className="font-medium">{withColon(t('catalog.cost'))}</span> {visa.requirements.costs.cost} {visa.requirements.costs.currency ?? ''}</p>}
                         {!!visa.requirements.documents?.list?.length && (
                           <ul className="list-disc pl-5">{visa.requirements.documents.list.slice(0, 8).map((d: string) => <li key={d}>{d}</li>)}</ul>
                         )}
-                        {visa.embassy && <p><span className="font-medium">{t('catalog.where_to_apply')} :</span> {visa.embassy.name}{visa.embassy.city ? ` — ${visa.embassy.city}` : ''}</p>}
+                        {visa.embassy && <p><span className="font-medium">{withColon(t('catalog.where_to_apply'))}</span> {visa.embassy.name}{visa.embassy.city ? ` — ${visa.embassy.city}` : ''}</p>}
                       </>
                     ) : visa ? (
                       <p>{t('catalog.visa_missing', { from: originLabel(project.profile.nationality, lang), to: countryLabel })}</p>
@@ -990,7 +988,7 @@ const StudyPlanner: React.FC = () => {
                   </InfoCard>
 
                   <InfoCard title={t('catalog.recognition_title')}>
-                    {project.profile.diploma && <p>{t('catalog.your_diploma')} : <strong>{tv(project.profile.diploma)}</strong></p>}
+                    {project.profile.diploma && <p>{withColon(t('catalog.your_diploma'))} <strong>{tv(project.profile.diploma)}</strong></p>}
                     {recognition.length ? (
                       <ul className="space-y-2">
                         {recognition.slice(0, 3).map(r => (

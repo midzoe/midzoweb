@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useCountries } from '../../hooks/useCountries';
+import React, { useMemo, useState } from 'react';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
 import ActionButton from '../common/ActionButton';
+import { FilterSelect, useCatalog, CatalogEmpty } from '../common/catalogKit';
 
 // Prestataires de légalisation ET de reconnaissance, servis par le backend
 // (ServiceProvider, serviceType = "legalization" | "recognition").
@@ -12,6 +12,7 @@ interface DocumentService {
   country: string;
   serviceType: string;
   services?: string[];
+  documentTypes?: string[];
   processingTime?: string;
   price?: string;
   rating?: number;
@@ -19,159 +20,78 @@ interface DocumentService {
 }
 
 const DocumentServices: React.FC = () => {
-  const [residenceCountry, setResidenceCountry] = useState<string>("");
-  const [nationality, setNationality] = useState<string>("");
+  const { t, val, duration, options, countryOptions, country, colon } = useCatalog();
   const [destinationCountry, setDestinationCountry] = useState<string>("");
   const [documentType, setDocumentType] = useState<string>("");
   const [serviceType, setServiceType] = useState<'legalization' | 'recognition' | 'all'>('all');
 
-  const { countries: allCountries } = useCountries();
-
-  // « all » interroge les deux familles explicitement : omettre le filtre ramènerait
-  // aussi les prestataires de visa travail, qui n'ont rien à faire sur cette page.
-  const { items: filteredServices, loading, error } = useApiList<DocumentService>(
+  // Les deux familles sont chargées explicitement : sans filtre, l'API ramènerait aussi les
+  // prestataires de visa travail, qui n'ont rien à faire sur cette page.
+  const { items: providers, loading, error } = useApiList<DocumentService>(
     () =>
-      serviceType === 'all'
-        ? Promise.all([
-            apiService.getServiceProviders({ type: 'legalization', country: destinationCountry }),
-            apiService.getServiceProviders({ type: 'recognition', country: destinationCountry }),
-          ]).then(([legalization, recognition]) => ({
-            data: [...(legalization.data ?? []), ...(recognition.data ?? [])],
-          }))
-        : apiService.getServiceProviders({ type: serviceType, country: destinationCountry }),
-    [serviceType, destinationCountry],
-    { errorMessage: 'Unable to load document services. Please try again later.' }
+      Promise.all([
+        apiService.getServiceProviders({ type: 'legalization' }),
+        apiService.getServiceProviders({ type: 'recognition' }),
+      ]).then(([legalization, recognition]) => ({
+        data: [...(legalization.data ?? []), ...(recognition.data ?? [])],
+      })),
+    [],
+    { errorMessage: t('common.error') }
   );
+
+  const ofType = useMemo(
+    () => providers.filter(p => serviceType === 'all' || p.serviceType === serviceType),
+    [providers, serviceType]
+  );
+  const filteredServices = ofType.filter(p =>
+    (!destinationCountry || p.country === destinationCountry)
+    && (!documentType || (p.documentTypes ?? []).includes(documentType))
+  );
+
+  // Cliquer sur la carte déjà choisie revient à « toutes les prestations ».
+  const chooseType = (type: 'legalization' | 'recognition') => {
+    setServiceType(current => (current === type ? 'all' : type));
+    setDocumentType('');
+  };
+
+  const steps = (key: string) => t(key, { returnObjects: true }) as string[];
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Document Services</h1>
+        <h1 className="text-4xl font-bold text-primary mb-8">{t('docs.title')}</h1>
 
         {/* Service Type Selection */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Choose Service Type</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">{t('docs.choose_type')}</h2>
+          <p className="text-sm text-gray-500 mb-4">{t('docs.choose_hint')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div 
-              className={`p-6 rounded-lg cursor-pointer border-2 transition-all ${
-                serviceType === 'legalization' 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-gray-200 hover:border-primary/50'
-              }`}
-              onClick={() => setServiceType('legalization')}
-            >
-              <h3 className="text-lg font-semibold mb-2">Document Legalization</h3>
-              <p className="text-gray-600 text-sm">
-                Authentication of documents in your country of residence through embassies, 
-                ministries, or qualified institutions. Typically done before traveling abroad.
-              </p>
-            </div>
-            <div 
-              className={`p-6 rounded-lg cursor-pointer border-2 transition-all ${
-                serviceType === 'recognition' 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-gray-200 hover:border-primary/50'
-              }`}
-              onClick={() => setServiceType('recognition')}
-            >
-              <h3 className="text-lg font-semibold mb-2">Translation & Recognition</h3>
-              <p className="text-gray-600 text-sm">
-                Professional translation of your documents and official recognition of your 
-                qualifications in the destination country. This process validates your 
-                credentials for study or work purposes.
-              </p>
-            </div>
+            {(['legalization', 'recognition'] as const).map(type => (
+              <button
+                type="button"
+                key={type}
+                aria-pressed={serviceType === type}
+                className={`text-left p-6 rounded-lg border-2 transition-all ${
+                  serviceType === type
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 hover:border-primary/50'
+                }`}
+                onClick={() => chooseType(type)}
+              >
+                <h3 className="text-lg font-semibold mb-2">{t(`docs.${type}`)}</h3>
+                <p className="text-gray-600 text-sm">{t(`docs.${type}_text`)}</p>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country of Residence
-              </label>
-              <select
-                value={residenceCountry}
-                onChange={(e) => setResidenceCountry(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Select Country</option>
-                {allCountries.map(country => (
-                  <option key={country} value={country}>{country}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nationality
-              </label>
-              <select
-                value={nationality}
-                onChange={(e) => setNationality(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Select Nationality</option>
-                {allCountries.map(country => (
-                  <option key={country} value={country}>{country}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Destination Country
-              </label>
-              <select
-                value={destinationCountry}
-                onChange={(e) => setDestinationCountry(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Select Country</option>
-                {allCountries.map(country => (
-                  <option key={country} value={country}>{country}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Document Type
-              </label>
-              <select
-                value={documentType}
-                onChange={(e) => setDocumentType(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">Select Document Type</option>
-                <optgroup label="Academic Documents">
-                  <option value="High School Diploma">High School Diploma</option>
-                  <option value="Bachelor's Degree">Bachelor's Degree</option>
-                  <option value="Master's Degree">Master's Degree</option>
-                  <option value="PhD Degree">PhD Degree</option>
-                  <option value="Transcripts">Transcripts</option>
-                  <option value="Language Certificates">Language Certificates</option>
-                  <option value="Professional Qualifications">Professional Qualifications</option>
-                  <option value="Other Academic Documents">Other Academic Documents</option>
-                </optgroup>
-                <optgroup label="Personal Documents">
-                  <option value="Birth Certificate">Birth Certificate</option>
-                  <option value="Marriage Certificate">Marriage Certificate</option>
-                  <option value="Divorce Certificate">Divorce Certificate</option>
-                  <option value="Death Certificate">Death Certificate</option>
-                  <option value="Police Clearance">Police Clearance</option>
-                  <option value="Medical Records">Medical Records</option>
-                  <option value="Passport">Passport</option>
-                  <option value="National ID">National ID</option>
-                  <option value="Driver's License">Driver's License</option>
-                  <option value="Power of Attorney">Power of Attorney</option>
-                  <option value="Employment Records">Employment Records</option>
-                  <option value="Tax Documents">Tax Documents</option>
-                  <option value="Other Personal Documents">Other Personal Documents</option>
-                </optgroup>
-              </select>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FilterSelect label={t('common.destination_country')} all={t('common.all_countries')} value={destinationCountry} onChange={setDestinationCountry}
+              options={countryOptions(ofType.map(p => p.country))} />
+            <FilterSelect label={t('common.document_type')} all={t('common.all_documents')} value={documentType} onChange={setDocumentType}
+              options={options(ofType.flatMap(p => p.documentTypes ?? []))} />
           </div>
         </div>
 
@@ -179,7 +99,7 @@ const DocumentServices: React.FC = () => {
         {loading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-gray-600">Loading document services...</p>
+            <p className="mt-2 text-gray-600">{t('common.loading')}</p>
           </div>
         )}
         {error && (
@@ -202,31 +122,31 @@ const DocumentServices: React.FC = () => {
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
-                      {service.serviceType === 'legalization' ? 'Legalization' : 'Translation & Recognition'}
+                      {service.serviceType === 'legalization' ? t('docs.badge_legalization') : t('docs.recognition')}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-4">{service.country}</p>
+                  <p className="text-gray-600 mb-4">{country(service.country)}</p>
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Services:</span>{" "}
-                      {(service.services ?? []).join(", ")}
+                      <span className="font-medium">{colon(t('common.services'))}</span>{" "}
+                      {(service.services ?? []).map(s => val(s)).join(", ")}
                     </p>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Processing Time:</span>{" "}
-                      {service.processingTime}
+                      <span className="font-medium">{colon(t('common.processing_time'))}</span>{" "}
+                      {duration(service.processingTime)}
                     </p>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Price Range:</span>{" "}
+                      <span className="font-medium">{colon(t('common.price'))}</span>{" "}
                       {service.price}
                     </p>
                     {service.rating != null && (
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">Rating:</span>{" "}
-                        {service.rating}/5.0
+                        <span className="font-medium">{colon(t('common.rating'))}</span>{" "}
+                        {service.rating}/5
                       </p>
                     )}
                     <div className="text-sm text-gray-600">
-                      <span className="font-medium">Requirements:</span>
+                      <span className="font-medium">{colon(t('common.requirements'))}</span>
                       <ul className="list-disc list-inside mt-1 ml-2">
                         {(service.requirements ?? []).map((req, idx) => (
                           <li key={idx}>{req}</li>
@@ -235,14 +155,14 @@ const DocumentServices: React.FC = () => {
                     </div>
                   </div>
                   <ActionButton href={(service as any).link} service={`Légalisation de documents — ${service.provider}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
-                    Get Started
+                    {t('docs.get_started')}
                   </ActionButton>
                 </div>
               </div>
             ))
           ) : (
             <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 text-lg">No services found matching your criteria. Please adjust your filters.</p>
+              <CatalogEmpty total={providers.length} service="Légalisation et reconnaissance de documents" className="text-gray-500 text-lg" />
             </div>
           )}
         </div>
@@ -251,50 +171,36 @@ const DocumentServices: React.FC = () => {
         {/* Information Sections */}
         <div className="space-y-6 mt-12">
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-primary mb-4">Document Services Process</h2>
+            <h2 className="text-2xl font-bold text-primary mb-4">{t('docs.process_title')}</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Legalization Steps</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('docs.legal_steps_title')}</h3>
                 <ol className="list-decimal list-inside space-y-2 text-gray-600">
-                  <li>Document authentication by issuing institution</li>
-                  <li>Notarization by certified notary public</li>
-                  <li>Authentication by Ministry of Foreign Affairs</li>
-                  <li>Legalization by destination country's embassy/consulate</li>
-                  <li>Translation by certified translator (if required)</li>
+                  {steps('docs.legal_steps').map(step => <li key={step}>{step}</li>)}
                 </ol>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Translation & Recognition Steps</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('docs.recog_steps_title')}</h3>
                 <ol className="list-decimal list-inside space-y-2 text-gray-600">
-                  <li>Professional translation of documents</li>
-                  <li>Certification of translations</li>
-                  <li>Submission to recognition authority</li>
-                  <li>Evaluation and assessment</li>
-                  <li>Issuance of recognition certificate</li>
+                  {steps('docs.recog_steps').map(step => <li key={step}>{step}</li>)}
                 </ol>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-primary mb-4">Important Information</h2>
+            <h2 className="text-2xl font-bold text-primary mb-4">{t('docs.info_title')}</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Processing Times</h3>
-                <div className="space-y-2 text-gray-600">
-                  <p>• Standard Processing: 15-20 working days</p>
-                  <p>• Express Processing: 5-7 working days (additional fee)</p>
-                  <p>• Emergency Processing: 2-3 working days (premium fee)</p>
-                </div>
+                <h3 className="text-lg font-semibold mb-2">{t('docs.times_title')}</h3>
+                <ul className="list-disc list-inside space-y-2 text-gray-600">
+                  {steps('docs.times').map(line => <li key={line}>{line}</li>)}
+                </ul>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-2">Required Documents</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('docs.docs_title')}</h3>
                 <ul className="list-disc list-inside space-y-2 text-gray-600">
-                  <li>Original documents</li>
-                  <li>Official translations</li>
-                  <li>Identity documents</li>
-                  <li>Application forms</li>
-                  <li>Supporting documentation</li>
+                  {steps('docs.docs').map(line => <li key={line}>{line}</li>)}
                 </ul>
               </div>
             </div>

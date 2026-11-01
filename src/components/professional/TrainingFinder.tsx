@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useCountries } from '../../hooks/useCountries';
+import React, { useMemo, useState } from 'react';
 import { useApiList } from '../../hooks/useApiList';
 import { apiService } from '../../services/api';
 import ActionButton from '../common/ActionButton';
+import { amountOf, bucketOf, FilterSelect, monthsOf, presentBuckets, useCatalog, CatalogEmpty } from '../common/catalogKit';
 
 // Formations servies par le backend (Training).
 interface Training {
@@ -23,151 +23,54 @@ interface Training {
   link?: string;
 }
 
+const DURATION_EDGES = [3, 6, 12]; // mois
+const PRICE_EDGES = [2000, 5000, 10000];
+
 const TrainingFinder: React.FC = () => {
+  const { t, val, duration: durationText, options, countryOptions, country: countryLabel, money, bucketOptions, colon } = useCatalog();
   const [country, setCountry] = useState<string>("");
   const [course, setCourse] = useState<string>("");
   const [duration, setDuration] = useState<string>("");
   const [priceRange, setPriceRange] = useState<string>("");
   const [category, setCategory] = useState<string>("");
 
-  const { countries: allCountries } = useCountries();
-  const courses = [
-    // Healthcare Courses
-    "Nursing Assistant Program",
-    "Emergency Medical Technician",
-    "Medical Laboratory Technician",
-    "Pharmacy Technician",
-    // Technology Courses
-    "Full Stack Development",
-    "Data Science",
-    "Cloud Computing",
-    "Cybersecurity",
-    // Business Courses
-    "Digital Marketing",
-    "Project Management",
-    "Business Analytics",
-    "Financial Management"
-  ].sort();
-
-  const categories = [
-    "Healthcare",
-    "Technology",
-    "Business",
-    "Education"
-  ].sort();
-
-  const durations = [
-    "1-3 months",
-    "3-6 months",
-    "6-12 months",
-    "Over 12 months"
-  ];
-  const priceRanges = [
-    "Under €2,000",
-    "€2,000-€5,000",
-    "€5,000-€10,000",
-    "Above €10,000"
-  ];
-
-  // Pays et catégorie sont filtrés côté serveur ; l'intitulé exact du cours est
-  // affiné ici (l'API cherche « contient », le select attend une correspondance stricte).
+  // Tout le catalogue est chargé une fois : les menus ne proposent que ce qui existe.
   const { items: trainings, loading, error } = useApiList<Training>(
-    () => apiService.getTrainings({ country, category }),
-    [country, category],
-    { errorMessage: 'Unable to load training programs. Please try again later.' }
+    () => apiService.getTrainings({}),
+    [],
+    { errorMessage: t('common.error') }
   );
 
-  const filteredTrainings = course
-    ? trainings.filter(t => t.course === course)
-    : trainings;
+  // La liste des cours suit le pays et la catégorie choisis.
+  const scoped = useMemo(() => trainings.filter(tr =>
+    (!country || tr.country === country) && (!category || tr.category === category)
+  ), [trainings, country, category]);
+  const filteredTrainings = scoped.filter(tr =>
+    (!course || tr.course === course)
+    && (!duration || bucketOf(monthsOf(tr.duration), DURATION_EDGES) === duration)
+    && (!priceRange || bucketOf(amountOf(tr.price), PRICE_EDGES) === priceRange)
+  );
+
+  const monthsLabel = (n: number) => durationText(`${n} months`);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-primary mb-8">Professional Training Finder</h1>
+        <h1 className="text-4xl font-bold text-primary mb-8">{t('trainings.title')}</h1>
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country
-              </label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Countries</option>
-                {allCountries.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Course
-              </label>
-              <select
-                value={course}
-                onChange={(e) => setCourse(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Courses</option>
-                {courses.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Duration
-              </label>
-              <select
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Durations</option>
-                {durations.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price Range
-              </label>
-              <select
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value)}
-                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-              >
-                <option value="">All Ranges</option>
-                {priceRanges.map(range => (
-                  <option key={range} value={range}>{range}</option>
-                ))}
-              </select>
-            </div>
+            <FilterSelect label={t('common.country')} all={t('common.all_countries')} value={country}
+              onChange={v => { setCountry(v); setCourse(''); }} options={countryOptions(trainings.map(tr => tr.country))} />
+            <FilterSelect label={t('common.category')} all={t('common.all_categories')} value={category}
+              onChange={v => { setCategory(v); setCourse(''); }} options={options(trainings.filter(tr => !country || tr.country === country).map(tr => tr.category))} />
+            <FilterSelect label={t('trainings.course')} all={t('trainings.all_courses')} value={course} onChange={setCourse}
+              options={options(scoped.map(tr => tr.course))} />
+            <FilterSelect label={t('trainings.duration')} all={t('trainings.all_durations')} value={duration} onChange={setDuration}
+              options={bucketOptions(presentBuckets(scoped.map(tr => monthsOf(tr.duration)), DURATION_EDGES), monthsLabel)} />
+            <FilterSelect label={t('common.price_range')} all={t('common.all_prices')} value={priceRange} onChange={setPriceRange}
+              options={bucketOptions(presentBuckets(scoped.map(tr => amountOf(tr.price)), PRICE_EDGES), n => money(n))} />
           </div>
         </div>
 
@@ -175,7 +78,7 @@ const TrainingFinder: React.FC = () => {
         {loading && (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-gray-600">Loading training programs...</p>
+            <p className="mt-2 text-gray-600">{t('common.loading')}</p>
           </div>
         )}
         {error && (
@@ -206,31 +109,38 @@ const TrainingFinder: React.FC = () => {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-primary mb-2">{training.course}</h3>
-                      <p className="text-gray-600">{training.provider} - {training.country}</p>
+                      <p className="text-gray-600">{training.provider} — {countryLabel(training.country)}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      training.category === 'Healthcare' ? 'bg-blue-100 text-blue-800' :
-                      training.category === 'Technology' ? 'bg-green-100 text-green-800' :
-                      'bg-purple-100 text-purple-800'
-                    }`}>
-                      {training.category}
-                    </span>
+                    {training.category && (
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        training.category === 'Healthcare' ? 'bg-blue-100 text-blue-800' :
+                        training.category === 'Technology' ? 'bg-green-100 text-green-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {val(training.category)}
+                      </span>
+                    )}
                   </div>
                   <p className="text-gray-600 mb-4">{training.description}</p>
                   <div className="space-y-2">
+                    {!training.image && training.price && (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">{colon(t('common.price'))}</span> {training.price}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Duration:</span> {training.duration}
+                      <span className="font-medium">{colon(t('trainings.duration'))}</span> {durationText(training.duration)}
                     </p>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Certification:</span> {training.certification}
+                      <span className="font-medium">{colon(t('trainings.certification'))}</span> {training.certification}
                     </p>
                     {training.rating != null && (
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">Rating:</span> {training.rating}/5.0 ({training.reviews} reviews)
+                        <span className="font-medium">{colon(t('common.rating'))}</span> {training.rating}/5 ({t('common.reviews', { count: training.reviews ?? 0 })})
                       </p>
                     )}
                     <div className="text-sm text-gray-600">
-                      <span className="font-medium">Features:</span>
+                      <span className="font-medium">{colon(t('common.features'))}</span>
                       <ul className="list-disc list-inside mt-1">
                         {(training.features ?? []).map((feature, idx) => (
                           <li key={idx}>{feature}</li>
@@ -239,14 +149,14 @@ const TrainingFinder: React.FC = () => {
                     </div>
                   </div>
                   <ActionButton href={training.link} service={`Formation — ${training.provider}`} className="mt-4 w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors">
-                    Enroll Now
+                    {t('trainings.enroll')}
                   </ActionButton>
                 </div>
               </div>
             ))
           ) : (
             <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 text-lg">No training programs found matching your criteria. Please adjust your filters.</p>
+              <CatalogEmpty total={trainings.length} service="Formations professionnelles" className="text-gray-500 text-lg" />
             </div>
           )}
         </div>

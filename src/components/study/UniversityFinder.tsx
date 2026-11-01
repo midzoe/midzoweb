@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCountries } from '../../hooks/useCountries';
 import { apiService } from '../../services/api';
+import { useCatalog } from '../common/catalogKit';
+import { translateTexts, useContentLabels } from '../../i18n/contentTranslation';
 
 interface University {
   id: number;
@@ -103,26 +105,30 @@ const UniversityFinder: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [universities, setUniversities] = useState<University[]>([]);
+  const programLabel = useContentLabels(universities.flatMap(u => (u.programs ?? []).map(p => p.name)));
   const [availableCountries, setAvailableCountries] = useState<string[]>([]);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [availablePrograms, setAvailablePrograms] = useState<string[]>([]);
+  // Intitulés des programmes dans la langue du site (DeepL) ; la valeur filtrée reste celle de la base.
+  const [programLabels, setProgramLabels] = useState<Map<string, string>>(new Map());
   const [loadingCities, setLoadingCities] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const { countries: fallbackCountries } = useCountries();
+  // Pays et niveaux affichés dans la langue du site ; la valeur filtrée reste celle de la base.
+  const { country: countryLabel, val, countryOptions } = useCatalog();
 
-  const levels = ["Bachelor", "Master", "PhD", "Certificate"];
+  // Niveaux réellement présents dans le catalogue (l'API les renvoie avec les programmes).
+  const [levels, setLevels] = useState<string[]>(["Bachelor", "Master"]);
 
   useEffect(() => {
-    loadUniversities();
     loadCountries();
     loadPrograms();
   }, []);
 
+  // Aussi au retour à « tous » : sans cela, la liste restait filtrée sur l'ancien choix.
   useEffect(() => {
-    if (selectedCountry || selectedProgram || selectedLevel || searchQuery || selectedCity) {
-      loadUniversities();
-    }
+    loadUniversities();
   }, [selectedCountry, selectedCity, selectedProgram, selectedLevel, searchQuery]);
 
   // Load cities when country changes
@@ -185,7 +191,10 @@ const UniversityFinder: React.FC = () => {
     try {
       const response = await apiService.getUniversityPrograms();
       if (response.success && response.data) {
-        setAvailablePrograms(response.data.programNames || []);
+        const names: string[] = response.data.programNames || [];
+        setAvailablePrograms(names);
+        translateTexts(names).then(setProgramLabels).catch(() => {});
+        if (Array.isArray(response.data.levels) && response.data.levels.length) setLevels(response.data.levels);
       }
     } catch (err) {
       console.error("Error loading programs:", err);
@@ -210,6 +219,19 @@ const UniversityFinder: React.FC = () => {
     setSelectedLevel("");
     setSearchQuery("");
   };
+
+  // « Architecture » et « Architettura » se traduisent pareil : une seule option, qui cherche
+  // les deux intitulés (« Architecture||Architettura », compris par l'API).
+  const programOptions = (() => {
+    const byLabel = new Map<string, string[]>();
+    availablePrograms.forEach(name => {
+      const label = programLabels.get(name) ?? name;
+      byLabel.set(label, [...(byLabel.get(label) ?? []), name]);
+    });
+    return [...byLabel.entries()]
+      .map(([label, names]) => ({ value: names.join('||'), label }))
+      .sort((a, b) => a.label.localeCompare(b.label, lang));
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -250,8 +272,8 @@ const UniversityFinder: React.FC = () => {
                 className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
               >
                 <option value="">{t.allCountries}</option>
-                {availableCountries.map(country => (
-                  <option key={country} value={country}>{country}</option>
+                {countryOptions(availableCountries).map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
@@ -284,8 +306,8 @@ const UniversityFinder: React.FC = () => {
                 className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
               >
                 <option value="">{t.allPrograms}</option>
-                {availablePrograms.map(program => (
-                  <option key={program} value={program}>{program}</option>
+                {programOptions.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
@@ -301,7 +323,7 @@ const UniversityFinder: React.FC = () => {
               >
                 <option value="">{t.allLevels}</option>
                 {levels.map(level => (
-                  <option key={level} value={level}>{level}</option>
+                  <option key={level} value={level}>{val(level)}</option>
                 ))}
               </select>
             </div>
@@ -330,7 +352,7 @@ const UniversityFinder: React.FC = () => {
                 <div key={university.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-primary mb-2">{university.name}</h3>
-                    <p className="text-gray-600 mb-4">{university.city}, {university.country}</p>
+                    <p className="text-gray-600 mb-4">{university.city}, {countryLabel(university.country)}</p>
 
                     {university.specialty && (
                       <p className="text-gray-600 mb-4">{university.specialty}</p>
@@ -346,7 +368,7 @@ const UniversityFinder: React.FC = () => {
                                 key={`${program.id}`}
                                 className="inline-block bg-primary/10 text-primary px-2 py-1 rounded-full text-xs"
                               >
-                                {program.name} ({program.level})
+                                {programLabel(program.name)} ({val(program.level)})
                               </span>
                             ))}
                             {university.programs.length > 5 && (
