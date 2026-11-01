@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   AcademicCapIcon, SunIcon, AdjustmentsHorizontalIcon, CheckIcon, ArrowRightIcon,
@@ -238,6 +238,14 @@ const Packages: React.FC = () => {
   const consultation = byFamily.consultation?.[0] ?? null;
   const theme = THEME[family];
 
+  // `/packages#consultation` (pages Orientation) : la carte n'existe qu'une fois les packages chargés.
+  const location = useLocation();
+  useEffect(() => {
+    if (location.hash === '#consultation' && consultation) {
+      document.getElementById('consultation')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [location.hash, consultation]);
+
   const priceOf = (p: ShowcasePackage) => formatPrice(p.price_from_cents, p.currency, i18n.language) + (localEquivalent(p.price_from_cents) ? ` (${localEquivalent(p.price_from_cents)})` : '');
   const { pricing } = usePricing();
   const tierText = useTierText(pricing?.services);
@@ -469,7 +477,7 @@ const Packages: React.FC = () => {
 
         {/* ── Consultation personnalisée ─────────────────────────────────── */}
         {consultation && (
-          <section className="mt-16">
+          <section id="consultation" className="mt-16 scroll-mt-24">
             <div className="grid grid-cols-1 gap-6 rounded-3xl border-2 border-dashed border-stone-300 bg-white/70 p-6 sm:p-8 lg:grid-cols-[1fr_1.3fr] lg:items-center lg:p-10">
               <div className="min-w-0">
                 <p className="font-display text-sm uppercase tracking-[0.22em] text-gold-600">

@@ -30,13 +30,14 @@ const Orientation = () => {
     en: {
       title: 'Orientation',
       subtitle: 'Before you travel, study, or work abroad — get the right guidance. Midzo\'s orientation service helps you make informed decisions about your international project.',
-      cta: 'Start',
+      cta: 'Book a consultation',
+      see_path: 'See this path',
       premium_title: 'Premium Orientation — Corporate & Training Centers',
       premium_desc: 'For companies sending teams abroad for training, conferences, or work assignments — Midzo handles the complete orientation: visa, accommodation location, local logistics, and on-ground support.',
       premium_cta: 'Request Corporate Orientation',
       process_title: 'Our Process',
       step1: 'Initial Consultation',
-      step1_desc: 'Free 30-minute call to understand your situation and goals.',
+      step1_desc: 'An appointment with an expert at a time you choose, to understand your situation and goals. The consultation is refunded if you then take a package.',
       step2: 'Personalized Report',
       step2_desc: 'We produce a detailed orientation report with recommendations and action plan.',
       step3: 'Implementation Support',
@@ -50,13 +51,14 @@ const Orientation = () => {
     fr: {
       title: 'Orientation',
       subtitle: 'Avant de voyager, étudier ou travailler à l\'étranger — obtenez les bons conseils. Le service d\'orientation Midzo vous aide à prendre des décisions éclairées sur votre projet international.',
-      cta: 'Démarrer',
+      cta: 'Réserver une consultation',
+      see_path: 'Voir ce parcours',
       premium_title: 'Orientation Premium — Entreprises & Centres de Formation',
       premium_desc: 'Pour les entreprises envoyant des équipes à l\'étranger pour des formations, conférences ou missions — Midzo gère l\'orientation complète : visa, localisation hébergement, logistique locale et support terrain.',
       premium_cta: 'Demander l\'Orientation Corporate',
       process_title: 'Notre Processus',
       step1: 'Consultation Initiale',
-      step1_desc: 'Appel gratuit de 30 minutes pour comprendre votre situation et vos objectifs.',
+      step1_desc: 'Un rendez-vous avec un expert, sur le créneau de votre choix, pour comprendre votre situation et vos objectifs. La consultation est remboursée si vous prenez ensuite un package.',
       step2: 'Rapport Personnalisé',
       step2_desc: 'Nous produisons un rapport d\'orientation détaillé avec recommandations et plan d\'action.',
       step3: 'Support à l\'Implémentation',
@@ -70,13 +72,14 @@ const Orientation = () => {
     de: {
       title: 'Orientierung',
       subtitle: 'Bevor Sie ins Ausland reisen, studieren oder arbeiten — holen Sie sich die richtige Beratung. Midzos Orientierungsservice hilft Ihnen, fundierte Entscheidungen über Ihr internationales Projekt zu treffen.',
-      cta: 'Starten',
+      cta: 'Beratung buchen',
+      see_path: 'Diesen Weg ansehen',
       premium_title: 'Premium-Orientierung — Unternehmen & Bildungszentren',
       premium_desc: 'Für Unternehmen, die Teams für Schulungen, Konferenzen oder Einsätze ins Ausland entsenden — Midzo übernimmt die komplette Orientierung: Visum, Unterkunft, lokale Logistik und Betreuung vor Ort.',
       premium_cta: 'Corporate-Orientierung anfragen',
       process_title: 'Unser Prozess',
       step1: 'Erstgespräch',
-      step1_desc: 'Kostenloses 30-Minuten-Gespräch, um Ihre Situation und Ziele zu verstehen.',
+      step1_desc: 'Ein Termin mit einem Experten zu einer Zeit Ihrer Wahl, um Ihre Situation und Ziele zu verstehen. Die Beratung wird erstattet, wenn Sie danach ein Paket buchen.',
       step2: 'Personalisierter Bericht',
       step2_desc: 'Wir erstellen einen detaillierten Orientierungsbericht mit Empfehlungen und Aktionsplan.',
       step3: 'Implementierungs-Support',
@@ -141,23 +144,26 @@ const Orientation = () => {
         </div>
       </div>
 
-      {/* Étapes du parcours mis en avant — saisies en admin sur la fiche service. */}
-      {focused && focused.steps.length > 0 && (
+      {/* Étapes du parcours mis en avant — saisies en admin sur la fiche service. L'orientation
+          n'a pas de prix dans la grille : on démarre par la consultation (créneau + paiement). */}
+      {focused && (
         <div className="bg-white border-b">
           <div className="max-w-4xl mx-auto px-4 py-12">
-            <ol className="space-y-3">
-              {focused.steps.map((step, i) => (
-                <li key={i} className="flex items-start gap-3 text-gray-700">
-                  <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-white">
-                    {i + 1}
-                  </span>
-                  {step}
-                </li>
-              ))}
-            </ol>
+            {focused.steps.length > 0 && (
+              <ol className="space-y-3 mb-8">
+                {focused.steps.map((step, i) => (
+                  <li key={i} className="flex items-start gap-3 text-gray-700">
+                    <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold text-white">
+                      {i + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            )}
             <Link
-              to="/contact"
-              className="mt-8 inline-block px-8 py-3 bg-secondary hover:bg-primary text-white rounded-full font-semibold transition-colors duration-300"
+              to="/packages#consultation"
+              className="inline-block px-8 py-3 bg-secondary hover:bg-primary text-white rounded-full font-semibold transition-colors duration-300"
             >
               {l.cta}
             </Link>
@@ -235,7 +241,7 @@ const Orientation = () => {
                   to={path.link}
                   className="block text-center py-3 bg-secondary hover:bg-primary text-white rounded-full font-semibold text-sm transition-colors duration-300"
                 >
-                  {l.cta} — {path.title}
+                  {l.see_path} — {path.title}
                 </Link>
               </div>
             </div>
